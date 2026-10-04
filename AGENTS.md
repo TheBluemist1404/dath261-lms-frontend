@@ -62,3 +62,14 @@ tanstackIntent:
     run: "npx @tanstack/intent@latest load @tanstack/virtual-file-routes#virtual-file-routes"
     for: "Programmatic route tree building as an alternative to filesystem conventions: rootRoute, index, route, layout, physical, defineVirtualSubtreeConfig. Use with TanStack Router plugin's virtualRouteConfig option."
 <!-- intent-skills:end -->
+
+
+## Commit Attribution
+
+When ChatGPT/Codex Connector directly authors a repository change, preserve the responsible human GitHub account as the primary author and append:
+
+```text
+Co-authored-by: chatgpt-codex-connector[bot] <199175422+chatgpt-codex-connector[bot]@users.noreply.github.com>
+```
+
+For squash merges, include the same trailer in the squash commit message so the attribution remains visible on the default branch. This records AI assistance only; the assigned team member remains responsible for reviewing and owning the change.
