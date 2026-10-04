@@ -1,8 +1,8 @@
 # Learner-Oriented LMS — Frontend
 
-[![CI](https://github.com/TheBluemist1404/datn261-lms-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/TheBluemist1404/datn261-lms-frontend/actions/workflows/ci.yml)
+[![CI](https://github.com/TheBluemist1404/dath261-lms-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/TheBluemist1404/dath261-lms-frontend/actions/workflows/ci.yml)
 
-Frontend application for the **DATN 261 Learner-Oriented Learning Management System**.
+Frontend application for the **DATH 261 Learner-Oriented Learning Management System**.
 
 The project combines conventional LMS workflows with a personal knowledge workspace so that learning material, student notes, contextual references, collaboration, assessments, and progress can live in one permission-aware learning environment.
 
