@@ -7,7 +7,7 @@ const plannedCapabilities = [
 
 export function HomePage() {
 	return (
-		<main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
+		<section className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
 			<p className="text-sm font-semibold uppercase tracking-[0.2em]">
 				DATN 261
 			</p>
@@ -30,6 +30,6 @@ export function HomePage() {
 					</li>
 				))}
 			</ul>
-		</main>
+		</section>
 	);
 }

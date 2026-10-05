@@ -1,4 +1,20 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/manrope/wght.css";
+
+@theme {
+	--font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+	--font-heading: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+	--color-canvas: #f7f8f5;
+	--color-subtle: #eef2ef;
+	--color-primary: #0f766e;
+	--color-primary-hover: #115e59;
+	--color-primary-subtle: #e7f3ef;
+	--color-ink: #182522;
+	--color-muted: #556560;
+	--color-border: #dde5df;
+	--color-error: #b42318;
+}
 
 * {
 	box-sizing: border-box;
@@ -12,4 +28,14 @@ body,
 
 body {
 	margin: 0;
+	font-family: var(--font-sans);
+}
+
+:where(a, button, summary):focus-visible {
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
+}
+
+button:not(:disabled) {
+	cursor: pointer;
 }
