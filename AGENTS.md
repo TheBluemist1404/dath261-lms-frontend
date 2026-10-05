@@ -62,3 +62,31 @@ tanstackIntent:
     run: "npx @tanstack/intent@latest load @tanstack/virtual-file-routes#virtual-file-routes"
     for: "Programmatic route tree building as an alternative to filesystem conventions: rootRoute, index, route, layout, physical, defineVirtualSubtreeConfig. Use with TanStack Router plugin's virtualRouteConfig option."
 <!-- intent-skills:end -->
+
+
+## Commit Attribution
+
+Use co-author trailers only when an AI coding tool directly authored a meaningful part of the repository change. Keep the responsible team member as the primary Git author.
+
+### ChatGPT / Codex through the GitHub Connector
+
+When the change is authored through the ChatGPT/Codex GitHub Connector, append:
+
+```text
+Co-authored-by: chatgpt-codex-connector[bot] <199175422+chatgpt-codex-connector[bot]@users.noreply.github.com>
+```
+
+### Codex outside the GitHub Connector
+
+When Codex Desktop, Codex CLI, or another Codex coding surface directly authors the change without using the GitHub Connector, append:
+
+```text
+Co-authored-by: Codex <codex@openai.com>
+```
+
+### Attribution Rules
+
+- Do not add an AI co-author trailer when the AI only provided advice, explanation, review, or minor suggestions and the human authored the actual change.
+- Do not add both Codex identities unless both surfaces materially authored the same change.
+- For squash merges, preserve the applicable trailer in the squash commit message so the attribution remains visible on the default branch.
+- AI co-authorship records assistance only. The assigned team member remains responsible for reviewing, validating, and owning the change.
