@@ -81,7 +81,7 @@ Choose the smallest test level that gives useful confidence:
 Before opening a PR, run:
 
 ```bash
-pnpm ci
+pnpm run ci
 ```
 
 This checks Biome, TypeScript, tests, and the production build.

@@ -159,7 +159,7 @@ Do not commit secrets or local `.env` files.
 | `pnpm format` | Format with Biome |
 | `pnpm check` | Check formatting, lint rules, and imports |
 | `pnpm check:fix` | Apply Biome fixes |
-| `pnpm ci` | Run the full local CI-equivalent quality gate |
+| `pnpm run ci` | Run the full local CI-equivalent quality gate |
 
 ## Testing and Quality Gates
 
