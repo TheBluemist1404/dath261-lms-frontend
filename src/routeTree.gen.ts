@@ -11,6 +11,10 @@
 import { Route as rootRouteImport } from './routes/~__root'
 import { Route as LayoutRouteImport } from './routes/~_layout'
 import { Route as LayoutIndexRouteImport } from './routes/~_layout.index'
+import { Route as LayoutWorkspaceRouteImport } from './routes/~_layout/~workspace'
+import { Route as LayoutWorkspaceIndexRouteImport } from './routes/~_layout/~workspace/~index'
+import { Route as LayoutWorkspaceIdRouteImport } from './routes/~_layout/~workspace/~$id'
+import { Route as LayoutWorkspaceMeRouteImport } from './routes/~_layout/~workspace/~me'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -21,24 +25,63 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutWorkspaceRoute = LayoutWorkspaceRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutWorkspaceIndexRoute = LayoutWorkspaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
+const LayoutWorkspaceIdRoute = LayoutWorkspaceIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
+const LayoutWorkspaceMeRoute = LayoutWorkspaceMeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
+  '/workspace': typeof LayoutWorkspaceRouteWithChildren
+  '/workspace/': typeof LayoutWorkspaceIndexRoute
+  '/workspace/$id': typeof LayoutWorkspaceIdRoute
+  '/workspace/me': typeof LayoutWorkspaceMeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
+  '/workspace': typeof LayoutWorkspaceIndexRoute
+  '/workspace/$id': typeof LayoutWorkspaceIdRoute
+  '/workspace/me': typeof LayoutWorkspaceMeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/workspace/': typeof LayoutWorkspaceIndexRoute
+  '/_layout/workspace/$id': typeof LayoutWorkspaceIdRoute
+  '/_layout/workspace/me': typeof LayoutWorkspaceMeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/workspace' | '/workspace/' | '/workspace/$id' | '/workspace/me'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/_layout' | '/_layout/'
+  to: '/' | '/workspace' | '/workspace/$id' | '/workspace/me'
+  id:
+    | '__root__'
+    | '/_layout'
+    | '/_layout/workspace'
+    | '/_layout/'
+    | '/_layout/workspace/'
+    | '/_layout/workspace/$id'
+    | '/_layout/workspace/me'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -61,14 +104,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/workspace': {
+      id: '/_layout/workspace'
+      path: '/workspace'
+      fullPath: '/workspace'
+      preLoaderRoute: typeof LayoutWorkspaceRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/workspace/': {
+      id: '/_layout/workspace/'
+      path: '/'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof LayoutWorkspaceIndexRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/$id': {
+      id: '/_layout/workspace/$id'
+      path: '/$id'
+      fullPath: '/workspace/$id'
+      preLoaderRoute: typeof LayoutWorkspaceIdRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/me': {
+      id: '/_layout/workspace/me'
+      path: '/me'
+      fullPath: '/workspace/me'
+      preLoaderRoute: typeof LayoutWorkspaceMeRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
   }
 }
 
+interface LayoutWorkspaceRouteChildren {
+  LayoutWorkspaceIndexRoute: typeof LayoutWorkspaceIndexRoute
+  LayoutWorkspaceIdRoute: typeof LayoutWorkspaceIdRoute
+  LayoutWorkspaceMeRoute: typeof LayoutWorkspaceMeRoute
+}
+
+const LayoutWorkspaceRouteChildren: LayoutWorkspaceRouteChildren = {
+  LayoutWorkspaceIndexRoute: LayoutWorkspaceIndexRoute,
+  LayoutWorkspaceIdRoute: LayoutWorkspaceIdRoute,
+  LayoutWorkspaceMeRoute: LayoutWorkspaceMeRoute,
+}
+
+const LayoutWorkspaceRouteWithChildren = LayoutWorkspaceRoute._addFileChildren(
+  LayoutWorkspaceRouteChildren,
+)
+
 interface LayoutRouteChildren {
+  LayoutWorkspaceRoute: typeof LayoutWorkspaceRouteWithChildren
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutWorkspaceRoute: LayoutWorkspaceRouteWithChildren,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

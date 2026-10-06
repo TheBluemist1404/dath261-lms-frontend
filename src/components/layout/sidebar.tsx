@@ -2,18 +2,24 @@ import { Link } from "@tanstack/react-router";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { type UserRole, useAuthStore } from "@/stores/auth.store";
 
-const menus: Record<UserRole, { label: string; icon: IconName }[]> = {
+type MenuItem = {
+	label: string;
+	icon: IconName;
+	to?: "/" | "/workspace";
+};
+
+const menus: Record<UserRole, MenuItem[]> = {
 	student: [
 		{ label: "Dashboard", icon: "dashboard" },
 		{ label: "My Courses", icon: "courses" },
 		{ label: "Catalog", icon: "book" },
-		{ label: "Workspaces", icon: "workspace" },
+		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
 		{ label: "Notifications", icon: "bell" },
 	],
 	lecturer: [
 		{ label: "My Courses", icon: "courses" },
-		{ label: "Workspaces", icon: "workspace" },
+		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
 		{ label: "Notifications", icon: "bell" },
 	],
@@ -27,9 +33,9 @@ const menus: Record<UserRole, { label: string; icon: IconName }[]> = {
 
 export default function Sidebar() {
 	const role = useAuthStore((state) => state.user?.role);
-	const items = role
+	const items: MenuItem[] = role
 		? menus[role]
-		: [{ label: "Catalog", icon: "book" } as const];
+		: [{ label: "Catalog", icon: "book" }];
 	const caption = role === "admin" ? "Administration" : (role ?? "Explore");
 
 	return (
@@ -38,16 +44,25 @@ export default function Sidebar() {
 				{caption}
 			</p>
 			<nav aria-label="Primary navigation" className="flex flex-col gap-2">
-				{/* Use the homepage until each feature has its own route. */}
+				{/* Unimplemented features still use the homepage. */}
 				{items.map((item, index) => (
 					<Link
 						key={item.label}
-						to="/"
-						activeProps={{ "aria-current": index === 0 ? "page" : undefined }}
-						className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold ${index === 0 ? "bg-primary-subtle text-primary" : "text-muted hover:bg-subtle hover:text-ink"}`}
+						to={item.to ?? "/"}
+						activeOptions={{ exact: item.to !== "/workspace" }}
+						activeProps={{
+							"aria-current": item.to || index === 0 ? "page" : undefined,
+						}}
+						className="rounded-lg text-sm font-semibold"
 					>
-						<Icon name={item.icon} />
-						{item.label}
+						{({ isActive }) => (
+							<span
+								className={`flex min-h-11 items-center gap-2 rounded-lg px-3 ${isActive && (item.to || index === 0) ? "bg-primary-subtle text-primary" : "text-muted hover:bg-subtle hover:text-ink"}`}
+							>
+								<Icon name={item.icon} />
+								{item.label}
+							</span>
+						)}
 					</Link>
 				))}
 			</nav>
