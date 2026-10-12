@@ -19,7 +19,7 @@ function RootComponent() {
 	return (
 		<>
 			<Outlet />
-			{import.meta.env.DEV && (
+			{import.meta.env.DEV && import.meta.env.MODE !== "test" && (
 				<TanStackDevtools
 					config={{ position: "bottom-right" }}
 					plugins={[

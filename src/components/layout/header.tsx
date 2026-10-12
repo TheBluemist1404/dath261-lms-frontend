@@ -40,7 +40,7 @@ export default function Header() {
 					</>
 				) : status === "unauthenticated" ? (
 					<Link
-						to="/"
+						to="/login"
 						className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-primary hover:bg-primary-subtle"
 					>
 						Sign in
