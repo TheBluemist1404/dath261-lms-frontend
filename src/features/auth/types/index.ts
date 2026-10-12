@@ -18,3 +18,9 @@ export interface AuthResponse {
 	user: AuthUser;
 	message?: string;
 }
+
+export interface RouterAuthContext {
+	user: AuthUser | null;
+	isLoading: boolean;
+	isAuthenticated: boolean;
+}
