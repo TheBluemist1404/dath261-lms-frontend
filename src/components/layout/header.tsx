@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useAuthStore } from "@/stores/auth.store";
 import { Brand } from "./brand";
 
 export default function Header() {
 	const user = useAuthStore((state) => state.user);
 	const status = useAuthStore((state) => state.status);
+	const { logout } = useAuth();
 	const initials = user?.name
 		.trim()
 		.split(/\s+/)
@@ -37,6 +39,14 @@ export default function Header() {
 						>
 							<span aria-hidden="true">{initials || "N"}</span>
 						</Link>
+						<button
+							type="button"
+							onClick={() => logout()}
+							aria-label="Sign out"
+							className="flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-muted hover:bg-subtle hover:text-ink cursor-pointer"
+						>
+							Sign out
+						</button>
 					</>
 				) : status === "unauthenticated" ? (
 					<Link
