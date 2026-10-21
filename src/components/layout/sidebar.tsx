@@ -2,7 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { type UserRole, useAuthStore } from "@/stores/auth.store";
 
-const menus: Record<UserRole, { label: string; icon: IconName }[]> = {
+const menus: Record<
+	UserRole,
+	{ label: string; icon: IconName; to?: "/admin" }[]
+> = {
 	student: [
 		{ label: "Dashboard", icon: "dashboard" },
 		{ label: "My Courses", icon: "courses" },
@@ -18,7 +21,7 @@ const menus: Record<UserRole, { label: string; icon: IconName }[]> = {
 		{ label: "Notifications", icon: "bell" },
 	],
 	admin: [
-		{ label: "Overview", icon: "dashboard" },
+		{ label: "Overview", icon: "dashboard", to: "/admin" },
 		{ label: "Users", icon: "users" },
 		{ label: "Courses", icon: "courses" },
 		{ label: "Reports", icon: "reports" },
@@ -42,7 +45,7 @@ export default function Sidebar() {
 				{items.map((item, index) => (
 					<Link
 						key={item.label}
-						to="/"
+						to={("to" in item && item.to) || "/"}
 						activeProps={{ "aria-current": index === 0 ? "page" : undefined }}
 						className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold ${index === 0 ? "bg-primary-subtle text-primary" : "text-muted hover:bg-subtle hover:text-ink"}`}
 					>
