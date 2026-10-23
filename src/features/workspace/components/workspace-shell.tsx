@@ -12,6 +12,9 @@ import { PageTreeNav } from "./page-tree-nav";
 import { ErrorState, LoadingState } from "./query-state";
 import { WorkspaceNotFound } from "./workspace-not-found";
 
+const headerLinkClass =
+	"inline-flex min-h-11 items-center rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-subtle";
+
 export interface WorkspaceShellContext {
 	workspace: Workspace;
 	pages: PageSummary[];
@@ -75,17 +78,28 @@ export function WorkspaceShell({
 					<h1 className="font-heading text-3xl font-bold tracking-tight [overflow-wrap:anywhere]">
 						{workspace.data.name}
 					</h1>
-					<Link
-						to="/workspace/$id/settings"
-						params={{ id: workspaceId }}
-						className="inline-flex min-h-11 items-center rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-subtle"
-					>
-						Workspace settings
-					</Link>
+					<div className="flex flex-wrap gap-2">
+						{!isPersonal && (
+							<Link
+								to="/workspace/$id/members"
+								params={{ id: workspaceId }}
+								className={headerLinkClass}
+							>
+								Members ({workspace.data.memberCount})
+							</Link>
+						)}
+						<Link
+							to="/workspace/$id/settings"
+							params={{ id: workspaceId }}
+							className={headerLinkClass}
+						>
+							Workspace settings
+						</Link>
+					</div>
 				</div>
 				<p className="text-sm text-muted">
 					{isPersonal
-						? "Only you can access this workspace. Invitations are unavailable."
+						? "Only you can access this workspace. Collaborators cannot be added."
 						: "Workspace membership governs access."}
 				</p>
 			</header>

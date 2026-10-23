@@ -52,6 +52,12 @@ export const mockUsers = {
 		firstName: "Bao",
 		lastName: "Nguyen",
 	},
+	vy: {
+		id: "user-vy",
+		email: "vy.pham@example.com",
+		firstName: "Vy",
+		lastName: "Pham",
+	},
 } satisfies Record<string, WorkspaceMemberUser>;
 
 const seededAt = "2026-10-20T08:00:00.000Z";
@@ -74,10 +80,10 @@ function page(
 }
 
 export function createSeedDb(): MockDb {
-	const { alex, mai, bao } = mockUsers;
+	const { alex, mai, bao, vy } = mockUsers;
 
 	return {
-		users: [alex, mai, bao],
+		users: [alex, mai, bao, vy],
 		defaultWorkspaceByUser: { [alex.id]: "ws-personal-alex" },
 		workspaces: [
 			{
