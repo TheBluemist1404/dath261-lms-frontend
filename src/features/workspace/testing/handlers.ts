@@ -27,6 +27,8 @@ import {
 
 const api = (path: string) => `*/api${path}`;
 
+const SEARCH_RESULT_LIMIT = 50;
+
 function error(statusCode: number, message: string) {
 	const names: Record<number, string> = {
 		400: "Bad Request",
@@ -552,6 +554,9 @@ export const workspaceHandlers = [
 		({ request, params }) => {
 			const access = resolveWorkspace(request, String(params.workspaceId));
 			if (!access.ok) return access.response;
+			if (access.workspace.archivedAt) {
+				return error(409, "Restore the workspace before editing it");
+			}
 
 			const target = membershipOf(access.workspace.id, String(params.userId));
 			if (!target) return error(404, "Member not found");
@@ -655,6 +660,9 @@ export const workspaceHandlers = [
 
 		const params = new URL(request.url).searchParams;
 		const type = params.get("type");
+		if (type !== "FILE" && type !== "VIDEO") {
+			return error(400, "type must be FILE or VIDEO");
+		}
 		const query = params.get("q")?.trim().toLowerCase() ?? "";
 		return HttpResponse.json(
 			mockDb.courseBlocks
@@ -694,21 +702,26 @@ export const workspaceHandlers = [
 				contentHits.push(withSnippet);
 			}
 		}
-		return HttpResponse.json([
-			...titleHits.sort(byUpdatedAt),
-			...contentHits.sort(byUpdatedAt),
-		]);
+		return HttpResponse.json(
+			[...titleHits.sort(byUpdatedAt), ...contentHits.sort(byUpdatedAt)].slice(
+				0,
+				SEARCH_RESULT_LIMIT,
+			),
+		);
 	}),
 
 	http.get(api("/recent-pages"), ({ request }) => {
 		const userId = currentUserId(request);
 		if (!userId) return error(401, "Unauthorized");
 		const limit = Number(new URL(request.url).searchParams.get("limit") ?? 5);
+		if (!Number.isInteger(limit) || limit < 1 || limit > 20) {
+			return error(400, "limit must be a whole number from 1 to 20");
+		}
 		return HttpResponse.json(
 			accessiblePages(userId)
 				.map(({ hit }) => hit)
 				.sort(byUpdatedAt)
-				.slice(0, Math.min(Math.max(limit, 1), 20)),
+				.slice(0, limit),
 		);
 	}),
 ];

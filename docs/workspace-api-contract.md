@@ -1,7 +1,8 @@
 # Workspace API contract
 
-Status: proposed on 2026-10-22 by the Workspace owner; the frontend mocks it in
-`src/features/workspace/testing/handlers.ts` until the backend implements it.
+Status: proposed on 2026-10-22 by the Workspace owner and implemented by the
+backend on `feat/workspace-api` (2026-10-23). The frontend still mocks it in
+`src/features/workspace/testing/handlers.ts` for tests and `VITE_API_MOCKING=true`.
 Types live in `src/features/workspace/types.ts`. Change all three together.
 
 Product rules come from the Notion Use Cases (UC-08, UC-09) and Authorization
@@ -17,6 +18,11 @@ Model. Fields follow the backend Prisma models in `prisma/models/workspace.prism
   until an Owner restores it.
 - Members are added directly by email. There are no invitations, matching the
   current data model.
+- Administrators have no workspaces: every route below returns `403` for an
+  `ADMIN` token. A Student or Lecturer's personal workspace is created the first
+  time they call `GET /workspaces`.
+- Request bodies may be up to 2 MB, since page content is a whole editor document.
+- Validation failures, including unknown body fields, return `400`.
 
 ## Resources
 
@@ -46,8 +52,8 @@ Model. Fields follow the backend Prisma models in `prisma/models/workspace.prism
 | PATCH | `/pages/:id` | `{ title?, parentPageId?, content? }` | `200 Page` | Moving under itself or a descendant returns `400`. |
 | DELETE | `/pages/:id` | | `204` | Deletes the subtree. |
 | GET | `/workspaces/:id/members` | | `200 WorkspaceMember[]` | Members only. |
-| POST | `/workspaces/:id/members` | `{ email, role }` | `201 WorkspaceMember` | `role` is `MEMBER` or `CO_OWNER`. Owner adds either; Co-owner adds `MEMBER` only. `PERSONAL` returns `409`. Unknown email `404`, existing member `409`. |
-| DELETE | `/workspaces/:id/members/:userId` | | `204` | Owner removes Members and Co-owners; Co-owner removes Members; Owners cannot be removed (`403`). |
+| POST | `/workspaces/:id/members` | `{ email, role }` | `201 WorkspaceMember` | `role` is `MEMBER` or `CO_OWNER`. Owner adds either; Co-owner adds `MEMBER` only. `PERSONAL` and archived return `409`. Unknown email `404`, an administrator's email `400`, existing member `409`. |
+| DELETE | `/workspaces/:id/members/:userId` | | `204` | Owner removes Members and Co-owners; Co-owner removes Members; Owners cannot be removed (`403`). Not a member `404`. Archived `409`. |
 
 ## Course references
 
@@ -72,7 +78,7 @@ resolve differently for different members of a workspace.
 | GET | `/pages/:id/references` | | `200 CourseReference[]` | Members of the page's workspace. |
 | POST | `/pages/:id/references` | `{ courseBlockId, timestampSeconds? }` | `201 CourseReference` | Block must be an accessible `FILE` or `VIDEO`, otherwise `404`. `timestampSeconds` only for videos, a whole number from 0 to the video's `content.durationSeconds`, otherwise `400`. Archived workspace `409`. |
 | DELETE | `/references/:id` | | `204` | Members of the page's workspace; archived `409`. |
-| GET | `/reference-sources?type=FILE\|VIDEO&q=` | | `200 ReferencedBlock[]` | Accessible blocks of that type; `q` matches block or course title. |
+| GET | `/reference-sources?type=FILE\|VIDEO&q=` | | `200 ReferencedBlock[]` | Accessible blocks of that type; `type` is required (`400`). `q` matches block or course title, case-insensitive. |
 
 The frontend links "Open source" to `/courses/:courseId?block=:blockId&t=:seconds`
 until the course player route exists.
@@ -86,8 +92,8 @@ match in the page content, or `null`).
 
 | Method | Path | Body | Success | Rules |
 | --- | --- | --- | --- | --- |
-| GET | `/search/pages?q=` | | `200 PageHit[]` | Case-insensitive match on title or content text; `q` shorter than 2 characters returns `400`. Title matches first, then content matches, each newest `updatedAt` first. |
-| GET | `/recent-pages?limit=` | | `200 PageHit[]` | Newest `updatedAt` first, `limit` 1 to 20 (default 5), `snippet` is `null`. There is no visit history yet, so "recent" means recently edited. Kept off `/pages/*` so it cannot collide with `/pages/:id`. |
+| GET | `/search/pages?q=` | | `200 PageHit[]` | Case-insensitive match on title or content text; `q` shorter than 2 characters returns `400`. Title matches first, then content matches, each newest `updatedAt` first. At most 50 hits. |
+| GET | `/recent-pages?limit=` | | `200 PageHit[]` | Newest `updatedAt` first, `limit` a whole number from 1 to 20 (default 5, otherwise `400`), `snippet` is `null`. There is no visit history yet, so "recent" means recently edited. Kept off `/pages/*` so it cannot collide with `/pages/:id`. |
 
 Content text is every string `text` field in the editor JSON, which covers both
 the plain-text stand-in and Lexical's serialized state.
@@ -109,3 +115,9 @@ come from the token's `sub` and `role` claims. The Vite dev server proxies
 `/api` to `VITE_API_PROXY_TARGET` (default `http://localhost:3001`) so the
 SameSite=Strict cookie stays same-site. Set `VITE_API_MOCKING=true` to serve
 the API from MSW instead.
+
+To try the UI against the real backend, run the backend with a database and
+`pnpm db:seed:dev` there (it prints the seeded accounts), then start the
+frontend with `VITE_API_MOCKING=false`. There is no sign-in screen yet; sign in
+by calling `POST /api/auth/login` from the browser console on
+`http://localhost:3000`, then reload.
