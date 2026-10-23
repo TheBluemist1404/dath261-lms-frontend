@@ -6,6 +6,7 @@ import { pageQuery } from "../api/workspace.queries";
 import { usePageAutosave } from "../hooks/use-page-autosave";
 import { getAncestors } from "../page-tree";
 import type { Page, PageSummary } from "../types";
+import { CourseReferences } from "./course-references";
 import { EditorSlot } from "./editor-slot";
 import {
 	MovePageDialog,
@@ -27,10 +28,11 @@ export function WorkspacePageView({
 }) {
 	return (
 		<WorkspaceShell workspaceId={workspaceId} activePageId={pageId}>
-			{({ pages, canEdit }) => (
+			{({ workspace, pages, canEdit }) => (
 				<PageLoader
 					key={pageId}
 					pageId={pageId}
+					workspaceName={workspace.name}
 					pages={pages}
 					canEdit={canEdit}
 					autosaveDelayMs={autosaveDelayMs}
@@ -42,11 +44,13 @@ export function WorkspacePageView({
 
 function PageLoader({
 	pageId,
+	workspaceName,
 	pages,
 	canEdit,
 	autosaveDelayMs,
 }: {
 	pageId: string;
+	workspaceName: string;
 	pages: PageSummary[];
 	canEdit: boolean;
 	autosaveDelayMs?: number;
@@ -77,6 +81,7 @@ function PageLoader({
 	return (
 		<PageEditor
 			page={page.data}
+			workspaceName={workspaceName}
 			pages={pages}
 			canEdit={canEdit}
 			autosaveDelayMs={autosaveDelayMs}
@@ -88,11 +93,13 @@ type OpenDialog = "rename" | "move" | "subpage" | null;
 
 function PageEditor({
 	page,
+	workspaceName,
 	pages,
 	canEdit,
 	autosaveDelayMs,
 }: {
 	page: Page;
+	workspaceName: string;
 	pages: PageSummary[];
 	canEdit: boolean;
 	autosaveDelayMs?: number;
@@ -143,6 +150,12 @@ function PageEditor({
 				initialContent={page.content}
 				readOnly={!canEdit}
 				onChange={autosave.queue}
+			/>
+
+			<CourseReferences
+				pageId={page.id}
+				destination={`${workspaceName} / ${summary.title}`}
+				canEdit={canEdit}
 			/>
 
 			{canEdit && (

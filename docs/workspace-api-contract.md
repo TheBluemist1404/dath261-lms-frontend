@@ -49,11 +49,39 @@ Model. Fields follow the backend Prisma models in `prisma/models/workspace.prism
 | POST | `/workspaces/:id/members` | `{ email, role }` | `201 WorkspaceMember` | `role` is `MEMBER` or `CO_OWNER`. Owner adds either; Co-owner adds `MEMBER` only. `PERSONAL` returns `409`. Unknown email `404`, existing member `409`. |
 | DELETE | `/workspaces/:id/members/:userId` | | `204` | Owner removes Members and Co-owners; Co-owner removes Members; Owners cannot be removed (`403`). |
 
+## Course references
+
+Rules come from FR-RR-01 to FR-RR-06 and UC-11. Rows follow
+`prisma/models/reference.prisma` (`pageId`, `courseBlockId`,
+`timestampSeconds`); only `FILE` and `VIDEO` course blocks can be referenced.
+
+A block is accessible when the caller is the course's lecturer or has an
+enrollment that is not `LEFT`, and the course is `PUBLISHED` and not
+suspended. Access is checked again on every read, so the same reference can
+resolve differently for different members of a workspace.
+
+`CourseReference`: `id`, `pageId`, `createdAt`, and `status`:
+
+- `AVAILABLE` adds `block { id, type, title, courseId, courseTitle,
+  durationSeconds }` and `timestampSeconds`.
+- `LOCKED` (no current enrollment) and `UNAVAILABLE` (course in Draft or
+  suspended) add nothing, so no block metadata leaks (NFR-VAL-02).
+
+| Method | Path | Body | Success | Rules |
+| --- | --- | --- | --- | --- |
+| GET | `/pages/:id/references` | | `200 CourseReference[]` | Members of the page's workspace. |
+| POST | `/pages/:id/references` | `{ courseBlockId, timestampSeconds? }` | `201 CourseReference` | Block must be an accessible `FILE` or `VIDEO`, otherwise `404`. `timestampSeconds` only for videos, a whole number from 0 to the video's `content.durationSeconds`, otherwise `400`. Archived workspace `409`. |
+| DELETE | `/references/:id` | | `204` | Members of the page's workspace; archived `409`. |
+| GET | `/reference-sources?type=FILE\|VIDEO&q=` | | `200 ReferencedBlock[]` | Accessible blocks of that type; `q` matches block or course title. |
+
+The frontend links "Open source" to `/courses/:courseId?block=:blockId&t=:seconds`
+until the course player route exists.
+
 ## Not yet covered
 
-Page archive/restore (no field in the model), search, recent pages, course
-references, and real-time collaboration get their own sections when those
-phases start.
+Page archive/restore (no field in the model), search, recent pages, copying
+permitted course material (FR-RR-07/08, no model yet), and real-time
+collaboration get their own sections when those phases start.
 
 ## Frontend auth against the current backend
 

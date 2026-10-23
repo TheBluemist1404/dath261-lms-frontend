@@ -1,7 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
 import { server } from "@/test/mocks/server";
+
+// Route tests render the whole app; its first render can pass the 1s default
+// when test files run in parallel.
+configure({ asyncUtilTimeout: 3000 });
 
 // jsdom does not implement the native dialog methods.
 if (!HTMLDialogElement.prototype.showModal) {

@@ -25,12 +25,47 @@ export interface MockMembershipRecord {
 	joinedAt: string;
 }
 
+export interface MockCourseRecord {
+	id: string;
+	title: string;
+	status: "DRAFT" | "PUBLISHED";
+	isSuspended: boolean;
+	lecturerId: string;
+}
+
+export interface MockCourseBlockRecord {
+	id: string;
+	courseId: string;
+	type: "MODULE" | "TEXT" | "FILE" | "VIDEO" | "QUIZ" | "ASSIGNMENT";
+	title: string;
+	/** Type-specific payload; videos carry their length. */
+	content: { durationSeconds?: number } | null;
+}
+
+export interface MockEnrollmentRecord {
+	userId: string;
+	courseId: string;
+	status: "ACTIVE" | "LEFT" | "COMPLETED";
+}
+
+export interface MockReferenceRecord {
+	id: string;
+	pageId: string;
+	courseBlockId: string;
+	timestampSeconds: number | null;
+	createdAt: string;
+}
+
 export interface MockDb {
 	users: WorkspaceMemberUser[];
 	defaultWorkspaceByUser: Record<string, string>;
 	workspaces: MockWorkspaceRecord[];
 	memberships: MockMembershipRecord[];
 	pages: Page[];
+	courses: MockCourseRecord[];
+	courseBlocks: MockCourseBlockRecord[];
+	enrollments: MockEnrollmentRecord[];
+	references: MockReferenceRecord[];
 }
 
 export const mockUsers = {
@@ -185,6 +220,109 @@ export function createSeedDb(): MockDb {
 				"page-group-plan",
 			),
 			page("page-old", "ws-old-project", "Archived notes"),
+		],
+		courses: [
+			{
+				id: "course-os",
+				title: "Operating Systems",
+				status: "PUBLISHED",
+				isSuspended: false,
+				lecturerId: "user-lecturer",
+			},
+			{
+				id: "course-networks",
+				title: "Computer Networks",
+				status: "PUBLISHED",
+				isSuspended: false,
+				lecturerId: "user-lecturer",
+			},
+			{
+				id: "course-databases",
+				title: "Database Systems",
+				status: "DRAFT",
+				isSuspended: false,
+				lecturerId: "user-lecturer",
+			},
+		],
+		courseBlocks: [
+			{
+				id: "block-os-week2",
+				courseId: "course-os",
+				type: "MODULE",
+				title: "Week 2 · Processes",
+				content: null,
+			},
+			{
+				id: "block-os-lecture2",
+				courseId: "course-os",
+				type: "VIDEO",
+				title: "Lecture 2 · Processes",
+				content: { durationSeconds: 3600 },
+			},
+			{
+				id: "block-os-slides2",
+				courseId: "course-os",
+				type: "FILE",
+				title: "Lecture 2 slides",
+				content: null,
+			},
+			{
+				id: "block-os-scheduling",
+				courseId: "course-os",
+				type: "VIDEO",
+				title: "Lecture 3 · CPU scheduling",
+				content: { durationSeconds: 2700 },
+			},
+			{
+				id: "block-net-tcp",
+				courseId: "course-networks",
+				type: "FILE",
+				title: "TCP handshake notes",
+				content: null,
+			},
+			{
+				id: "block-db-intro",
+				courseId: "course-databases",
+				type: "VIDEO",
+				title: "Relational model",
+				content: { durationSeconds: 1800 },
+			},
+		],
+		enrollments: [
+			{ userId: alex.id, courseId: "course-os", status: "ACTIVE" },
+			{ userId: alex.id, courseId: "course-networks", status: "LEFT" },
+			{ userId: alex.id, courseId: "course-databases", status: "ACTIVE" },
+			{ userId: mai.id, courseId: "course-networks", status: "ACTIVE" },
+		],
+		references: [
+			{
+				id: "ref-processes-video",
+				pageId: "page-processes",
+				courseBlockId: "block-os-lecture2",
+				timestampSeconds: 272,
+				createdAt: seededAt,
+			},
+			{
+				id: "ref-processes-slides",
+				pageId: "page-processes",
+				courseBlockId: "block-os-slides2",
+				timestampSeconds: null,
+				createdAt: seededAt,
+			},
+			{
+				id: "ref-group-tcp",
+				pageId: "page-group-processes",
+				courseBlockId: "block-net-tcp",
+				timestampSeconds: null,
+				createdAt: seededAt,
+			},
+			{
+				id: "ref-group-relational",
+				pageId: "page-group-processes",
+				courseBlockId: "block-db-intro",
+				timestampSeconds: null,
+				createdAt: seededAt,
+			},
 		],
 	};
 }

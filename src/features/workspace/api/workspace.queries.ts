@@ -1,10 +1,12 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { WorkspaceListFilters } from "../types";
+import type { ReferenceSourceFilters, WorkspaceListFilters } from "../types";
 import {
 	getPage,
 	getWorkspace,
 	listMembers,
 	listPages,
+	listReferenceSources,
+	listReferences,
 	listWorkspaces,
 } from "./workspace.api";
 
@@ -23,6 +25,14 @@ export const workspaceKeys = {
 	members: (workspaceId: string) =>
 		[...workspaceKeys.detail(workspaceId), "members"] as const,
 	page: (pageId: string) => [...workspaceKeys.all, "page", pageId] as const,
+	references: (pageId: string) =>
+		[...workspaceKeys.page(pageId), "references"] as const,
+	referenceSources: (filters: ReferenceSourceFilters) =>
+		[
+			...workspaceKeys.all,
+			"reference-sources",
+			{ type: filters.type, q: filters.q ?? "" },
+		] as const,
 };
 
 export function workspaceListQuery(filters: WorkspaceListFilters = {}) {
@@ -57,5 +67,19 @@ export function pageQuery(pageId: string) {
 	return queryOptions({
 		queryKey: workspaceKeys.page(pageId),
 		queryFn: ({ signal }) => getPage(pageId, signal),
+	});
+}
+
+export function pageReferencesQuery(pageId: string) {
+	return queryOptions({
+		queryKey: workspaceKeys.references(pageId),
+		queryFn: ({ signal }) => listReferences(pageId, signal),
+	});
+}
+
+export function referenceSourcesQuery(filters: ReferenceSourceFilters) {
+	return queryOptions({
+		queryKey: workspaceKeys.referenceSources(filters),
+		queryFn: ({ signal }) => listReferenceSources(filters, signal),
 	});
 }

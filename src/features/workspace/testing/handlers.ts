@@ -2,16 +2,21 @@ import { HttpResponse, http } from "msw";
 import { readAccessTokenClaims } from "@/lib/auth/access-token";
 import type {
 	AddMemberInput,
+	CourseReference,
 	CreatePageInput,
+	CreateReferenceInput,
 	CreateWorkspaceInput,
 	Page,
+	ReferencedBlock,
 	UpdatePageInput,
 	UpdateWorkspaceInput,
 	Workspace,
 	WorkspaceMember,
 } from "../types";
 import {
+	type MockCourseBlockRecord,
 	type MockMembershipRecord,
+	type MockReferenceRecord,
 	type MockWorkspaceRecord,
 	mockDb,
 } from "./mock-db";
@@ -149,6 +154,71 @@ function isDescendant(pageId: string, candidateAncestorId: string): boolean {
 		current = mockDb.pages.find((entry) => entry.id === parentId);
 	}
 	return false;
+}
+
+type BlockAccess = "AVAILABLE" | "LOCKED" | "UNAVAILABLE";
+
+/**
+ * Re-checks course access on every read (FR-RR-05): the viewer needs the
+ * lecturer role on the course or a current enrollment, and the course must be
+ * Published and not suspended.
+ */
+function blockAccess(
+	block: MockCourseBlockRecord,
+	userId: string,
+): BlockAccess {
+	const course = mockDb.courses.find((entry) => entry.id === block.courseId);
+	if (!course) return "UNAVAILABLE";
+	const enrolled = mockDb.enrollments.some(
+		(entry) =>
+			entry.userId === userId &&
+			entry.courseId === course.id &&
+			entry.status !== "LEFT",
+	);
+	if (course.lecturerId !== userId && !enrolled) return "LOCKED";
+	if (course.status !== "PUBLISHED" || course.isSuspended) return "UNAVAILABLE";
+	return "AVAILABLE";
+}
+
+function isReferenceable(block: MockCourseBlockRecord) {
+	return block.type === "FILE" || block.type === "VIDEO";
+}
+
+function toReferencedBlock(block: MockCourseBlockRecord): ReferencedBlock {
+	const course = mockDb.courses.find((entry) => entry.id === block.courseId);
+	return {
+		id: block.id,
+		type: block.type === "VIDEO" ? "VIDEO" : "FILE",
+		title: block.title,
+		courseId: block.courseId,
+		courseTitle: course?.title ?? "",
+		durationSeconds: block.content?.durationSeconds ?? null,
+	};
+}
+
+function toReference(
+	record: MockReferenceRecord,
+	userId: string,
+): CourseReference {
+	const base = {
+		id: record.id,
+		pageId: record.pageId,
+		createdAt: record.createdAt,
+	};
+	const block = mockDb.courseBlocks.find(
+		(entry) => entry.id === record.courseBlockId,
+	);
+	const access = block ? blockAccess(block, userId) : "UNAVAILABLE";
+	if (!block || access !== "AVAILABLE") {
+		// Locked references carry no block metadata (NFR-VAL-02).
+		return { ...base, status: access === "LOCKED" ? "LOCKED" : "UNAVAILABLE" };
+	}
+	return {
+		...base,
+		status: "AVAILABLE",
+		block: toReferencedBlock(block),
+		timestampSeconds: record.timestampSeconds,
+	};
 }
 
 export const workspaceHandlers = [
@@ -441,4 +511,105 @@ export const workspaceHandlers = [
 			return new HttpResponse(null, { status: 204 });
 		},
 	),
+
+	http.get(api("/pages/:pageId/references"), ({ request, params }) => {
+		const access = resolvePage(request, String(params.pageId));
+		if (!access.ok) return access.response;
+		return HttpResponse.json(
+			mockDb.references
+				.filter((reference) => reference.pageId === access.page.id)
+				.map((reference) => toReference(reference, access.userId)),
+		);
+	}),
+
+	http.post(api("/pages/:pageId/references"), async ({ request, params }) => {
+		const access = resolvePage(request, String(params.pageId));
+		if (!access.ok) return access.response;
+		if (access.workspace.archivedAt) {
+			return error(409, "Restore the workspace before editing it");
+		}
+
+		const body = (await request.json()) as Partial<CreateReferenceInput>;
+		const block = mockDb.courseBlocks.find(
+			(entry) => entry.id === body.courseBlockId,
+		);
+		// Blocks the caller cannot access look the same as missing ones.
+		if (
+			!block ||
+			!isReferenceable(block) ||
+			blockAccess(block, access.userId) !== "AVAILABLE"
+		) {
+			return error(404, "Course material is not available");
+		}
+
+		const timestamp = body.timestampSeconds ?? null;
+		if (timestamp !== null) {
+			const duration = block.content?.durationSeconds;
+			if (
+				block.type !== "VIDEO" ||
+				!Number.isInteger(timestamp) ||
+				timestamp < 0 ||
+				(duration !== undefined && timestamp > duration)
+			) {
+				return error(400, "timestampSeconds is outside the video");
+			}
+		}
+
+		const record: MockReferenceRecord = {
+			id: `ref-${crypto.randomUUID()}`,
+			pageId: access.page.id,
+			courseBlockId: block.id,
+			timestampSeconds: timestamp,
+			createdAt: now(),
+		};
+		mockDb.references.push(record);
+		return HttpResponse.json(toReference(record, access.userId), {
+			status: 201,
+		});
+	}),
+
+	http.delete(api("/references/:referenceId"), ({ request, params }) => {
+		const record = mockDb.references.find(
+			(entry) => entry.id === String(params.referenceId),
+		);
+		if (!record) {
+			return currentUserId(request)
+				? error(404, "Reference not found")
+				: error(401, "Unauthorized");
+		}
+		const access = resolvePage(request, record.pageId);
+		if (!access.ok) {
+			return access.response.status === 404
+				? error(404, "Reference not found")
+				: access.response;
+		}
+		if (access.workspace.archivedAt) {
+			return error(409, "Restore the workspace before editing it");
+		}
+		mockDb.references = mockDb.references.filter((entry) => entry !== record);
+		return new HttpResponse(null, { status: 204 });
+	}),
+
+	http.get(api("/reference-sources"), ({ request }) => {
+		const userId = currentUserId(request);
+		if (!userId) return error(401, "Unauthorized");
+
+		const params = new URL(request.url).searchParams;
+		const type = params.get("type");
+		const query = params.get("q")?.trim().toLowerCase() ?? "";
+		return HttpResponse.json(
+			mockDb.courseBlocks
+				.filter(
+					(block) =>
+						block.type === type && blockAccess(block, userId) === "AVAILABLE",
+				)
+				.map(toReferencedBlock)
+				.filter(
+					(block) =>
+						!query ||
+						block.title.toLowerCase().includes(query) ||
+						block.courseTitle.toLowerCase().includes(query),
+				),
+		);
+	}),
 ];

@@ -73,3 +73,56 @@ export interface AddMemberInput {
 export interface WorkspaceListFilters {
 	archived?: boolean;
 }
+
+// Course references (FR-RR, UC-11). Mirrors prisma/models/reference.prisma and
+// the referenced CourseBlock; see docs/workspace-api-contract.md.
+
+export type ReferenceBlockType = "FILE" | "VIDEO";
+
+export interface ReferencedBlock {
+	id: string;
+	type: ReferenceBlockType;
+	title: string;
+	courseId: string;
+	courseTitle: string;
+	/** Video length when known; used to validate timestamps. */
+	durationSeconds: number | null;
+}
+
+/**
+ * A reference resolved for the current viewer. Authorization is re-checked on
+ * every read, so a LOCKED or UNAVAILABLE reference carries no block metadata.
+ */
+export type CourseReference =
+	| {
+			id: string;
+			pageId: string;
+			createdAt: string;
+			status: "AVAILABLE";
+			block: ReferencedBlock;
+			timestampSeconds: number | null;
+	  }
+	| {
+			id: string;
+			pageId: string;
+			createdAt: string;
+			/** The viewer has no active enrollment in the source course. */
+			status: "LOCKED";
+	  }
+	| {
+			id: string;
+			pageId: string;
+			createdAt: string;
+			/** The source course is in Draft or suspended. */
+			status: "UNAVAILABLE";
+	  };
+
+export interface CreateReferenceInput {
+	courseBlockId: string;
+	timestampSeconds?: number | null;
+}
+
+export interface ReferenceSourceFilters {
+	type: ReferenceBlockType;
+	q?: string;
+}

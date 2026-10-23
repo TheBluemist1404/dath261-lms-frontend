@@ -1,10 +1,14 @@
 import { httpClient } from "@/lib/http/client";
 import type {
 	AddMemberInput,
+	CourseReference,
 	CreatePageInput,
+	CreateReferenceInput,
 	CreateWorkspaceInput,
 	Page,
 	PageSummary,
+	ReferencedBlock,
+	ReferenceSourceFilters,
 	UpdatePageInput,
 	UpdateWorkspaceInput,
 	Workspace,
@@ -109,4 +113,38 @@ export async function addMember(workspaceId: string, input: AddMemberInput) {
 
 export async function removeMember(workspaceId: string, userId: string) {
 	await httpClient.delete(`/workspaces/${workspaceId}/members/${userId}`);
+}
+
+export async function listReferences(pageId: string, signal?: AbortSignal) {
+	const { data } = await httpClient.get<CourseReference[]>(
+		`/pages/${pageId}/references`,
+		{ signal },
+	);
+	return data;
+}
+
+export async function createReference(
+	pageId: string,
+	input: CreateReferenceInput,
+) {
+	const { data } = await httpClient.post<CourseReference>(
+		`/pages/${pageId}/references`,
+		input,
+	);
+	return data;
+}
+
+export async function deleteReference(referenceId: string) {
+	await httpClient.delete(`/references/${referenceId}`);
+}
+
+export async function listReferenceSources(
+	filters: ReferenceSourceFilters,
+	signal?: AbortSignal,
+) {
+	const { data } = await httpClient.get<ReferencedBlock[]>(
+		"/reference-sources",
+		{ params: { type: filters.type, q: filters.q || undefined }, signal },
+	);
+	return data;
 }
