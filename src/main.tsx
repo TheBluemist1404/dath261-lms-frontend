@@ -12,19 +12,19 @@ if (!rootElement) {
 	throw new Error("Root element #app was not found");
 }
 
-async function enableApiMocking() {
+async function startApiMocking() {
 	if (!import.meta.env.DEV || import.meta.env.VITE_API_MOCKING !== "true") {
 		return;
 	}
-	const { worker } = await import("@/mocks/browser");
-	await worker.start({ onUnhandledRequest: "bypass" });
+	const { enableApiMocking } = await import("@/mocks/enable-api-mocking");
+	await enableApiMocking();
 }
 
 installAuthInterceptors();
 
 const root = ReactDOM.createRoot(rootElement);
 
-enableApiMocking()
+startApiMocking()
 	.then(restoreSession)
 	.finally(() => {
 		root.render(
