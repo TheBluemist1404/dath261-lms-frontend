@@ -19,6 +19,7 @@ import { Route as LayoutWorkspaceSearchRouteImport } from './routes/~_layout/~wo
 import { Route as LayoutWorkspaceIdIndexRouteImport } from './routes/~_layout/~workspace/~$id/~index'
 import { Route as LayoutWorkspaceIdMembersRouteImport } from './routes/~_layout/~workspace/~$id/~members'
 import { Route as LayoutWorkspaceIdSettingsRouteImport } from './routes/~_layout/~workspace/~$id/~settings'
+import { Route as LayoutWorkspaceIdDiscussionPageIdRouteImport } from './routes/~_layout/~workspace/~$id/~discussion/~$pageId'
 import { Route as LayoutWorkspaceIdPagesPageIdRouteImport } from './routes/~_layout/~workspace/~$id/~pages/~$pageId'
 
 const LayoutRoute = LayoutRouteImport.update({
@@ -72,6 +73,12 @@ const LayoutWorkspaceIdSettingsRoute =
     path: '/$id/settings',
     getParentRoute: () => LayoutWorkspaceRoute,
   } as any)
+const LayoutWorkspaceIdDiscussionPageIdRoute =
+  LayoutWorkspaceIdDiscussionPageIdRouteImport.update({
+    id: '/$id/discussion/$pageId',
+    path: '/$id/discussion/$pageId',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
 const LayoutWorkspaceIdPagesPageIdRoute =
   LayoutWorkspaceIdPagesPageIdRouteImport.update({
     id: '/$id/pages/$pageId',
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
   '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
   '/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRoutesByTo {
@@ -100,6 +108,7 @@ export interface FileRoutesByTo {
   '/workspace/$id': typeof LayoutWorkspaceIdIndexRoute
   '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
   '/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRoutesById {
@@ -114,6 +123,7 @@ export interface FileRoutesById {
   '/_layout/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
   '/_layout/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/_layout/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/_layout/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
   '/_layout/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRouteTypes {
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/workspace/$id/'
     | '/workspace/$id/members'
     | '/workspace/$id/settings'
+    | '/workspace/$id/discussion/$pageId'
     | '/workspace/$id/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/workspace/$id'
     | '/workspace/$id/members'
     | '/workspace/$id/settings'
+    | '/workspace/$id/discussion/$pageId'
     | '/workspace/$id/pages/$pageId'
   id:
     | '__root__'
@@ -152,6 +164,7 @@ export interface FileRouteTypes {
     | '/_layout/workspace/$id/'
     | '/_layout/workspace/$id/members'
     | '/_layout/workspace/$id/settings'
+    | '/_layout/workspace/$id/discussion/$pageId'
     | '/_layout/workspace/$id/pages/$pageId'
   fileRoutesById: FileRoutesById
 }
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutWorkspaceIdSettingsRouteImport
       parentRoute: typeof LayoutWorkspaceRoute
     }
+    '/_layout/workspace/$id/discussion/$pageId': {
+      id: '/_layout/workspace/$id/discussion/$pageId'
+      path: '/$id/discussion/$pageId'
+      fullPath: '/workspace/$id/discussion/$pageId'
+      preLoaderRoute: typeof LayoutWorkspaceIdDiscussionPageIdRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
     '/_layout/workspace/$id/pages/$pageId': {
       id: '/_layout/workspace/$id/pages/$pageId'
       path: '/$id/pages/$pageId'
@@ -249,6 +269,7 @@ interface LayoutWorkspaceRouteChildren {
   LayoutWorkspaceIdIndexRoute: typeof LayoutWorkspaceIdIndexRoute
   LayoutWorkspaceIdMembersRoute: typeof LayoutWorkspaceIdMembersRoute
   LayoutWorkspaceIdSettingsRoute: typeof LayoutWorkspaceIdSettingsRoute
+  LayoutWorkspaceIdDiscussionPageIdRoute: typeof LayoutWorkspaceIdDiscussionPageIdRoute
   LayoutWorkspaceIdPagesPageIdRoute: typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 
@@ -260,6 +281,8 @@ const LayoutWorkspaceRouteChildren: LayoutWorkspaceRouteChildren = {
   LayoutWorkspaceIdIndexRoute: LayoutWorkspaceIdIndexRoute,
   LayoutWorkspaceIdMembersRoute: LayoutWorkspaceIdMembersRoute,
   LayoutWorkspaceIdSettingsRoute: LayoutWorkspaceIdSettingsRoute,
+  LayoutWorkspaceIdDiscussionPageIdRoute:
+    LayoutWorkspaceIdDiscussionPageIdRoute,
   LayoutWorkspaceIdPagesPageIdRoute: LayoutWorkspaceIdPagesPageIdRoute,
 }
 

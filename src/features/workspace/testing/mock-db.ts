@@ -56,6 +56,25 @@ export interface MockReferenceRecord {
 	createdAt: string;
 }
 
+export interface MockMessageRecord {
+	id: string;
+	pageId: string;
+	senderId: string;
+	content: string;
+	createdAt: string;
+}
+
+export interface MockReportRecord {
+	id: string;
+	reporterId: string;
+	targetType: "MESSAGE";
+	targetId: string;
+	reason: string;
+	description: string | null;
+	status: "PENDING";
+	createdAt: string;
+}
+
 export interface MockDb {
 	users: WorkspaceMemberUser[];
 	defaultWorkspaceByUser: Record<string, string>;
@@ -66,6 +85,8 @@ export interface MockDb {
 	courseBlocks: MockCourseBlockRecord[];
 	enrollments: MockEnrollmentRecord[];
 	references: MockReferenceRecord[];
+	messages: MockMessageRecord[];
+	reports: MockReportRecord[];
 }
 
 export const mockUsers = {
@@ -294,6 +315,16 @@ export function createSeedDb(): MockDb {
 			{ userId: alex.id, courseId: "course-databases", status: "ACTIVE" },
 			{ userId: mai.id, courseId: "course-networks", status: "ACTIVE" },
 		],
+		messages: [
+			{
+				id: "msg-mai-1",
+				pageId: "page-group-processes",
+				senderId: mai.id,
+				content: "The scheduling example helped me understand this.",
+				createdAt: "2026-10-22T08:56:00.000Z",
+			},
+		],
+		reports: [],
 		references: [
 			{
 				id: "ref-processes-video",

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getApiErrorStatus } from "@/lib/http/errors";
@@ -171,19 +172,30 @@ function PageEditor({
 					<h2 className="font-heading text-3xl font-bold tracking-tight [overflow-wrap:anywhere]">
 						{summary.title}
 					</h2>
-					{canEdit && (
-						<div className="flex flex-wrap gap-2">
-							<Button variant="ghost" onClick={() => setDialog("subpage")}>
-								New subpage
-							</Button>
-							<Button variant="ghost" onClick={() => setDialog("rename")}>
-								Rename
-							</Button>
-							<Button variant="ghost" onClick={() => setDialog("move")}>
-								Move
-							</Button>
-						</div>
-					)}
+					<div className="flex flex-wrap gap-2">
+						{collaborative && (
+							<Link
+								to="/workspace/$id/discussion/$pageId"
+								params={{ id: workspace.id, pageId: page.id }}
+								className="inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-semibold text-primary hover:bg-primary-subtle"
+							>
+								Discussion
+							</Link>
+						)}
+						{canEdit && (
+							<>
+								<Button variant="ghost" onClick={() => setDialog("subpage")}>
+									New subpage
+								</Button>
+								<Button variant="ghost" onClick={() => setDialog("rename")}>
+									Rename
+								</Button>
+								<Button variant="ghost" onClick={() => setDialog("move")}>
+									Move
+								</Button>
+							</>
+						)}
+					</div>
 				</div>
 			</div>
 

@@ -2,14 +2,18 @@ import { httpClient } from "@/lib/http/client";
 import type {
 	AddMemberInput,
 	CourseReference,
+	CreateMessageInput,
 	CreatePageInput,
 	CreateReferenceInput,
+	CreateReportInput,
 	CreateWorkspaceInput,
 	Page,
 	PageHit,
+	PageMessage,
 	PageSummary,
 	ReferencedBlock,
 	ReferenceSourceFilters,
+	Report,
 	UpdatePageInput,
 	UpdateWorkspaceInput,
 	Workspace,
@@ -163,5 +167,26 @@ export async function listRecentPages(limit: number, signal?: AbortSignal) {
 		params: { limit },
 		signal,
 	});
+	return data;
+}
+
+export async function listMessages(pageId: string, signal?: AbortSignal) {
+	const { data } = await httpClient.get<PageMessage[]>(
+		`/pages/${pageId}/messages`,
+		{ signal },
+	);
+	return data;
+}
+
+export async function sendMessage(pageId: string, input: CreateMessageInput) {
+	const { data } = await httpClient.post<PageMessage>(
+		`/pages/${pageId}/messages`,
+		input,
+	);
+	return data;
+}
+
+export async function createReport(input: CreateReportInput) {
+	const { data } = await httpClient.post<Report>("/reports", input);
 	return data;
 }

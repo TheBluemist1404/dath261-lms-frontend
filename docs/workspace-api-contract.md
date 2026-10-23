@@ -98,6 +98,23 @@ match in the page content, or `null`).
 Content text is every string `text` field in the editor JSON, which covers both
 the plain-text stand-in and Lexical's serialized state.
 
+## Page discussion and reports (frontend only, not built on the backend)
+
+Proposed for FR-CW-13 and FR-AD-02, following `prisma/models/collaboration.prisma`
+(`Message`) and `moderation.prisma` (`Report`). Only the MSW mock implements
+these so far. Live delivery over Socket.IO can come later by pushing new messages
+into the `messages` query cache; the REST endpoints stay the source of history.
+
+`PageMessage`: `id`, `pageId`, `sender { id, firstName, lastName }`, `content`,
+`createdAt`. Messages belong to the page; a passage the user selected in the
+editor is passed to the discussion screen as `?passage=` for context only.
+
+| Method | Path | Body | Success | Rules |
+| --- | --- | --- | --- | --- |
+| GET | `/pages/:id/messages` | | `200 PageMessage[]` | Members of the page's workspace, oldest first. `PERSONAL` returns `409`. |
+| POST | `/pages/:id/messages` | `{ content }` | `201 PageMessage` | 1 to 2000 characters after trimming. `PERSONAL` or archived returns `409`. |
+| POST | `/reports` | `{ targetType: "MESSAGE", targetId, reason, description? }` | `201 { id, status }` | Reporter must be able to see the message (`404` otherwise); reporting your own message returns `400`. `status` starts `PENDING`. |
+
 ## Not yet covered
 
 Page archive/restore (no field in the model), copying

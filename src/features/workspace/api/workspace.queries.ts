@@ -4,6 +4,7 @@ import {
 	getPage,
 	getWorkspace,
 	listMembers,
+	listMessages,
 	listPages,
 	listRecentPages,
 	listReferenceSources,
@@ -27,6 +28,8 @@ export const workspaceKeys = {
 	members: (workspaceId: string) =>
 		[...workspaceKeys.detail(workspaceId), "members"] as const,
 	page: (pageId: string) => [...workspaceKeys.all, "page", pageId] as const,
+	messages: (pageId: string) =>
+		[...workspaceKeys.page(pageId), "messages"] as const,
 	references: (pageId: string) =>
 		[...workspaceKeys.page(pageId), "references"] as const,
 	search: (query: string) => [...workspaceKeys.all, "search", query] as const,
@@ -103,5 +106,12 @@ export function recentPagesQuery(limit: number) {
 	return queryOptions({
 		queryKey: workspaceKeys.recent(limit),
 		queryFn: ({ signal }) => listRecentPages(limit, signal),
+	});
+}
+
+export function pageMessagesQuery(pageId: string) {
+	return queryOptions({
+		queryKey: workspaceKeys.messages(pageId),
+		queryFn: ({ signal }) => listMessages(pageId, signal),
 	});
 }

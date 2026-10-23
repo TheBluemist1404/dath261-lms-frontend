@@ -3,11 +3,14 @@ import { readAccessTokenClaims } from "@/lib/auth/access-token";
 import type {
 	AddMemberInput,
 	CourseReference,
+	CreateMessageInput,
 	CreatePageInput,
 	CreateReferenceInput,
+	CreateReportInput,
 	CreateWorkspaceInput,
 	Page,
 	PageHit,
+	PageMessage,
 	ReferencedBlock,
 	UpdatePageInput,
 	UpdateWorkspaceInput,
@@ -17,6 +20,7 @@ import type {
 import {
 	type MockCourseBlockRecord,
 	type MockMembershipRecord,
+	type MockMessageRecord,
 	type MockReferenceRecord,
 	type MockWorkspaceRecord,
 	mockDb,
@@ -277,6 +281,21 @@ function accessiblePages(userId: string) {
 		};
 		return [{ hit, content: page.content }];
 	});
+}
+
+function toMessage(record: MockMessageRecord): PageMessage {
+	const sender = mockDb.users.find((user) => user.id === record.senderId);
+	return {
+		id: record.id,
+		pageId: record.pageId,
+		sender: {
+			id: record.senderId,
+			firstName: sender?.firstName ?? null,
+			lastName: sender?.lastName ?? null,
+		},
+		content: record.content,
+		createdAt: record.createdAt,
+	};
 }
 
 const byUpdatedAt = (a: PageHit, b: PageHit) =>
@@ -722,6 +741,79 @@ export const workspaceHandlers = [
 				.map(({ hit }) => hit)
 				.sort(byUpdatedAt)
 				.slice(0, limit),
+		);
+	}),
+
+	http.get(api("/pages/:pageId/messages"), ({ request, params }) => {
+		const access = resolvePage(request, String(params.pageId));
+		if (!access.ok) return access.response;
+		if (access.workspace.type === "PERSONAL") {
+			return error(409, "The personal workspace has no discussion");
+		}
+		return HttpResponse.json(
+			mockDb.messages
+				.filter((message) => message.pageId === access.page.id)
+				.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+				.map(toMessage),
+		);
+	}),
+
+	http.post(api("/pages/:pageId/messages"), async ({ request, params }) => {
+		const access = resolvePage(request, String(params.pageId));
+		if (!access.ok) return access.response;
+		if (access.workspace.type === "PERSONAL") {
+			return error(409, "The personal workspace has no discussion");
+		}
+		if (access.workspace.archivedAt) {
+			return error(409, "Restore the workspace before editing it");
+		}
+		const body = (await request.json()) as Partial<CreateMessageInput>;
+		if (!validName(body.content, 2000)) {
+			return error(400, "content must be 1 to 2000 characters");
+		}
+		const record: MockMessageRecord = {
+			id: `msg-${crypto.randomUUID()}`,
+			pageId: access.page.id,
+			senderId: access.userId,
+			content: body.content.trim(),
+			createdAt: now(),
+		};
+		mockDb.messages.push(record);
+		return HttpResponse.json(toMessage(record), { status: 201 });
+	}),
+
+	http.post(api("/reports"), async ({ request }) => {
+		const userId = currentUserId(request);
+		if (!userId) return error(401, "Unauthorized");
+		const body = (await request.json()) as Partial<CreateReportInput>;
+		if (body.targetType !== "MESSAGE" || !validName(body.reason, 100)) {
+			return error(400, "targetType and reason are required");
+		}
+		const message = mockDb.messages.find((entry) => entry.id === body.targetId);
+		const page = message
+			? mockDb.pages.find((entry) => entry.id === message.pageId)
+			: undefined;
+		// Only members who can see the message can report it.
+		if (!message || !page || !membershipOf(page.workspaceId, userId)) {
+			return error(404, "Message not found");
+		}
+		if (message.senderId === userId) {
+			return error(400, "You cannot report your own message");
+		}
+		const report = {
+			id: `report-${crypto.randomUUID()}`,
+			reporterId: userId,
+			targetType: "MESSAGE" as const,
+			targetId: message.id,
+			reason: body.reason.trim(),
+			description: body.description?.trim() || null,
+			status: "PENDING" as const,
+			createdAt: now(),
+		};
+		mockDb.reports.push(report);
+		return HttpResponse.json(
+			{ id: report.id, status: report.status },
+			{ status: 201 },
 		);
 	}),
 ];

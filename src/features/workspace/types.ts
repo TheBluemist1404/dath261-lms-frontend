@@ -137,3 +137,30 @@ export interface PageHit {
 	/** Text around the first content match; null for title-only matches. */
 	snippet: string | null;
 }
+
+// Page discussion (FR-CW-13) and reports (FR-AD-02). Mirrors the backend
+// Message and Report models.
+
+export interface PageMessage {
+	id: string;
+	pageId: string;
+	sender: Pick<WorkspaceMemberUser, "id" | "firstName" | "lastName">;
+	content: string;
+	createdAt: string;
+}
+
+export interface CreateMessageInput {
+	content: string;
+}
+
+export interface CreateReportInput {
+	targetType: "MESSAGE";
+	targetId: string;
+	reason: string;
+	description?: string;
+}
+
+export interface Report {
+	id: string;
+	status: "PENDING" | "DISMISSED" | "ACTION_TAKEN";
+}
