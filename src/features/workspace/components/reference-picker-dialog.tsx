@@ -6,7 +6,11 @@ import { getApiErrorMessage } from "@/lib/http/errors";
 import { referenceSourcesQuery } from "../api/workspace.queries";
 import { useCreateReference } from "../hooks/use-reference-mutations";
 import { formatTimestamp, parseTimestamp } from "../timestamp";
-import type { ReferenceBlockType, ReferencedBlock } from "../types";
+import type {
+	CourseReference,
+	ReferenceBlockType,
+	ReferencedBlock,
+} from "../types";
 
 const fieldClass =
 	"mt-2 min-h-11 w-full rounded-lg border border-border bg-white px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-invalid:border-error";
@@ -22,12 +26,15 @@ export function ReferencePickerDialog({
 	onClose,
 	pageId,
 	destination,
+	onCreated,
 }: {
 	open: boolean;
 	onClose: () => void;
 	pageId: string;
 	/** "Workspace / Page" shown so the user knows where the reference lands. */
 	destination: string;
+	/** Called with the new reference before the dialog closes. */
+	onCreated?: (reference: CourseReference) => void;
 }) {
 	return (
 		<Dialog
@@ -41,6 +48,7 @@ export function ReferencePickerDialog({
 					pageId={pageId}
 					destination={destination}
 					onDone={onClose}
+					onCreated={onCreated}
 				/>
 			)}
 		</Dialog>
@@ -51,10 +59,12 @@ function PickerForm({
 	pageId,
 	destination,
 	onDone,
+	onCreated,
 }: {
 	pageId: string;
 	destination: string;
 	onDone: () => void;
+	onCreated?: (reference: CourseReference) => void;
 }) {
 	const searchId = useId();
 	const timestampId = useId();
@@ -104,7 +114,12 @@ function PickerForm({
 		setTimestampError(null);
 		create.mutate(
 			{ courseBlockId: selected.id, timestampSeconds },
-			{ onSuccess: onDone },
+			{
+				onSuccess: (reference) => {
+					onCreated?.(reference);
+					onDone();
+				},
+			},
 		);
 	}
 

@@ -2,11 +2,14 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Awareness } from "y-protocols/awareness";
 import * as Y from "yjs";
+import { renderWithProviders } from "@/test/render";
+import { workspaceKeys } from "../api/workspace.queries";
 import type { SharedDocument } from "../collaboration/collaboration";
 import {
 	DOCUMENT_FRAGMENT,
 	seedSharedDocument,
 } from "../collaboration/shared-document";
+import type { CourseReference } from "../types";
 import { BlockEditor } from "./block-editor";
 
 // The setup file swaps this module for a textarea double; cover the real one here.
@@ -43,6 +46,8 @@ describe("BlockEditor", () => {
 		render(
 			<BlockEditor
 				initialContent={{ type: "plain-text", text: "First idea\nSecond idea" }}
+				pageId="page-1"
+				destination="Group / Page"
 				readOnly={false}
 				onChange={() => {}}
 			/>,
@@ -67,6 +72,8 @@ describe("BlockEditor", () => {
 						{ type: "bulletListItem", content: "Round robin" },
 					],
 				}}
+				pageId="page-1"
+				destination="Group / Page"
 				readOnly
 				onChange={() => {}}
 			/>,
@@ -86,6 +93,8 @@ describe("BlockEditor", () => {
 					type: "plain-text",
 					text: "Ignored for shared pages",
 				}}
+				pageId="page-1"
+				destination="Group / Page"
 				readOnly={false}
 				onChange={() => {}}
 				shared={shared}
@@ -121,6 +130,8 @@ describe("BlockEditor", () => {
 		render(
 			<BlockEditor
 				initialContent={null}
+				pageId="page-1"
+				destination="Group / Page"
 				readOnly
 				onChange={() => {}}
 				shared={sharedDocument("Archived notes")}
@@ -130,5 +141,55 @@ describe("BlockEditor", () => {
 		const editor = await editorElement();
 		expect(editor).toHaveAttribute("contenteditable", "false");
 		expect(editor).toHaveTextContent("Archived notes");
+	});
+
+	it("shows course references placed in the page text", async () => {
+		const references: CourseReference[] = [
+			{
+				id: "ref-1",
+				pageId: "page-1",
+				createdAt: "2026-10-01T00:00:00.000Z",
+				status: "AVAILABLE",
+				timestampSeconds: 95,
+				block: {
+					id: "block-1",
+					type: "VIDEO",
+					title: "Lecture 3: Scheduling",
+					courseId: "course-1",
+					courseTitle: "Operating Systems",
+					durationSeconds: 3600,
+				},
+			},
+			{
+				id: "ref-2",
+				pageId: "page-1",
+				createdAt: "2026-10-01T00:00:00.000Z",
+				status: "LOCKED",
+			},
+		];
+		const { queryClient } = renderWithProviders(
+			<BlockEditor
+				initialContent={{
+					type: "blocknote",
+					blocks: [
+						{ type: "paragraph", content: "Before" },
+						{ type: "courseReference", props: { referenceId: "ref-1" } },
+						{ type: "courseReference", props: { referenceId: "ref-2" } },
+					],
+				}}
+				pageId="page-1"
+				destination="Group / Page"
+				readOnly
+				onChange={() => {}}
+			/>,
+		);
+		queryClient.setQueryData(workspaceKeys.references("page-1"), references);
+
+		const editor = await editorElement();
+		await waitFor(() =>
+			expect(editor).toHaveTextContent("Lecture 3: Scheduling"),
+		);
+		expect(editor).toHaveTextContent("Starts at 1:35");
+		expect(editor).toHaveTextContent("Protected reference");
 	});
 });

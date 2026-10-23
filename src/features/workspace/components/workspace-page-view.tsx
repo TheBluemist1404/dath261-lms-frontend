@@ -230,6 +230,7 @@ function PageEditor({
 			) : (
 				<EditorSlot
 					pageId={page.id}
+					destination={`${workspace.name} / ${summary.title}`}
 					initialContent={page.content}
 					readOnly={!editable}
 					onChange={collaborative ? ignoreChange : autosave.queue}

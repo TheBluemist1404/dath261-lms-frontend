@@ -70,6 +70,11 @@ enrollment that is not `LEFT`, and the course is `PUBLISHED` and not
 suspended. Access is checked again on every read, so the same reference can
 resolve differently for different members of a workspace.
 
+The editor can also place a reference in the page text as a
+`{ type: "courseReference", props: { referenceId } }` block. The block holds
+only the id; the card is resolved from `GET /pages/:id/references`, so access
+is still checked per viewer and no block metadata is stored in page content.
+
 `CourseReference`: `id`, `pageId`, `createdAt`, and `status`:
 
 - `AVAILABLE` adds `block { id, type, title, courseId, courseTitle,

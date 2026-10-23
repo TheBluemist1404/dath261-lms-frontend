@@ -8,6 +8,8 @@ import type { SharedDocument } from "../collaboration/collaboration";
  */
 export interface EditorSlotProps {
 	pageId: string;
+	/** "Workspace / Page", shown when inserting a course reference. */
+	destination: string;
 	initialContent: unknown;
 	readOnly: boolean;
 	onChange: (content: unknown) => void;
@@ -30,7 +32,7 @@ export function EditorSlot({ pageId, ...props }: EditorSlotProps) {
 				</output>
 			}
 		>
-			<BlockEditor key={pageId} {...props} />
+			<BlockEditor key={pageId} pageId={pageId} {...props} />
 		</Suspense>
 	);
 }
