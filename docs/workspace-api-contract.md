@@ -163,7 +163,9 @@ calling refresh. There is no current-user endpoint, so the user id and role
 come from the token's `sub` and `role` claims. The Vite dev server proxies
 `/api` to `VITE_API_PROXY_TARGET` (default `http://localhost:3001`) so the
 SameSite=Strict cookie stays same-site. Set `VITE_API_MOCKING=true` to serve
-the API from MSW instead.
+the API from MSW instead. In production, `vercel.json` rewrites `/api/*` to the
+Render backend for the same reason, and every other path to `index.html` for
+client-side routes.
 
 To try the UI against the real backend, run the backend with a database and
 `pnpm db:seed:dev` there (it prints the seeded accounts), then start the
