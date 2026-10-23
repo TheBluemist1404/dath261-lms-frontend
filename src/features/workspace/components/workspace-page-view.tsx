@@ -2,10 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getApiErrorStatus } from "@/lib/http/errors";
-import { pageQuery } from "../api/workspace.queries";
+import { useAuthStore } from "@/stores/auth.store";
+import { pageQuery, workspaceMembersQuery } from "../api/workspace.queries";
+import { useCollaboration } from "../collaboration/collaboration";
 import { usePageAutosave } from "../hooks/use-page-autosave";
 import { getAncestors } from "../page-tree";
-import type { Page, PageSummary } from "../types";
+import type { Page, PageSummary, Workspace } from "../types";
+import {
+	AccessEnded,
+	ConnectionBanner,
+	PresenceIndicator,
+} from "./collaboration-status";
 import { CourseReferences } from "./course-references";
 import { EditorSlot } from "./editor-slot";
 import {
@@ -32,7 +39,7 @@ export function WorkspacePageView({
 				<PageLoader
 					key={pageId}
 					pageId={pageId}
-					workspaceName={workspace.name}
+					workspace={workspace}
 					pages={pages}
 					canEdit={canEdit}
 					autosaveDelayMs={autosaveDelayMs}
@@ -44,13 +51,13 @@ export function WorkspacePageView({
 
 function PageLoader({
 	pageId,
-	workspaceName,
+	workspace,
 	pages,
 	canEdit,
 	autosaveDelayMs,
 }: {
 	pageId: string;
-	workspaceName: string;
+	workspace: Workspace;
 	pages: PageSummary[];
 	canEdit: boolean;
 	autosaveDelayMs?: number;
@@ -81,7 +88,7 @@ function PageLoader({
 	return (
 		<PageEditor
 			page={page.data}
-			workspaceName={workspaceName}
+			workspace={workspace}
 			pages={pages}
 			canEdit={canEdit}
 			autosaveDelayMs={autosaveDelayMs}
@@ -93,13 +100,13 @@ type OpenDialog = "rename" | "move" | "subpage" | null;
 
 function PageEditor({
 	page,
-	workspaceName,
+	workspace,
 	pages,
 	canEdit,
 	autosaveDelayMs,
 }: {
 	page: Page;
-	workspaceName: string;
+	workspace: Workspace;
 	pages: PageSummary[];
 	canEdit: boolean;
 	autosaveDelayMs?: number;
@@ -111,12 +118,47 @@ function PageEditor({
 	const summary = pages.find((entry) => entry.id === page.id) ?? page;
 	const close = () => setDialog(null);
 
+	// Shared pages go through the real-time layer; personal pages never do.
+	const userId = useAuthStore((state) => state.user?.id);
+	const collaborative = workspace.type === "COLLABORATIVE";
+	const members = useQuery({
+		...workspaceMembersQuery(workspace.id),
+		enabled: collaborative,
+	});
+	const collaboration = useCollaboration(
+		collaborative && userId && members.data
+			? { pageId: page.id, userId, members: members.data }
+			: null,
+	);
+	const paused = collaborative && collaboration.status !== "connected";
+	const editable = canEdit && !paused;
+
+	if (collaborative && collaboration.status === "revoked") {
+		return <AccessEnded />;
+	}
+
 	return (
 		<article className="space-y-5 rounded-xl border border-border bg-white p-6">
-			{canEdit && (
-				<SaveStatusIndicator
-					status={autosave.status}
-					onRetry={autosave.retry}
+			<div className="flex flex-wrap items-start justify-between gap-3">
+				{canEdit && (
+					<SaveStatusIndicator
+						status={autosave.status}
+						onRetry={autosave.retry}
+					/>
+				)}
+				{collaborative && userId && members.data && (
+					<PresenceIndicator
+						status={collaboration.status}
+						members={members.data}
+						currentUserId={userId}
+						presentUserIds={collaboration.presentUserIds}
+					/>
+				)}
+			</div>
+			{collaborative && canEdit && (
+				<ConnectionBanner
+					status={collaboration.status}
+					onRetry={collaboration.retry}
 				/>
 			)}
 			<div className="space-y-2">
@@ -148,13 +190,13 @@ function PageEditor({
 			<EditorSlot
 				pageId={page.id}
 				initialContent={page.content}
-				readOnly={!canEdit}
+				readOnly={!editable}
 				onChange={autosave.queue}
 			/>
 
 			<CourseReferences
 				pageId={page.id}
-				destination={`${workspaceName} / ${summary.title}`}
+				destination={`${workspace.name} / ${summary.title}`}
 				canEdit={canEdit}
 			/>
 
