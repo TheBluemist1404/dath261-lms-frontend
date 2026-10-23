@@ -102,12 +102,11 @@ match in the page content, or `null`).
 Content text is every string `text` field in the editor JSON, which covers
 BlockNote blocks and the plain-text snapshots of shared pages.
 
-## Page discussion and reports (frontend only, not built on the backend)
+## Page discussion and reports
 
-Proposed for FR-CW-13 and FR-AD-02, following `prisma/models/collaboration.prisma`
-(`Message`) and `moderation.prisma` (`Report`). Only the MSW mock implements
-these so far. Live delivery over Socket.IO can come later by pushing new messages
-into the `messages` query cache; the REST endpoints stay the source of history.
+For FR-CW-13 and FR-AD-02, on the backend's `Message` and `Report` models
+(`src/modules/discussion`). The REST endpoints are the source of history; new
+messages are also pushed live (see Real-time collaboration below).
 
 `PageMessage`: `id`, `pageId`, `sender { id, firstName, lastName }`, `content`,
 `createdAt`. Messages belong to the page; a passage the user selected in the
@@ -138,6 +137,11 @@ proxies it with the rest of `/api`; `VITE_COLLAB_URL` overrides the address.
   token and reconnect), `not-found`, `not-collaborative`, `access-revoked`
   (member removed) and `page-deleted` (access ended), and `workspace-changed`
   (archived or restored: reconnect to get the new scope).
+- Discussion updates use the same server: a client subscribes to the document
+  `discussion:<pageId>` (same membership rules, always read-only, nothing
+  stored) and receives `{ "type": "message.created", "message": PageMessage }`
+  as a stateless message for every post, its own included, so clients
+  de-duplicate by `id`.
 - Presence uses Yjs awareness: each client publishes
   `user { id, name, color }`, which also labels its cursor.
 - Personal pages do not use this server; they save `content` through

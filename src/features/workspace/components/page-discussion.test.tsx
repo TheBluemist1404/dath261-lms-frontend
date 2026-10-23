@@ -3,13 +3,18 @@ import {
 	createRouter,
 	RouterProvider,
 } from "@tanstack/react-router";
-import { screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
 import { signInForTest } from "@/test/auth";
 import { server } from "@/test/mocks/server";
 import { createTestQueryClient, renderWithProviders } from "@/test/render";
+import {
+	type DiscussionListeners,
+	resetDiscussionChannel,
+	setDiscussionChannel,
+} from "../collaboration/discussion-channel";
 import { workspaceHandlers } from "../testing/handlers";
 import { mockDb, mockUsers, resetMockDb } from "../testing/mock-db";
 
@@ -34,9 +39,99 @@ beforeEach(() => {
 	server.use(...workspaceHandlers);
 });
 
-afterEach(() => signOut());
+afterEach(() => {
+	signOut();
+	resetDiscussionChannel();
+});
+
+/** Captures the live channel the discussion subscribes to. */
+function fakeChannel() {
+	const subscriptions: { pageId: string; listeners: DiscussionListeners }[] =
+		[];
+	setDiscussionChannel((pageId, listeners) => {
+		const entry = { pageId, listeners };
+		subscriptions.push(entry);
+		return () => subscriptions.splice(subscriptions.indexOf(entry), 1);
+	});
+	return subscriptions;
+}
+
+const liveMessage = {
+	id: "msg-live-1",
+	pageId: "page-group-processes",
+	sender: { id: mockUsers.mai.id, firstName: "Mai", lastName: "Tran" },
+	content: "Just joined, reading the notes now.",
+	createdAt: new Date().toISOString(),
+};
 
 describe("Page discussion", () => {
+	it("shows messages other members post while it is open", async () => {
+		const subscriptions = fakeChannel();
+		renderAt(discussion);
+		const messages = await screen.findByRole("list", { name: "Messages" });
+		expect(subscriptions.map((entry) => entry.pageId)).toEqual([
+			"page-group-processes",
+		]);
+
+		act(() => subscriptions[0].listeners.onMessage(liveMessage));
+		act(() => subscriptions[0].listeners.onMessage(liveMessage));
+
+		expect(
+			await within(messages).findByText("Just joined, reading the notes now."),
+		).toBeInTheDocument();
+		expect(
+			within(messages).getAllByText("Just joined, reading the notes now."),
+		).toHaveLength(1);
+	});
+
+	it("lists an own message once when its broadcast arrives too", async () => {
+		const subscriptions = fakeChannel();
+		const { user } = renderAt(discussion);
+		await user.type(await screen.findByLabelText("Message"), "Own post");
+		await user.click(screen.getByRole("button", { name: "Send message" }));
+		const messages = screen.getByRole("list", { name: "Messages" });
+		await within(messages).findByText("Own post");
+
+		const sent = mockDb.messages.find((entry) => entry.content === "Own post");
+		act(() =>
+			subscriptions[0].listeners.onMessage({
+				id: sent?.id ?? "",
+				pageId: "page-group-processes",
+				sender: { id: mockUsers.alex.id, firstName: "Alex", lastName: "Le" },
+				content: "Own post",
+				createdAt: sent?.createdAt ?? "",
+			}),
+		);
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		expect(within(messages).getAllByText("Own post")).toHaveLength(1);
+	});
+
+	it("shows access ended when the server ends the subscription", async () => {
+		const subscriptions = fakeChannel();
+		renderAt(discussion);
+		await screen.findByRole("list", { name: "Messages" });
+
+		mockDb.memberships = mockDb.memberships.filter(
+			(entry) =>
+				!(
+					entry.workspaceId === "ws-systems-study-group" &&
+					entry.userId === mockUsers.alex.id
+				),
+		);
+		act(() => subscriptions[0].listeners.onAccessEnded());
+
+		expect(
+			await screen.findByRole("heading", { name: "Access revoked" }),
+		).toBeInTheDocument();
+	});
+
+	it("does not subscribe on personal pages", async () => {
+		const subscriptions = fakeChannel();
+		renderAt("/workspace/ws-personal-alex/discussion/page-processes");
+		expect((await screen.findAllByRole("heading")).length).toBeGreaterThan(0);
+		expect(subscriptions).toHaveLength(0);
+	});
+
 	it("shows the page context, passage and existing messages", async () => {
 		renderAt(`${discussion}?passage=A%20process%20can%20be%20ready`);
 

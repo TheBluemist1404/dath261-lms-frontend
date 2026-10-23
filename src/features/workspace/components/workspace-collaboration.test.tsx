@@ -140,7 +140,9 @@ describe("Collaboration UI", () => {
 
 		act(() => connection.set({ status: "revoked" }));
 		expect(
-			screen.getByRole("heading", { name: "Workspace access has ended." }),
+			await screen.findByRole("heading", {
+				name: "Workspace access has ended.",
+			}),
 		).toBeInTheDocument();
 		expect(
 			screen.queryByRole("textbox", { name: "Page content" }),

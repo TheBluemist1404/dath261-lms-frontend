@@ -2,6 +2,7 @@ import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 import { getAccessToken } from "@/lib/auth/access-token";
 import { refreshAccessToken } from "@/lib/auth/session";
+import type { PageMessage } from "../types";
 import {
 	type CollaborationAdapter,
 	type CollaborationState,
@@ -9,6 +10,7 @@ import {
 	collaborationUser,
 	type SharedDocument,
 } from "./collaboration";
+import type { DiscussionChannel } from "./discussion-channel";
 import { DOCUMENT_FRAGMENT } from "./shared-document";
 
 /** How long a dropped connection counts as "reconnecting" before it is "disconnected". */
@@ -196,5 +198,58 @@ export const hocuspocusAdapter: CollaborationAdapter = ({
 			doc.destroy();
 		},
 		shared,
+	};
+};
+
+interface MessageCreatedEvent {
+	type?: string;
+	message?: PageMessage;
+}
+
+/**
+ * Receives new discussion messages from the server's `discussion:<pageId>`
+ * channel. It carries no document; messages are still posted over REST.
+ */
+export const hocuspocusDiscussionChannel: DiscussionChannel = (
+	pageId,
+	{ onMessage, onAccessEnded },
+) => {
+	let refreshedToken = false;
+	const provider = new HocuspocusProvider({
+		url: collaborationUrl(),
+		name: `discussion:${pageId}`,
+		document: new Y.Doc(),
+		token: () => getAccessToken() ?? "",
+		awareness: null,
+	});
+	provider.on("stateless", ({ payload }: { payload: string }) => {
+		try {
+			const event = JSON.parse(payload) as MessageCreatedEvent;
+			if (event.type === "message.created" && event.message) {
+				onMessage(event.message);
+			}
+		} catch {
+			// Ignore payloads this client does not understand.
+		}
+	});
+	provider.on(
+		"authenticationFailed",
+		async ({ reason }: { reason: string }) => {
+			if (accessEndedReasons.has(reason)) return onAccessEnded();
+			if (reason === "token-invalid" && !refreshedToken) {
+				refreshedToken = true;
+				if (await refreshAccessToken()) {
+					provider.disconnect();
+					void provider.connect();
+				}
+			}
+		},
+	);
+	provider.on("close", ({ event }: { event: { reason?: string } }) => {
+		if (accessEndedReasons.has(event.reason ?? "")) onAccessEnded();
+	});
+	return () => {
+		provider.document.destroy();
+		provider.destroy();
 	};
 };

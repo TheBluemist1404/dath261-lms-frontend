@@ -12,6 +12,10 @@ import {
 	workspaceKeys,
 	workspaceQuery,
 } from "../api/workspace.queries";
+import {
+	useLiveMessages,
+	withMessage,
+} from "../collaboration/discussion-channel";
 import { formatRelativeTime } from "../relative-time";
 import type { PageMessage, Workspace } from "../types";
 import { ErrorState, LoadingState } from "./query-state";
@@ -51,6 +55,7 @@ export function PageDiscussion({
 	const workspace = useQuery(workspaceQuery(workspaceId));
 	const page = useQuery(pageQuery(pageId));
 	const messages = useQuery(pageMessagesQuery(pageId));
+	useLiveMessages(pageId, workspace.data?.type === "COLLABORATIVE");
 
 	const failed = workspace.error ?? page.error ?? messages.error;
 	if (failed) {
@@ -129,7 +134,7 @@ function Discussion({
 		onSuccess: (message) => {
 			queryClient.setQueryData<PageMessage[]>(
 				workspaceKeys.messages(pageId),
-				(current = []) => [...current, message],
+				(current) => withMessage(current, message),
 			);
 			setDraft("");
 		},
