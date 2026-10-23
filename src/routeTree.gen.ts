@@ -15,6 +15,7 @@ import { Route as LayoutWorkspaceRouteImport } from './routes/~_layout/~workspac
 import { Route as LayoutWorkspaceIndexRouteImport } from './routes/~_layout/~workspace/~index'
 import { Route as LayoutWorkspaceArchivedRouteImport } from './routes/~_layout/~workspace/~archived'
 import { Route as LayoutWorkspaceMeRouteImport } from './routes/~_layout/~workspace/~me'
+import { Route as LayoutWorkspaceSearchRouteImport } from './routes/~_layout/~workspace/~search'
 import { Route as LayoutWorkspaceIdIndexRouteImport } from './routes/~_layout/~workspace/~$id/~index'
 import { Route as LayoutWorkspaceIdMembersRouteImport } from './routes/~_layout/~workspace/~$id/~members'
 import { Route as LayoutWorkspaceIdSettingsRouteImport } from './routes/~_layout/~workspace/~$id/~settings'
@@ -49,6 +50,11 @@ const LayoutWorkspaceMeRoute = LayoutWorkspaceMeRouteImport.update({
   path: '/me',
   getParentRoute: () => LayoutWorkspaceRoute,
 } as any)
+const LayoutWorkspaceSearchRoute = LayoutWorkspaceSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
 const LayoutWorkspaceIdIndexRoute = LayoutWorkspaceIdIndexRouteImport.update({
   id: '/$id/',
   path: '/$id/',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/workspace/': typeof LayoutWorkspaceIndexRoute
   '/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/workspace/search': typeof LayoutWorkspaceSearchRoute
   '/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
   '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/workspace': typeof LayoutWorkspaceIndexRoute
   '/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/workspace/search': typeof LayoutWorkspaceSearchRoute
   '/workspace/$id': typeof LayoutWorkspaceIdIndexRoute
   '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/_layout/workspace/': typeof LayoutWorkspaceIndexRoute
   '/_layout/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/_layout/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/_layout/workspace/search': typeof LayoutWorkspaceSearchRoute
   '/_layout/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
   '/_layout/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/_layout/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/workspace/'
     | '/workspace/archived'
     | '/workspace/me'
+    | '/workspace/search'
     | '/workspace/$id/'
     | '/workspace/$id/members'
     | '/workspace/$id/settings'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/workspace/archived'
     | '/workspace/me'
+    | '/workspace/search'
     | '/workspace/$id'
     | '/workspace/$id/members'
     | '/workspace/$id/settings'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/_layout/workspace/'
     | '/_layout/workspace/archived'
     | '/_layout/workspace/me'
+    | '/_layout/workspace/search'
     | '/_layout/workspace/$id/'
     | '/_layout/workspace/$id/members'
     | '/_layout/workspace/$id/settings'
@@ -191,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutWorkspaceMeRouteImport
       parentRoute: typeof LayoutWorkspaceRoute
     }
+    '/_layout/workspace/search': {
+      id: '/_layout/workspace/search'
+      path: '/search'
+      fullPath: '/workspace/search'
+      preLoaderRoute: typeof LayoutWorkspaceSearchRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
     '/_layout/workspace/$id/': {
       id: '/_layout/workspace/$id/'
       path: '/$id'
@@ -226,6 +245,7 @@ interface LayoutWorkspaceRouteChildren {
   LayoutWorkspaceIndexRoute: typeof LayoutWorkspaceIndexRoute
   LayoutWorkspaceArchivedRoute: typeof LayoutWorkspaceArchivedRoute
   LayoutWorkspaceMeRoute: typeof LayoutWorkspaceMeRoute
+  LayoutWorkspaceSearchRoute: typeof LayoutWorkspaceSearchRoute
   LayoutWorkspaceIdIndexRoute: typeof LayoutWorkspaceIdIndexRoute
   LayoutWorkspaceIdMembersRoute: typeof LayoutWorkspaceIdMembersRoute
   LayoutWorkspaceIdSettingsRoute: typeof LayoutWorkspaceIdSettingsRoute
@@ -236,6 +256,7 @@ const LayoutWorkspaceRouteChildren: LayoutWorkspaceRouteChildren = {
   LayoutWorkspaceIndexRoute: LayoutWorkspaceIndexRoute,
   LayoutWorkspaceArchivedRoute: LayoutWorkspaceArchivedRoute,
   LayoutWorkspaceMeRoute: LayoutWorkspaceMeRoute,
+  LayoutWorkspaceSearchRoute: LayoutWorkspaceSearchRoute,
   LayoutWorkspaceIdIndexRoute: LayoutWorkspaceIdIndexRoute,
   LayoutWorkspaceIdMembersRoute: LayoutWorkspaceIdMembersRoute,
   LayoutWorkspaceIdSettingsRoute: LayoutWorkspaceIdSettingsRoute,

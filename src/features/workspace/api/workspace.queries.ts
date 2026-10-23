@@ -5,9 +5,11 @@ import {
 	getWorkspace,
 	listMembers,
 	listPages,
+	listRecentPages,
 	listReferenceSources,
 	listReferences,
 	listWorkspaces,
+	searchPages,
 } from "./workspace.api";
 
 export const workspaceKeys = {
@@ -27,6 +29,8 @@ export const workspaceKeys = {
 	page: (pageId: string) => [...workspaceKeys.all, "page", pageId] as const,
 	references: (pageId: string) =>
 		[...workspaceKeys.page(pageId), "references"] as const,
+	search: (query: string) => [...workspaceKeys.all, "search", query] as const,
+	recent: (limit: number) => [...workspaceKeys.all, "recent", limit] as const,
 	referenceSources: (filters: ReferenceSourceFilters) =>
 		[
 			...workspaceKeys.all,
@@ -81,5 +85,23 @@ export function referenceSourcesQuery(filters: ReferenceSourceFilters) {
 	return queryOptions({
 		queryKey: workspaceKeys.referenceSources(filters),
 		queryFn: ({ signal }) => listReferenceSources(filters, signal),
+	});
+}
+
+/** Shortest query the search endpoint accepts. */
+export const minSearchLength = 2;
+
+export function pageSearchQuery(query: string) {
+	return queryOptions({
+		queryKey: workspaceKeys.search(query),
+		queryFn: ({ signal }) => searchPages(query, signal),
+		enabled: query.length >= minSearchLength,
+	});
+}
+
+export function recentPagesQuery(limit: number) {
+	return queryOptions({
+		queryKey: workspaceKeys.recent(limit),
+		queryFn: ({ signal }) => listRecentPages(limit, signal),
 	});
 }

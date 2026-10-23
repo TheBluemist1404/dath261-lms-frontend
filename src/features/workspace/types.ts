@@ -126,3 +126,14 @@ export interface ReferenceSourceFilters {
 	type: ReferenceBlockType;
 	q?: string;
 }
+
+// Search and recent pages (FR-PW-06).
+
+export interface PageHit {
+	page: PageSummary;
+	workspace: Pick<Workspace, "id" | "name" | "type">;
+	/** Ancestor page titles, root first. */
+	path: string[];
+	/** Text around the first content match; null for title-only matches. */
+	snippet: string | null;
+}

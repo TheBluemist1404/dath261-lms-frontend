@@ -6,6 +6,7 @@ import type {
 	CreateReferenceInput,
 	CreateWorkspaceInput,
 	Page,
+	PageHit,
 	PageSummary,
 	ReferencedBlock,
 	ReferenceSourceFilters,
@@ -146,5 +147,21 @@ export async function listReferenceSources(
 		"/reference-sources",
 		{ params: { type: filters.type, q: filters.q || undefined }, signal },
 	);
+	return data;
+}
+
+export async function searchPages(query: string, signal?: AbortSignal) {
+	const { data } = await httpClient.get<PageHit[]>("/search/pages", {
+		params: { q: query },
+		signal,
+	});
+	return data;
+}
+
+export async function listRecentPages(limit: number, signal?: AbortSignal) {
+	const { data } = await httpClient.get<PageHit[]>("/recent-pages", {
+		params: { limit },
+		signal,
+	});
 	return data;
 }

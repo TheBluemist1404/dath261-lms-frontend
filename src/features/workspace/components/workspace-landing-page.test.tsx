@@ -111,8 +111,9 @@ describe("Workspace routing", () => {
 		const router = createWorkspaceRouter("/workspace");
 		const { user } = renderWithProviders(<RouterProvider router={router} />);
 		const pageLink = await screen.findByRole("link", {
-			name: "Understanding processes",
+			name: /^Understanding processes/,
 		});
+		expect(pageLink).toHaveTextContent("My personal workspace");
 		expect(pageLink).toHaveAttribute(
 			"href",
 			"/workspace/ws-personal-alex/pages/page-processes",

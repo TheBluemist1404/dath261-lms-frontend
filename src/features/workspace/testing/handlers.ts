@@ -7,6 +7,7 @@ import type {
 	CreateReferenceInput,
 	CreateWorkspaceInput,
 	Page,
+	PageHit,
 	ReferencedBlock,
 	UpdatePageInput,
 	UpdateWorkspaceInput,
@@ -220,6 +221,64 @@ function toReference(
 		timestampSeconds: record.timestampSeconds,
 	};
 }
+
+/** Text of an editor document: every string `text` field, in order. */
+function contentText(content: unknown): string {
+	if (!content || typeof content !== "object") return "";
+	if (Array.isArray(content)) return content.map(contentText).join(" ");
+	const record = content as Record<string, unknown>;
+	return Object.entries(record)
+		.map(([key, value]) =>
+			key === "text" && typeof value === "string" ? value : contentText(value),
+		)
+		.filter(Boolean)
+		.join(" ");
+}
+
+function snippetAround(text: string, index: number, length: number) {
+	const radius = 60;
+	const start = Math.max(0, index - radius);
+	const end = Math.min(text.length, index + length + radius);
+	return `${start > 0 ? "…" : ""}${text.slice(start, end).trim()}${end < text.length ? "…" : ""}`;
+}
+
+/** Pages in the caller's active workspaces, as hits without snippets. */
+function accessiblePages(userId: string) {
+	return mockDb.pages.flatMap((page) => {
+		const workspace = mockDb.workspaces.find(
+			(entry) => entry.id === page.workspaceId,
+		);
+		if (
+			!workspace ||
+			workspace.archivedAt ||
+			!membershipOf(workspace.id, userId)
+		) {
+			return [];
+		}
+		const path: string[] = [];
+		let parentId = page.parentPageId;
+		while (parentId) {
+			const parent = mockDb.pages.find((entry) => entry.id === parentId);
+			if (!parent) break;
+			path.unshift(parent.title);
+			parentId = parent.parentPageId;
+		}
+		const hit: PageHit = {
+			page: toPageSummary(page),
+			workspace: {
+				id: workspace.id,
+				name: workspace.name,
+				type: workspace.type,
+			},
+			path,
+			snippet: null,
+		};
+		return [{ hit, content: page.content }];
+	});
+}
+
+const byUpdatedAt = (a: PageHit, b: PageHit) =>
+	b.page.updatedAt.localeCompare(a.page.updatedAt);
 
 export const workspaceHandlers = [
 	http.get(api("/workspaces"), ({ request }) => {
@@ -610,6 +669,46 @@ export const workspaceHandlers = [
 						block.title.toLowerCase().includes(query) ||
 						block.courseTitle.toLowerCase().includes(query),
 				),
+		);
+	}),
+
+	http.get(api("/search/pages"), ({ request }) => {
+		const userId = currentUserId(request);
+		if (!userId) return error(401, "Unauthorized");
+		const query = new URL(request.url).searchParams.get("q")?.trim() ?? "";
+		if (query.length < 2) return error(400, "q must be at least 2 characters");
+
+		const needle = query.toLowerCase();
+		const titleHits: PageHit[] = [];
+		const contentHits: PageHit[] = [];
+		for (const { hit, content } of accessiblePages(userId)) {
+			const text = contentText(content);
+			const index = text.toLowerCase().indexOf(needle);
+			const withSnippet =
+				index >= 0
+					? { ...hit, snippet: snippetAround(text, index, needle.length) }
+					: hit;
+			if (hit.page.title.toLowerCase().includes(needle)) {
+				titleHits.push(withSnippet);
+			} else if (index >= 0) {
+				contentHits.push(withSnippet);
+			}
+		}
+		return HttpResponse.json([
+			...titleHits.sort(byUpdatedAt),
+			...contentHits.sort(byUpdatedAt),
+		]);
+	}),
+
+	http.get(api("/recent-pages"), ({ request }) => {
+		const userId = currentUserId(request);
+		if (!userId) return error(401, "Unauthorized");
+		const limit = Number(new URL(request.url).searchParams.get("limit") ?? 5);
+		return HttpResponse.json(
+			accessiblePages(userId)
+				.map(({ hit }) => hit)
+				.sort(byUpdatedAt)
+				.slice(0, Math.min(Math.max(limit, 1), 20)),
 		);
 	}),
 ];

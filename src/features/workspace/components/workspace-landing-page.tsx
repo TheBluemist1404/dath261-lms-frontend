@@ -1,12 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import {
-	workspaceListQuery,
-	workspacePagesQuery,
-} from "../api/workspace.queries";
+import { recentPagesQuery, workspaceListQuery } from "../api/workspace.queries";
 import type { Workspace } from "../types";
 import { CreateWorkspaceDialog } from "./create-workspace-dialog";
 import { ErrorState, LoadingState } from "./query-state";
@@ -37,6 +34,7 @@ export function WorkspaceLandingPage() {
 					A home for your notes, ideas, and shared learning. Pick up where you
 					left off, or make space for something new.
 				</p>
+				<SearchForm />
 			</header>
 
 			{workspaces.isPending ? (
@@ -105,12 +103,43 @@ export function WorkspaceLandingPage() {
 	);
 }
 
+function SearchForm() {
+	const navigate = useNavigate();
+	const [query, setQuery] = useState("");
+
+	return (
+		<search>
+			<form
+				className="mt-6 flex max-w-xl gap-2"
+				onSubmit={(event) => {
+					event.preventDefault();
+					const q = query.trim();
+					if (q) navigate({ to: "/workspace/search", search: { q } });
+				}}
+			>
+				<label htmlFor="workspace-landing-search" className="sr-only">
+					Search pages
+				</label>
+				<input
+					id="workspace-landing-search"
+					type="search"
+					value={query}
+					placeholder="Search your pages"
+					onChange={(event) => setQuery(event.target.value)}
+					className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-white px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+				/>
+				<Button type="submit" variant="secondary">
+					Search
+				</Button>
+			</form>
+		</search>
+	);
+}
+
 function PersonalWorkspaceSection({ workspace }: { workspace: Workspace }) {
-	const pages = useQuery(workspacePagesQuery(workspace.id));
-	// No visit history exists yet, so "recently used" means recently updated.
-	const recentPages = [...(pages.data ?? [])]
-		.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-		.slice(0, recentPageLimit);
+	// No visit history exists yet, so "recently used" means recently updated,
+	// across every active workspace the user belongs to.
+	const recent = useQuery(recentPagesQuery(recentPageLimit));
 
 	return (
 		<section aria-labelledby="personal-workspace-heading">
@@ -140,27 +169,32 @@ function PersonalWorkspaceSection({ workspace }: { workspace: Workspace }) {
 				</div>
 				<div className="p-6 sm:p-8">
 					<h3 className="font-heading text-base font-bold">Recently used</h3>
-					{pages.isPending ? (
+					{recent.isPending ? (
 						<LoadingState label="Loading recent pages…" />
-					) : recentPages.length === 0 ? (
+					) : !recent.data?.length ? (
 						<p className="mt-4 text-sm text-muted">
-							{pages.isError
+							{recent.isError
 								? "Recent pages are unavailable right now."
 								: "Pages you edit will appear here."}
 						</p>
 					) : (
 						<ul className="mt-4 space-y-2">
-							{recentPages.map((page) => (
-								<li key={page.id}>
+							{recent.data.map((hit) => (
+								<li key={hit.page.id}>
 									<Link
 										to="/workspace/$id/pages/$pageId"
-										params={{ id: workspace.id, pageId: page.id }}
+										params={{ id: hit.workspace.id, pageId: hit.page.id }}
 										className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors hover:bg-subtle hover:text-primary"
 									>
 										<span className="text-muted">
 											<Icon name="book" />
 										</span>
-										<span className="min-w-0 flex-1">{page.title}</span>
+										<span className="min-w-0 flex-1">
+											<span className="block">{hit.page.title}</span>
+											<span className="block text-xs font-normal text-muted">
+												{hit.workspace.name}
+											</span>
+										</span>
 										<span aria-hidden="true">&rarr;</span>
 									</Link>
 								</li>

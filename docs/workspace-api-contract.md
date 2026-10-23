@@ -77,9 +77,24 @@ resolve differently for different members of a workspace.
 The frontend links "Open source" to `/courses/:courseId?block=:blockId&t=:seconds`
 until the course player route exists.
 
+## Search and recent pages
+
+Both cover pages in the caller's active (not archived) workspaces only
+(FR-PW-06). `PageHit`: `page` (a `PageSummary`), `workspace { id, name, type }`,
+`path` (ancestor page titles, root first), and `snippet` (text around the first
+match in the page content, or `null`).
+
+| Method | Path | Body | Success | Rules |
+| --- | --- | --- | --- | --- |
+| GET | `/search/pages?q=` | | `200 PageHit[]` | Case-insensitive match on title or content text; `q` shorter than 2 characters returns `400`. Title matches first, then content matches, each newest `updatedAt` first. |
+| GET | `/recent-pages?limit=` | | `200 PageHit[]` | Newest `updatedAt` first, `limit` 1 to 20 (default 5), `snippet` is `null`. There is no visit history yet, so "recent" means recently edited. Kept off `/pages/*` so it cannot collide with `/pages/:id`. |
+
+Content text is every string `text` field in the editor JSON, which covers both
+the plain-text stand-in and Lexical's serialized state.
+
 ## Not yet covered
 
-Page archive/restore (no field in the model), search, recent pages, copying
+Page archive/restore (no field in the model), copying
 permitted course material (FR-RR-07/08, no model yet), and real-time
 collaboration get their own sections when those phases start.
 

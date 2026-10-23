@@ -79,6 +79,9 @@ export function WorkspaceShell({
 						{workspace.data.name}
 					</h1>
 					<div className="flex flex-wrap gap-2">
+						<Link to="/workspace/search" className={headerLinkClass}>
+							Search pages
+						</Link>
 						{!isPersonal && (
 							<Link
 								to="/workspace/$id/members"

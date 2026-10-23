@@ -327,9 +327,44 @@ export function createSeedDb(): MockDb {
 	};
 }
 
-export const mockDb: MockDb = createSeedDb();
+function withContent(
+	db: MockDb,
+	pageId: string,
+	text: string,
+	updatedAt: string,
+) {
+	const target = db.pages.find((entry) => entry.id === pageId);
+	if (!target) throw new Error(`No seed page ${pageId}`);
+	target.content = { type: "plain-text", text };
+	target.updatedAt = updatedAt;
+}
+
+function createSeedDbWithContent(): MockDb {
+	const db = createSeedDb();
+	withContent(
+		db,
+		"page-processes",
+		"A process is a program in execution. My notes remain mine even if course access ends.",
+		"2026-10-22T09:00:00.000Z",
+	);
+	withContent(
+		db,
+		"page-group-processes",
+		"Shared summary: each process has its own address space, threads share it.",
+		"2026-10-21T15:30:00.000Z",
+	);
+	withContent(
+		db,
+		"page-sources",
+		"Silberschatz chapter 3 covers process creation with fork and exec.",
+		"2026-10-21T10:00:00.000Z",
+	);
+	return db;
+}
+
+export const mockDb: MockDb = createSeedDbWithContent();
 
 /** Restores the seed data; call between tests that mutate mock state. */
 export function resetMockDb() {
-	Object.assign(mockDb, createSeedDb());
+	Object.assign(mockDb, createSeedDbWithContent());
 }
