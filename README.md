@@ -90,10 +90,13 @@ Keep route files thin. Business behavior belongs to the corresponding feature ra
 - pnpm
 - GitHub Actions
 
+### Editor and collaboration
+
+- **BlockNote** for the workspace page editor.
+- **Yjs** with **Hocuspocus** for collaborative documents and presence on shared pages.
+
 ### Planned application-level additions
 
-- **Lexical** for the study-oriented rich-text editor.
-- **Yjs** for CRDT-based collaborative documents and presence.
 - **Playwright** for end-to-end coverage once complete user flows exist.
 
 Application-specific dependencies are added when their feature is implemented rather than being preinstalled without use.

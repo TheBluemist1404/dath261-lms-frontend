@@ -5,16 +5,22 @@ import {
 } from "@tanstack/react-router";
 import { act, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Awareness } from "y-protocols/awareness";
 import { routeTree } from "@/routeTree.gen";
 import { signInForTest } from "@/test/auth";
 import { server } from "@/test/mocks/server";
 import { createTestQueryClient, renderWithProviders } from "@/test/render";
 import {
 	type ControllableConnection,
+	collaborationUser,
 	createControllableConnection,
 	resetCollaborationAdapter,
 	setCollaborationAdapter,
 } from "../collaboration/collaboration";
+import {
+	DOCUMENT_FRAGMENT,
+	seedSharedDocument,
+} from "../collaboration/shared-document";
 import { workspaceHandlers } from "../testing/handlers";
 import { mockUsers, resetMockDb } from "../testing/mock-db";
 
@@ -22,6 +28,8 @@ vi.mock("@tanstack/react-devtools", () => ({ TanStackDevtools: () => null }));
 
 const sharedPage =
 	"/workspace/ws-systems-study-group/pages/page-group-processes";
+const sharedSummary =
+	"Shared summary: each process has its own address space, threads share it.";
 let signOut = () => {};
 let connection: ControllableConnection;
 let retries = 0;
@@ -42,11 +50,17 @@ beforeEach(() => {
 	resetMockDb();
 	server.use(...workspaceHandlers);
 	retries = 0;
-	setCollaborationAdapter(() => {
+	setCollaborationAdapter(({ userId, members }) => {
+		const doc = seedSharedDocument(sharedSummary);
 		connection = createControllableConnection(
 			{ status: "connected", presentUserIds: [mockUsers.mai.id] },
 			() => {
 				retries += 1;
+			},
+			{
+				fragment: doc.getXmlFragment(DOCUMENT_FRAGMENT),
+				awareness: new Awareness(doc),
+				user: collaborationUser(userId, members),
 			},
 		);
 		return connection;
@@ -134,6 +148,27 @@ describe("Collaboration UI", () => {
 		expect(
 			screen.getByRole("link", { name: "Open my workspaces" }),
 		).toHaveAttribute("href", "/workspace");
+	});
+
+	it("shows saving until the server confirms shared edits", async () => {
+		renderAt(sharedPage);
+		await screen.findByRole("list", { name: "2 people editing" });
+		expect(await editor()).toHaveValue(sharedSummary);
+
+		act(() => connection.set({ unsyncedChanges: 2 }));
+		expect(screen.getByText("Saving your changes…")).toBeInTheDocument();
+
+		act(() => connection.set({ unsyncedChanges: 0 }));
+		expect(screen.getByText("All changes saved")).toBeInTheDocument();
+	});
+
+	it("follows the server when it only allows reading", async () => {
+		renderAt(sharedPage);
+		const textbox = await editor();
+		await screen.findByRole("list", { name: "2 people editing" });
+
+		act(() => connection.set({ readOnly: true }));
+		expect(textbox).toHaveAttribute("readonly");
 	});
 
 	it("does not connect personal pages", async () => {

@@ -56,7 +56,7 @@ Feature owners own their tests. Agree API contracts across the repos; do not tak
 - The auth store holds in-memory identity/status only. Session bootstrap and backend session integration remain pending.
 - The landing page uses explicit preview data and in-memory creation, not a backend workspace API. `/workspace?preview=empty` previews no additional workspaces. `/workspace/me` and `/workspace/$id` remain editor scaffolds; recent-page hashes are navigation placeholders.
 - A global Not Found page returns home. Development Devtools use a fixed bottom-right launcher and repair old saved floating coordinates.
-- Lexical, Yjs, and Playwright are planned; do not describe them as implemented features.
+- The page editor is BlockNote (`src/features/workspace/editor/`), chosen over Lexical after the collaboration spike. Shared pages sync through Yjs and the backend's Hocuspocus server at `/api/collab` (`collaboration/hocuspocus-adapter.ts`); personal pages autosave BlockNote JSON over REST. Tests swap the editor for a textarea double (`testing/block-editor-double.tsx`). Playwright is still planned.
 
 ## Development and checks
 

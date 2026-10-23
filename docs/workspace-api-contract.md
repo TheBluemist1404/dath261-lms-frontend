@@ -32,6 +32,10 @@ Model. Fields follow the backend Prisma models in `prisma/models/workspace.prism
 
 `PageSummary`: `id`, `workspaceId`, `title`, `parentPageId`, `createdAt`,
 `updatedAt`. `Page` adds `content` (the editor document as JSON, or `null`).
+Personal pages store BlockNote blocks as `{ type: "blocknote", blocks }`; older
+pages may still hold `{ type: "plain-text", text }`, which the editor opens as
+one paragraph per line. Shared pages are edited through the collaboration
+server below, which keeps `content` as a `{ type: "plain-text", text }` snapshot.
 
 `WorkspaceMember`: `userId`, `role`, `joinedAt`, and
 `user { id, email, firstName, lastName }`.
@@ -95,8 +99,8 @@ match in the page content, or `null`).
 | GET | `/search/pages?q=` | | `200 PageHit[]` | Case-insensitive match on title or content text; `q` shorter than 2 characters returns `400`. Title matches first, then content matches, each newest `updatedAt` first. At most 50 hits. |
 | GET | `/recent-pages?limit=` | | `200 PageHit[]` | Newest `updatedAt` first, `limit` a whole number from 1 to 20 (default 5, otherwise `400`), `snippet` is `null`. There is no visit history yet, so "recent" means recently edited. Kept off `/pages/*` so it cannot collide with `/pages/:id`. |
 
-Content text is every string `text` field in the editor JSON, which covers both
-the plain-text stand-in and Lexical's serialized state.
+Content text is every string `text` field in the editor JSON, which covers
+BlockNote blocks and the plain-text snapshots of shared pages.
 
 ## Page discussion and reports (frontend only, not built on the backend)
 
@@ -115,11 +119,35 @@ editor is passed to the discussion screen as `?passage=` for context only.
 | POST | `/pages/:id/messages` | `{ content }` | `201 PageMessage` | 1 to 2000 characters after trimming. `PERSONAL` or archived returns `409`. |
 | POST | `/reports` | `{ targetType: "MESSAGE", targetId, reason, description? }` | `201 { id, status }` | Reporter must be able to see the message (`404` otherwise); reporting your own message returns `400`. `status` starts `PENDING`. |
 
+## Real-time collaboration
+
+Pages in `COLLABORATIVE` workspaces are edited live through a Yjs WebSocket
+server (Hocuspocus) at `ws(s)://<api host>/api/collab`. The Vite dev server
+proxies it with the rest of `/api`; `VITE_COLLAB_URL` overrides the address.
+
+- The document name is the page id. The editor binds to the Yjs XML fragment
+  `document-store` (BlockNote's structure through y-prosemirror).
+- The client sends the REST access token. The server checks it, the account
+  status, and membership of the page's workspace; archived workspaces are
+  served read-only (`authenticated` scope `readonly`).
+- On first open the server seeds the shared state from the page's stored
+  `content` and saves it, so every client starts from the same history.
+  Edits are stored as the Yjs state (`pages.yjs_state`) at most 2 to 10 seconds
+  after they arrive, together with the plain-text `content` snapshot for search.
+- Refusals and server closes carry a reason: `token-invalid` (refresh the
+  token and reconnect), `not-found`, `not-collaborative`, `access-revoked`
+  (member removed) and `page-deleted` (access ended), and `workspace-changed`
+  (archived or restored: reconnect to get the new scope).
+- Presence uses Yjs awareness: each client publishes
+  `user { id, name, color }`, which also labels its cursor.
+- Personal pages do not use this server; they save `content` through
+  `PATCH /pages/:id`.
+
 ## Not yet covered
 
-Page archive/restore (no field in the model), copying
-permitted course material (FR-RR-07/08, no model yet), and real-time
-collaboration get their own sections when those phases start.
+Page archive/restore (no field in the model) and copying permitted course
+material (FR-RR-07/08, no model yet) get their own sections when those phases
+start.
 
 ## Frontend auth against the current backend
 

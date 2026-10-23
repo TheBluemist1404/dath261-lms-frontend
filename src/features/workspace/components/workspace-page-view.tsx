@@ -1,10 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getApiErrorStatus } from "@/lib/http/errors";
 import { useAuthStore } from "@/stores/auth.store";
-import { pageQuery, workspaceMembersQuery } from "../api/workspace.queries";
+import {
+	pageQuery,
+	workspaceKeys,
+	workspaceMembersQuery,
+} from "../api/workspace.queries";
 import { useCollaboration } from "../collaboration/collaboration";
 import { usePageAutosave } from "../hooks/use-page-autosave";
 import { getAncestors } from "../page-tree";
@@ -97,6 +101,8 @@ function PageLoader({
 	);
 }
 
+const ignoreChange = () => {};
+
 type OpenDialog = "rename" | "move" | "subpage" | null;
 
 function PageEditor({
@@ -128,11 +134,32 @@ function PageEditor({
 	});
 	const collaboration = useCollaboration(
 		collaborative && userId && members.data
-			? { pageId: page.id, userId, members: members.data }
+			? {
+					pageId: page.id,
+					userId,
+					members: members.data,
+					initialContent: page.content,
+				}
 			: null,
 	);
 	const paused = collaborative && collaboration.status !== "connected";
-	const editable = canEdit && !paused;
+	const editable = canEdit && !paused && !collaboration.readOnly;
+	// Shared pages are saved by the collaboration server as edits sync.
+	const saveStatus = collaborative
+		? collaboration.unsyncedChanges > 0
+			? "saving"
+			: "idle"
+		: autosave.status;
+
+	// The server switched this page to read-only (e.g. archived elsewhere):
+	// refresh the workspace so the rest of the page shows it too.
+	const queryClient = useQueryClient();
+	const serverReadOnly = collaboration.readOnly;
+	useEffect(() => {
+		if (serverReadOnly && !workspace.archivedAt) {
+			void queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
+		}
+	}, [serverReadOnly, workspace.archivedAt, queryClient]);
 
 	if (collaborative && collaboration.status === "revoked") {
 		return <AccessEnded />;
@@ -142,10 +169,7 @@ function PageEditor({
 		<article className="space-y-5 rounded-xl border border-border bg-white p-6">
 			<div className="flex flex-wrap items-start justify-between gap-3">
 				{canEdit && (
-					<SaveStatusIndicator
-						status={autosave.status}
-						onRetry={autosave.retry}
-					/>
+					<SaveStatusIndicator status={saveStatus} onRetry={autosave.retry} />
 				)}
 				{collaborative && userId && members.data && (
 					<PresenceIndicator
@@ -199,12 +223,19 @@ function PageEditor({
 				</div>
 			</div>
 
-			<EditorSlot
-				pageId={page.id}
-				initialContent={page.content}
-				readOnly={!editable}
-				onChange={autosave.queue}
-			/>
+			{collaborative && !collaboration.shared ? (
+				<output className="block min-h-60 rounded-xl border border-border p-6 text-sm text-muted">
+					Opening the shared page…
+				</output>
+			) : (
+				<EditorSlot
+					pageId={page.id}
+					initialContent={page.content}
+					readOnly={!editable}
+					onChange={collaborative ? ignoreChange : autosave.queue}
+					shared={collaboration.shared}
+				/>
+			)}
 
 			<CourseReferences
 				pageId={page.id}

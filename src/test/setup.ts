@@ -1,7 +1,14 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, configure } from "@testing-library/react";
-import { afterAll, afterEach, beforeAll } from "vitest";
+import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "@/test/mocks/server";
+
+// jsdom cannot drive BlockNote's contenteditable, so page tests use a textarea
+// double; editor/block-editor.test.tsx unmocks it to cover the real editor.
+vi.mock(
+	"@/features/workspace/editor/block-editor",
+	() => import("@/features/workspace/testing/block-editor-double"),
+);
 
 // Route tests render the whole app; its first render can pass the 1s default
 // when test files run in parallel.

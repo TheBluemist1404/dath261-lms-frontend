@@ -1,56 +1,36 @@
-import { useId, useState } from "react";
+import { lazy, Suspense } from "react";
+import type { SharedDocument } from "../collaboration/collaboration";
 
 /**
  * Contract between the page view and the editor component. The editor owns the
- * shape of `content`; the page view only stores and saves it.
+ * shape of `content`; the page view only stores and saves it. Shared pages pass
+ * `shared` and are saved by the collaboration server instead.
  */
 export interface EditorSlotProps {
 	pageId: string;
 	initialContent: unknown;
 	readOnly: boolean;
 	onChange: (content: unknown) => void;
+	shared?: SharedDocument;
 }
 
-interface PlainTextContent {
-	type: "plain-text";
-	text: string;
-}
+// BlockNote is large; load it with the first page rather than the app shell.
+const BlockEditor = lazy(() =>
+	import("../editor/block-editor").then((module) => ({
+		default: module.BlockEditor,
+	})),
+);
 
-function readPlainText(content: unknown) {
-	const candidate = content as Partial<PlainTextContent> | null;
-	return candidate?.type === "plain-text" && typeof candidate.text === "string"
-		? candidate.text
-		: "";
-}
-
-/**
- * Stand-in until the real editor is wired in: a textarea that stores
- * `{ type: "plain-text", text }`. Swap this component, keep the props.
- */
-export function EditorSlot({
-	initialContent,
-	readOnly,
-	onChange,
-}: EditorSlotProps) {
-	const id = useId();
-	const [text, setText] = useState(() => readPlainText(initialContent));
-
+export function EditorSlot({ pageId, ...props }: EditorSlotProps) {
 	return (
-		<div>
-			<label htmlFor={id} className="sr-only">
-				Page content
-			</label>
-			<textarea
-				id={id}
-				value={text}
-				readOnly={readOnly}
-				placeholder={readOnly ? "This page is empty." : "Start with an idea…"}
-				onChange={(event) => {
-					setText(event.target.value);
-					onChange({ type: "plain-text", text: event.target.value });
-				}}
-				className="min-h-80 w-full resize-y rounded-lg border border-border bg-white p-4 text-base leading-7 read-only:bg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-			/>
-		</div>
+		<Suspense
+			fallback={
+				<output className="block min-h-60 rounded-xl border border-border p-6 text-sm text-muted">
+					Loading editor…
+				</output>
+			}
+		>
+			<BlockEditor key={pageId} {...props} />
+		</Suspense>
 	);
 }
