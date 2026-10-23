@@ -89,7 +89,7 @@ describe("Workspace routing", () => {
 		const personalLink = await screen.findByRole("link", {
 			name: "Open my workspace",
 		});
-		expect(personalLink).toHaveAttribute("href", "/workspace/me");
+		expect(personalLink).toHaveAttribute("href", "/workspace/ws-personal-alex");
 		const workspaceLink = screen.getByRole("link", { name: "Workspaces" });
 		expect(workspaceLink).toHaveAttribute("href", "/workspace");
 		expect(workspaceLink).toHaveAttribute("aria-current", "page");
@@ -99,25 +99,50 @@ describe("Workspace routing", () => {
 
 		await user.click(personalLink);
 		await waitFor(() => {
-			expect(router.state.location.pathname).toBe("/workspace/me");
+			expect(router.state.location.pathname).toBe(
+				"/workspace/ws-personal-alex/pages/page-os-notes",
+			);
 			expect(workspaceLink).toHaveAttribute("aria-current", "page");
 		});
 	});
 
-	it("links a recently used page to its personal workspace and page identifier", async () => {
+	it("opens a recently used page", async () => {
 		signOut = signInForTest(mockUsers.alex.id);
 		const router = createWorkspaceRouter("/workspace");
 		const { user } = renderWithProviders(<RouterProvider router={router} />);
 		const pageLink = await screen.findByRole("link", {
 			name: "Understanding processes",
 		});
-		expect(pageLink).toHaveAttribute("href", "/workspace/me#page-processes");
+		expect(pageLink).toHaveAttribute(
+			"href",
+			"/workspace/ws-personal-alex/pages/page-processes",
+		);
 
 		await user.click(pageLink);
-		await waitFor(() => {
-			expect(router.state.location.pathname).toBe("/workspace/me");
-			expect(router.state.location.hash).toBe("page-processes");
-		});
+		expect(
+			await screen.findByRole("heading", {
+				name: "Understanding processes",
+				level: 2,
+			}),
+		).toBeInTheDocument();
+	});
+
+	it("redirects /workspace/me to the personal workspace", async () => {
+		signOut = signInForTest(mockUsers.alex.id);
+		const router = createWorkspaceRouter("/workspace/me");
+		renderWithProviders(<RouterProvider router={router} />);
+
+		await waitFor(() =>
+			expect(router.state.location.pathname).toBe(
+				"/workspace/ws-personal-alex/pages/page-os-notes",
+			),
+		);
+		expect(
+			await screen.findByRole("heading", {
+				name: "My personal workspace",
+				level: 1,
+			}),
+		).toBeInTheDocument();
 	});
 
 	it("creates the first additional workspace from the empty state", async () => {

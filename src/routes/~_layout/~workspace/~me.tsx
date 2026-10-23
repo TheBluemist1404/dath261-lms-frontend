@@ -1,9 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PersonalWorkspaceRedirect } from "@/features/workspace/components/personal-workspace-redirect";
 
 export const Route = createFileRoute("/_layout/workspace/me")({
-	component: RouteComponent,
+	component: PersonalWorkspaceRedirect,
 });
-
-function RouteComponent() {
-	return <div>Hello "/_layout/workspace/me"!</div>;
-}

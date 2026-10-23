@@ -130,7 +130,8 @@ function PersonalWorkspaceSection({ workspace }: { workspace: Workspace }) {
 						and turn what you learn into knowledge you can return to.
 					</p>
 					<Link
-						to="/workspace/me"
+						to="/workspace/$id"
+						params={{ id: workspace.id }}
 						className="mt-6 inline-flex min-h-11 items-center justify-center gap-3 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
 					>
 						Open my workspace
@@ -152,8 +153,8 @@ function PersonalWorkspaceSection({ workspace }: { workspace: Workspace }) {
 							{recentPages.map((page) => (
 								<li key={page.id}>
 									<Link
-										to="/workspace/me"
-										hash={page.id}
+										to="/workspace/$id/pages/$pageId"
+										params={{ id: workspace.id, pageId: page.id }}
 										className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors hover:bg-subtle hover:text-primary"
 									>
 										<span className="text-muted">
