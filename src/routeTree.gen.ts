@@ -13,8 +13,10 @@ import { Route as LayoutRouteImport } from './routes/~_layout'
 import { Route as LayoutIndexRouteImport } from './routes/~_layout.index'
 import { Route as LayoutWorkspaceRouteImport } from './routes/~_layout/~workspace'
 import { Route as LayoutWorkspaceIndexRouteImport } from './routes/~_layout/~workspace/~index'
-import { Route as LayoutWorkspaceIdRouteImport } from './routes/~_layout/~workspace/~$id'
+import { Route as LayoutWorkspaceArchivedRouteImport } from './routes/~_layout/~workspace/~archived'
 import { Route as LayoutWorkspaceMeRouteImport } from './routes/~_layout/~workspace/~me'
+import { Route as LayoutWorkspaceIdIndexRouteImport } from './routes/~_layout/~workspace/~$id/~index'
+import { Route as LayoutWorkspaceIdSettingsRouteImport } from './routes/~_layout/~workspace/~$id/~settings'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -35,9 +37,9 @@ const LayoutWorkspaceIndexRoute = LayoutWorkspaceIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutWorkspaceRoute,
 } as any)
-const LayoutWorkspaceIdRoute = LayoutWorkspaceIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
+const LayoutWorkspaceArchivedRoute = LayoutWorkspaceArchivedRouteImport.update({
+  id: '/archived',
+  path: '/archived',
   getParentRoute: () => LayoutWorkspaceRoute,
 } as any)
 const LayoutWorkspaceMeRoute = LayoutWorkspaceMeRouteImport.update({
@@ -45,19 +47,34 @@ const LayoutWorkspaceMeRoute = LayoutWorkspaceMeRouteImport.update({
   path: '/me',
   getParentRoute: () => LayoutWorkspaceRoute,
 } as any)
+const LayoutWorkspaceIdIndexRoute = LayoutWorkspaceIdIndexRouteImport.update({
+  id: '/$id/',
+  path: '/$id/',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
+const LayoutWorkspaceIdSettingsRoute =
+  LayoutWorkspaceIdSettingsRouteImport.update({
+    id: '/$id/settings',
+    path: '/$id/settings',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/workspace/': typeof LayoutWorkspaceIndexRoute
-  '/workspace/$id': typeof LayoutWorkspaceIdRoute
+  '/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
+  '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/workspace': typeof LayoutWorkspaceIndexRoute
-  '/workspace/$id': typeof LayoutWorkspaceIdRoute
+  '/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/workspace/$id': typeof LayoutWorkspaceIdIndexRoute
+  '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -65,23 +82,39 @@ export interface FileRoutesById {
   '/_layout/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/workspace/': typeof LayoutWorkspaceIndexRoute
-  '/_layout/workspace/$id': typeof LayoutWorkspaceIdRoute
+  '/_layout/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/_layout/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/_layout/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
+  '/_layout/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/workspace' | '/workspace/' | '/workspace/$id' | '/workspace/me'
+    | '/'
+    | '/workspace'
+    | '/workspace/'
+    | '/workspace/archived'
+    | '/workspace/me'
+    | '/workspace/$id/'
+    | '/workspace/$id/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/workspace' | '/workspace/$id' | '/workspace/me'
+  to:
+    | '/'
+    | '/workspace'
+    | '/workspace/archived'
+    | '/workspace/me'
+    | '/workspace/$id'
+    | '/workspace/$id/settings'
   id:
     | '__root__'
     | '/_layout'
     | '/_layout/workspace'
     | '/_layout/'
     | '/_layout/workspace/'
-    | '/_layout/workspace/$id'
+    | '/_layout/workspace/archived'
     | '/_layout/workspace/me'
+    | '/_layout/workspace/$id/'
+    | '/_layout/workspace/$id/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,11 +151,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutWorkspaceIndexRouteImport
       parentRoute: typeof LayoutWorkspaceRoute
     }
-    '/_layout/workspace/$id': {
-      id: '/_layout/workspace/$id'
-      path: '/$id'
-      fullPath: '/workspace/$id'
-      preLoaderRoute: typeof LayoutWorkspaceIdRouteImport
+    '/_layout/workspace/archived': {
+      id: '/_layout/workspace/archived'
+      path: '/archived'
+      fullPath: '/workspace/archived'
+      preLoaderRoute: typeof LayoutWorkspaceArchivedRouteImport
       parentRoute: typeof LayoutWorkspaceRoute
     }
     '/_layout/workspace/me': {
@@ -132,19 +165,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutWorkspaceMeRouteImport
       parentRoute: typeof LayoutWorkspaceRoute
     }
+    '/_layout/workspace/$id/': {
+      id: '/_layout/workspace/$id/'
+      path: '/$id'
+      fullPath: '/workspace/$id/'
+      preLoaderRoute: typeof LayoutWorkspaceIdIndexRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/$id/settings': {
+      id: '/_layout/workspace/$id/settings'
+      path: '/$id/settings'
+      fullPath: '/workspace/$id/settings'
+      preLoaderRoute: typeof LayoutWorkspaceIdSettingsRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
   }
 }
 
 interface LayoutWorkspaceRouteChildren {
   LayoutWorkspaceIndexRoute: typeof LayoutWorkspaceIndexRoute
-  LayoutWorkspaceIdRoute: typeof LayoutWorkspaceIdRoute
+  LayoutWorkspaceArchivedRoute: typeof LayoutWorkspaceArchivedRoute
   LayoutWorkspaceMeRoute: typeof LayoutWorkspaceMeRoute
+  LayoutWorkspaceIdIndexRoute: typeof LayoutWorkspaceIdIndexRoute
+  LayoutWorkspaceIdSettingsRoute: typeof LayoutWorkspaceIdSettingsRoute
 }
 
 const LayoutWorkspaceRouteChildren: LayoutWorkspaceRouteChildren = {
   LayoutWorkspaceIndexRoute: LayoutWorkspaceIndexRoute,
-  LayoutWorkspaceIdRoute: LayoutWorkspaceIdRoute,
+  LayoutWorkspaceArchivedRoute: LayoutWorkspaceArchivedRoute,
   LayoutWorkspaceMeRoute: LayoutWorkspaceMeRoute,
+  LayoutWorkspaceIdIndexRoute: LayoutWorkspaceIdIndexRoute,
+  LayoutWorkspaceIdSettingsRoute: LayoutWorkspaceIdSettingsRoute,
 }
 
 const LayoutWorkspaceRouteWithChildren = LayoutWorkspaceRoute._addFileChildren(

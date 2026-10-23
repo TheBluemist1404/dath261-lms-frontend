@@ -4,10 +4,14 @@ import {
 	RouterProvider,
 } from "@tanstack/react-router";
 import { screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
 import { useAuthStore } from "@/stores/auth.store";
+import { signInForTest } from "@/test/auth";
+import { server } from "@/test/mocks/server";
 import { createTestQueryClient, renderWithProviders } from "@/test/render";
+import { workspaceHandlers } from "../testing/handlers";
+import { mockDb, mockUsers, resetMockDb } from "../testing/mock-db";
 
 vi.mock("@tanstack/react-devtools", () => ({ TanStackDevtools: () => null }));
 
@@ -19,7 +23,15 @@ function createWorkspaceRouter(path: string) {
 	});
 }
 
+let signOut = () => {};
+
+beforeEach(() => {
+	resetMockDb();
+	server.use(...workspaceHandlers);
+});
+
 afterEach(() => {
+	signOut();
 	useAuthStore.getState().reset();
 	localStorage.removeItem("tanstack_devtools_settings");
 });
@@ -52,7 +64,9 @@ describe("Workspace routing", () => {
 	it.each([
 		["/workspace", "/_layout/workspace/"],
 		["/workspace/me", "/_layout/workspace/me"],
-		["/workspace/study-group", "/_layout/workspace/$id"],
+		["/workspace/study-group", "/_layout/workspace/$id/"],
+		["/workspace/study-group/settings", "/_layout/workspace/$id/settings"],
+		["/workspace/archived", "/_layout/workspace/archived"],
 	])("places %s under the future auth boundary", async (path, leafRoute) => {
 		const router = createWorkspaceRouter(path);
 		await router.load();
@@ -68,12 +82,7 @@ describe("Workspace routing", () => {
 	});
 
 	it("opens the personal workspace and keeps workspace navigation active", async () => {
-		useAuthStore.getState().setUser({
-			id: "student-1",
-			name: "Test Student",
-			email: "student@example.com",
-			role: "student",
-		});
+		signOut = signInForTest(mockUsers.alex.id);
 		const router = createWorkspaceRouter("/workspace");
 		const { user } = renderWithProviders(<RouterProvider router={router} />);
 
@@ -96,25 +105,27 @@ describe("Workspace routing", () => {
 	});
 
 	it("links a recently used page to its personal workspace and page identifier", async () => {
+		signOut = signInForTest(mockUsers.alex.id);
 		const router = createWorkspaceRouter("/workspace");
 		const { user } = renderWithProviders(<RouterProvider router={router} />);
 		const pageLink = await screen.findByRole("link", {
 			name: "Understanding processes",
 		});
-		expect(pageLink).toHaveAttribute(
-			"href",
-			"/workspace/me#understanding-processes",
-		);
+		expect(pageLink).toHaveAttribute("href", "/workspace/me#page-processes");
 
 		await user.click(pageLink);
 		await waitFor(() => {
 			expect(router.state.location.pathname).toBe("/workspace/me");
-			expect(router.state.location.hash).toBe("understanding-processes");
+			expect(router.state.location.hash).toBe("page-processes");
 		});
 	});
 
 	it("creates the first additional workspace from the empty state", async () => {
-		const router = createWorkspaceRouter("/workspace?preview=empty");
+		signOut = signInForTest(mockUsers.alex.id);
+		mockDb.workspaces = mockDb.workspaces.filter(
+			(workspace) => workspace.type === "PERSONAL",
+		);
+		const router = createWorkspaceRouter("/workspace");
 		const { user } = renderWithProviders(<RouterProvider router={router} />);
 		const createButton = await screen.findByRole("button", {
 			name: "Create workspace",
@@ -126,18 +137,6 @@ describe("Workspace routing", () => {
 			screen.getByRole("link", { name: "Open my workspace" }),
 		).toBeInTheDocument();
 		expect(screen.queryByRole("link", { name: /Research journal/ })).toBeNull();
-		const dialog = screen.getByRole("dialog", { hidden: true });
-		// jsdom does not implement the native dialog open/close methods.
-		Object.defineProperties(dialog, {
-			showModal: { value: () => dialog.setAttribute("open", "") },
-			close: {
-				value: () => {
-					dialog.removeAttribute("open");
-					dialog.dispatchEvent(new Event("close"));
-				},
-			},
-		});
-
 		await user.click(createButton);
 		const form = within(
 			screen.getByRole("dialog", { name: "Create a workspace" }),
@@ -158,12 +157,14 @@ describe("Workspace routing", () => {
 		await user.type(input, "  Operating systems  ");
 		await user.click(submit);
 
-		const card = await screen.findByRole("link", { name: /Operating systems/ });
+		const card = await screen.findByRole("link", {
+			name: /^Operating systems.*Owner$/,
+		});
 		expect(within(card).getByRole("heading")).toHaveTextContent(
 			/^Operating systems$/,
 		);
 		expect(within(card).getByText("0 pages")).toBeInTheDocument();
-		expect(within(card).getByText("Only you")).toBeInTheDocument();
+		expect(within(card).getByText("Only you · Owner")).toBeInTheDocument();
 		expect(card.getAttribute("href")).toMatch(/^\/workspace\/[^/]+$/);
 		expect(
 			screen.queryByRole("heading", { name: "No additional workspaces yet" }),

@@ -1,34 +1,28 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { type FormEvent, useRef, useState } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import {
-	previewRecentPages,
-	previewWorkspaces,
-	type WorkspaceSummary,
-} from "../workspace-preview-data";
+	workspaceListQuery,
+	workspacePagesQuery,
+} from "../api/workspace.queries";
+import type { Workspace } from "../types";
+import { CreateWorkspaceDialog } from "./create-workspace-dialog";
+import { ErrorState, LoadingState } from "./query-state";
 import { WorkspaceCard } from "./workspace-card";
 
-export function WorkspaceLandingPage({
-	initialWorkspaces = previewWorkspaces,
-}: {
-	initialWorkspaces?: WorkspaceSummary[];
-}) {
-	const [workspaces, setWorkspaces] = useState(() => [...initialWorkspaces]);
-	const [workspaceName, setWorkspaceName] = useState("");
-	const createDialog = useRef<HTMLDialogElement>(null);
+const recentPageLimit = 3;
 
-	function createWorkspace(event: FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-		const title = workspaceName.trim();
-		if (!title) return;
+export function WorkspaceLandingPage() {
+	const workspaces = useQuery(workspaceListQuery());
+	const [creating, setCreating] = useState(false);
 
-		setWorkspaces((current) => [
-			...current,
-			{ id: crypto.randomUUID(), title, pageCount: 0, collaboratorCount: 0 },
-		]);
-		createDialog.current?.close();
-		setWorkspaceName("");
-	}
+	const personal = workspaces.data?.find(
+		(workspace) => workspace.type === "PERSONAL",
+	);
+	const additional =
+		workspaces.data?.filter((workspace) => workspace.type !== "PERSONAL") ?? [];
 
 	return (
 		<div className="mx-auto max-w-6xl space-y-10">
@@ -45,34 +39,117 @@ export function WorkspaceLandingPage({
 				</p>
 			</header>
 
-			<section aria-labelledby="personal-workspace-heading">
-				<div className="grid overflow-hidden rounded-2xl border border-border bg-white lg:grid-cols-[1.4fr_1fr]">
-					<div className="bg-primary-subtle p-6 sm:p-8">
-						<span className="flex size-12 items-center justify-center rounded-xl bg-white text-primary">
-							<Icon name="workspace" />
-						</span>
-						<h2
-							id="personal-workspace-heading"
-							className="mt-6 font-heading text-2xl font-bold tracking-tight"
-						>
-							My workspace
-						</h2>
-						<p className="mt-3 max-w-lg text-sm leading-6 text-muted">
-							Your personal corner of Nodus. Organize study notes, collect
-							ideas, and turn what you learn into knowledge you can return to.
+			{workspaces.isPending ? (
+				<LoadingState label="Loading workspaces…" />
+			) : workspaces.isError ? (
+				<ErrorState
+					title="Workspaces could not be loaded"
+					error={workspaces.error}
+					onRetry={() => workspaces.refetch()}
+				/>
+			) : (
+				<>
+					{personal && <PersonalWorkspaceSection workspace={personal} />}
+
+					<section aria-labelledby="additional-workspaces-heading">
+						<div className="flex flex-row flex-wrap items-center justify-between gap-4">
+							<h2
+								id="additional-workspaces-heading"
+								className="min-w-0 font-heading text-xl font-bold tracking-tight"
+							>
+								Additional workspaces
+							</h2>
+							<div className="flex items-center gap-2">
+								<Link
+									to="/workspace/archived"
+									className="inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-semibold text-primary hover:bg-primary-subtle"
+								>
+									Archived workspaces
+								</Link>
+								<Button onClick={() => setCreating(true)}>
+									Create workspace
+								</Button>
+							</div>
+						</div>
+						{additional.length > 0 ? (
+							<div className="mt-5 grid gap-6 sm:grid-cols-2">
+								{additional.map((workspace) => (
+									<WorkspaceCard key={workspace.id} workspace={workspace} />
+								))}
+							</div>
+						) : (
+							<div className="mt-5 flex gap-4 rounded-xl border border-dashed border-border bg-white p-6">
+								<span className="mt-1 text-muted">
+									<Icon name="workspace" />
+								</span>
+								<div>
+									<h3 className="font-heading text-base font-semibold">
+										No additional workspaces yet
+									</h3>
+									<p className="mt-1 text-sm leading-6 text-muted">
+										Create a workspace for a project or study group. Add
+										collaborators whenever you need them.
+									</p>
+								</div>
+							</div>
+						)}
+					</section>
+				</>
+			)}
+
+			<CreateWorkspaceDialog
+				open={creating}
+				onClose={() => setCreating(false)}
+			/>
+		</div>
+	);
+}
+
+function PersonalWorkspaceSection({ workspace }: { workspace: Workspace }) {
+	const pages = useQuery(workspacePagesQuery(workspace.id));
+	// No visit history exists yet, so "recently used" means recently updated.
+	const recentPages = [...(pages.data ?? [])]
+		.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+		.slice(0, recentPageLimit);
+
+	return (
+		<section aria-labelledby="personal-workspace-heading">
+			<div className="grid overflow-hidden rounded-2xl border border-border bg-white lg:grid-cols-[1.4fr_1fr]">
+				<div className="bg-primary-subtle p-6 sm:p-8">
+					<span className="flex size-12 items-center justify-center rounded-xl bg-white text-primary">
+						<Icon name="workspace" />
+					</span>
+					<h2
+						id="personal-workspace-heading"
+						className="mt-6 font-heading text-2xl font-bold tracking-tight"
+					>
+						My workspace
+					</h2>
+					<p className="mt-3 max-w-lg text-sm leading-6 text-muted">
+						Your personal corner of Nodus. Organize study notes, collect ideas,
+						and turn what you learn into knowledge you can return to.
+					</p>
+					<Link
+						to="/workspace/me"
+						className="mt-6 inline-flex min-h-11 items-center justify-center gap-3 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+					>
+						Open my workspace
+						<span aria-hidden="true">&rarr;</span>
+					</Link>
+				</div>
+				<div className="p-6 sm:p-8">
+					<h3 className="font-heading text-base font-bold">Recently used</h3>
+					{pages.isPending ? (
+						<LoadingState label="Loading recent pages…" />
+					) : recentPages.length === 0 ? (
+						<p className="mt-4 text-sm text-muted">
+							{pages.isError
+								? "Recent pages are unavailable right now."
+								: "Pages you edit will appear here."}
 						</p>
-						<Link
-							to="/workspace/me"
-							className="mt-6 inline-flex min-h-11 items-center justify-center gap-3 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-						>
-							Open my workspace
-							<span aria-hidden="true">&rarr;</span>
-						</Link>
-					</div>
-					<div className="p-6 sm:p-8">
-						<h3 className="font-heading text-base font-bold">Recently used</h3>
+					) : (
 						<ul className="mt-4 space-y-2">
-							{previewRecentPages.map((page) => (
+							{recentPages.map((page) => (
 								<li key={page.id}>
 									<Link
 										to="/workspace/me"
@@ -88,103 +165,9 @@ export function WorkspaceLandingPage({
 								</li>
 							))}
 						</ul>
-					</div>
+					)}
 				</div>
-			</section>
-
-			<section aria-labelledby="additional-workspaces-heading">
-				<div className="flex flex-row items-center justify-between gap-4">
-					<h2
-						id="additional-workspaces-heading"
-						className="min-w-0 font-heading text-xl font-bold tracking-tight"
-					>
-						Additional workspaces
-					</h2>
-					<button
-						type="button"
-						onClick={() => createDialog.current?.showModal()}
-						className="min-h-11 shrink-0 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-					>
-						Create workspace
-					</button>
-				</div>
-				{workspaces.length > 0 ? (
-					<div className="mt-5 grid gap-6 sm:grid-cols-2">
-						{workspaces.map((workspace) => (
-							<WorkspaceCard key={workspace.id} workspace={workspace} />
-						))}
-					</div>
-				) : (
-					<div className="mt-5 flex gap-4 rounded-xl border border-dashed border-border bg-white p-6">
-						<span className="mt-1 text-muted">
-							<Icon name="workspace" />
-						</span>
-						<div>
-							<h3 className="font-heading text-base font-semibold">
-								No additional workspaces yet
-							</h3>
-							<p className="mt-1 text-sm leading-6 text-muted">
-								Create a workspace for a project or study group. Add
-								collaborators whenever you need them.
-							</p>
-						</div>
-					</div>
-				)}
-			</section>
-
-			<dialog
-				ref={createDialog}
-				aria-labelledby="create-workspace-heading"
-				aria-describedby="create-workspace-description"
-				onClose={() => setWorkspaceName("")}
-				className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-border bg-white p-6 text-ink shadow-xl backdrop:bg-ink/40"
-			>
-				<form onSubmit={createWorkspace} className="space-y-5">
-					<h2
-						id="create-workspace-heading"
-						className="font-heading text-2xl font-semibold"
-					>
-						Create a workspace
-					</h2>
-					<p
-						id="create-workspace-description"
-						className="text-sm leading-6 text-muted"
-					>
-						Your new workspace starts with just you. Add collaborators when you
-						are ready.
-					</p>
-					<div>
-						<label htmlFor="workspace-name" className="text-sm font-semibold">
-							Workspace name
-						</label>
-						<input
-							id="workspace-name"
-							name="workspaceName"
-							required
-							maxLength={100}
-							value={workspaceName}
-							onChange={(event) => setWorkspaceName(event.target.value)}
-							className="mt-2 min-h-11 w-full rounded-lg border border-border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-						/>
-					</div>
-					<div className="flex justify-end gap-3">
-						<button
-							type="button"
-							onClick={() => createDialog.current?.close()}
-							className="min-h-11 rounded-lg border border-border px-4 py-3 text-sm font-semibold hover:bg-subtle"
-						>
-							Cancel
-						</button>
-						<button
-							type="submit"
-							disabled={!workspaceName.trim()}
-							className="min-h-11 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-						>
-							Create workspace
-						</button>
-					</div>
-				</form>
-			</dialog>
-		</div>
+			</div>
+		</section>
 	);
 }
