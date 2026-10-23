@@ -94,10 +94,7 @@ Keep route files thin. Business behavior belongs to the corresponding feature ra
 
 - **BlockNote** for the workspace page editor.
 - **Yjs** with **Hocuspocus** for collaborative documents and presence on shared pages.
-
-### Planned application-level additions
-
-- **Playwright** for end-to-end coverage once complete user flows exist.
+- **Playwright** for browser tests of flows jsdom cannot drive, such as the real editor.
 
 Application-specific dependencies are added when their feature is implemented rather than being preinstalled without use.
 
@@ -158,6 +155,7 @@ Do not commit secrets or local `.env` files.
 | `pnpm typecheck` | Run TypeScript without emitting files |
 | `pnpm test` | Run Vitest once |
 | `pnpm test:watch` | Run Vitest in watch mode |
+| `pnpm test:e2e` | Run the Playwright browser tests in `e2e/` against the dev server with mocked API (run `pnpm exec playwright install chromium` once) |
 | `pnpm lint` | Lint with Biome |
 | `pnpm format` | Format with Biome |
 | `pnpm check` | Check formatting, lint rules, and imports |
@@ -170,9 +168,9 @@ Tests should normally live beside the source they verify.
 
 - **Vitest + React Testing Library** — utilities, hooks, components, and feature/integration behavior.
 - **MSW** — API-facing tests at the HTTP boundary instead of mocking Axios internals.
-- **Playwright** — later, for critical whole-application flows such as enrollment, learning, note creation, and collaboration.
+- **Playwright** — browser tests in `e2e/` for flows jsdom cannot drive, such as the page editor. They start the dev server with the API mocked, so no backend is needed.
 
-Every pull request is checked by GitHub Actions with a frozen pnpm install, Biome, TypeScript, Vitest, and a production Vite build.
+Every pull request is checked by GitHub Actions with a frozen pnpm install, Biome, TypeScript, Vitest, a production Vite build, and the Playwright browser tests.
 
 Local Git hooks provide earlier feedback:
 
