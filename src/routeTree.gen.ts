@@ -17,6 +17,7 @@ import { Route as LayoutWorkspaceArchivedRouteImport } from './routes/~_layout/~
 import { Route as LayoutWorkspaceMeRouteImport } from './routes/~_layout/~workspace/~me'
 import { Route as LayoutWorkspaceIdIndexRouteImport } from './routes/~_layout/~workspace/~$id/~index'
 import { Route as LayoutWorkspaceIdSettingsRouteImport } from './routes/~_layout/~workspace/~$id/~settings'
+import { Route as LayoutWorkspaceIdPagesPageIdRouteImport } from './routes/~_layout/~workspace/~$id/~pages/~$pageId'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -58,6 +59,12 @@ const LayoutWorkspaceIdSettingsRoute =
     path: '/$id/settings',
     getParentRoute: () => LayoutWorkspaceRoute,
   } as any)
+const LayoutWorkspaceIdPagesPageIdRoute =
+  LayoutWorkspaceIdPagesPageIdRouteImport.update({
+    id: '/$id/pages/$pageId',
+    path: '/$id/pages/$pageId',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/workspace/me': typeof LayoutWorkspaceMeRoute
   '/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
   '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
@@ -75,6 +83,7 @@ export interface FileRoutesByTo {
   '/workspace/me': typeof LayoutWorkspaceMeRoute
   '/workspace/$id': typeof LayoutWorkspaceIdIndexRoute
   '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +95,7 @@ export interface FileRoutesById {
   '/_layout/workspace/me': typeof LayoutWorkspaceMeRoute
   '/_layout/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
   '/_layout/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/_layout/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/workspace/me'
     | '/workspace/$id/'
     | '/workspace/$id/settings'
+    | '/workspace/$id/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/workspace/me'
     | '/workspace/$id'
     | '/workspace/$id/settings'
+    | '/workspace/$id/pages/$pageId'
   id:
     | '__root__'
     | '/_layout'
@@ -115,6 +127,7 @@ export interface FileRouteTypes {
     | '/_layout/workspace/me'
     | '/_layout/workspace/$id/'
     | '/_layout/workspace/$id/settings'
+    | '/_layout/workspace/$id/pages/$pageId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,6 +192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutWorkspaceIdSettingsRouteImport
       parentRoute: typeof LayoutWorkspaceRoute
     }
+    '/_layout/workspace/$id/pages/$pageId': {
+      id: '/_layout/workspace/$id/pages/$pageId'
+      path: '/$id/pages/$pageId'
+      fullPath: '/workspace/$id/pages/$pageId'
+      preLoaderRoute: typeof LayoutWorkspaceIdPagesPageIdRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
   }
 }
 
@@ -188,6 +208,7 @@ interface LayoutWorkspaceRouteChildren {
   LayoutWorkspaceMeRoute: typeof LayoutWorkspaceMeRoute
   LayoutWorkspaceIdIndexRoute: typeof LayoutWorkspaceIdIndexRoute
   LayoutWorkspaceIdSettingsRoute: typeof LayoutWorkspaceIdSettingsRoute
+  LayoutWorkspaceIdPagesPageIdRoute: typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 
 const LayoutWorkspaceRouteChildren: LayoutWorkspaceRouteChildren = {
@@ -196,6 +217,7 @@ const LayoutWorkspaceRouteChildren: LayoutWorkspaceRouteChildren = {
   LayoutWorkspaceMeRoute: LayoutWorkspaceMeRoute,
   LayoutWorkspaceIdIndexRoute: LayoutWorkspaceIdIndexRoute,
   LayoutWorkspaceIdSettingsRoute: LayoutWorkspaceIdSettingsRoute,
+  LayoutWorkspaceIdPagesPageIdRoute: LayoutWorkspaceIdPagesPageIdRoute,
 }
 
 const LayoutWorkspaceRouteWithChildren = LayoutWorkspaceRoute._addFileChildren(
