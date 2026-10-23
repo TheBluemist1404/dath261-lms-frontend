@@ -11,6 +11,7 @@ function page(id: string, parentPageId: string | null = null): PageSummary {
 	return {
 		id,
 		parentPageId,
+		archivedAt: null,
 		workspaceId: "ws",
 		title: id,
 		createdAt: "",

@@ -143,8 +143,9 @@ export const hocuspocusAdapter: CollaborationAdapter = ({
 	provider.on("close", ({ event }: { event: { reason?: string } }) => {
 		const reason = event.reason ?? "";
 		if (accessEndedReasons.has(reason)) return endAccess();
-		// Archive or restore: reconnect to pick up the new read/write scope.
-		if (reason === "workspace-changed") {
+		// Workspace or page archived or restored: reconnect to pick up the new
+		// read/write scope.
+		if (reason === "workspace-changed" || reason === "page-changed") {
 			set({ status: "reconnecting" });
 			reconnect();
 		}

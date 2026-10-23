@@ -23,6 +23,7 @@ import { EditorSlot } from "./editor-slot";
 import {
 	MovePageDialog,
 	NewPageDialog,
+	PageArchiveDialog,
 	RenamePageDialog,
 } from "./page-dialogs";
 import { ErrorState, LoadingState } from "./query-state";
@@ -103,7 +104,7 @@ function PageLoader({
 
 const ignoreChange = () => {};
 
-type OpenDialog = "rename" | "move" | "subpage" | null;
+type OpenDialog = "rename" | "move" | "subpage" | "archive" | "restore" | null;
 
 function PageEditor({
 	page,
@@ -119,6 +120,9 @@ function PageEditor({
 	autosaveDelayMs?: number;
 }) {
 	const autosave = usePageAutosave(page.id, autosaveDelayMs);
+	const archived = page.archivedAt !== null;
+	// Archived pages are read-only; workspace editors can still restore them.
+	const canEditPage = canEdit && !archived;
 	const [dialog, setDialog] = useState<OpenDialog>(null);
 	const ancestors = getAncestors(pages, page.id);
 	// The tree list carries renames immediately; the page body may be cached.
@@ -143,7 +147,7 @@ function PageEditor({
 			: null,
 	);
 	const paused = collaborative && collaboration.status !== "connected";
-	const editable = canEdit && !paused && !collaboration.readOnly;
+	const editable = canEditPage && !paused && !collaboration.readOnly;
 	// Shared pages are saved by the collaboration server as edits sync.
 	const saveStatus = collaborative
 		? collaboration.unsyncedChanges > 0
@@ -151,15 +155,17 @@ function PageEditor({
 			: "idle"
 		: autosave.status;
 
-	// The server switched this page to read-only (e.g. archived elsewhere):
+	// The server changed this page's scope (archived or restored elsewhere):
 	// refresh the workspace so the rest of the page shows it too.
 	const queryClient = useQueryClient();
 	const serverReadOnly = collaboration.readOnly;
+	const connected = collaboration.status === "connected";
+	const expectedReadOnly = Boolean(workspace.archivedAt) || archived;
 	useEffect(() => {
-		if (serverReadOnly && !workspace.archivedAt) {
+		if (connected && serverReadOnly !== expectedReadOnly) {
 			void queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
 		}
-	}, [serverReadOnly, workspace.archivedAt, queryClient]);
+	}, [connected, serverReadOnly, expectedReadOnly, queryClient]);
 
 	if (collaborative && collaboration.status === "revoked") {
 		return <AccessEnded />;
@@ -168,7 +174,7 @@ function PageEditor({
 	return (
 		<article className="space-y-5 rounded-xl border border-border bg-white p-6">
 			<div className="flex flex-wrap items-start justify-between gap-3">
-				{canEdit && (
+				{canEditPage && (
 					<SaveStatusIndicator status={saveStatus} onRetry={autosave.retry} />
 				)}
 				{collaborative && userId && members.data && (
@@ -180,7 +186,7 @@ function PageEditor({
 					/>
 				)}
 			</div>
-			{collaborative && canEdit && (
+			{collaborative && canEditPage && (
 				<ConnectionBanner
 					status={collaboration.status}
 					onRetry={collaboration.retry}
@@ -206,7 +212,7 @@ function PageEditor({
 								Discussion
 							</Link>
 						)}
-						{canEdit && (
+						{canEditPage && (
 							<>
 								<Button variant="ghost" onClick={() => setDialog("subpage")}>
 									New subpage
@@ -217,11 +223,31 @@ function PageEditor({
 								<Button variant="ghost" onClick={() => setDialog("move")}>
 									Move
 								</Button>
+								<Button variant="ghost" onClick={() => setDialog("archive")}>
+									Archive
+								</Button>
 							</>
 						)}
 					</div>
 				</div>
 			</div>
+
+			{archived && (
+				<div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+					<div>
+						<p className="font-semibold">Page archived</p>
+						<p className="mt-1">
+							It is hidden from the page tree and search, and read-only until
+							restored.
+						</p>
+					</div>
+					{canEdit && (
+						<Button variant="secondary" onClick={() => setDialog("restore")}>
+							Restore page
+						</Button>
+					)}
+				</div>
+			)}
 
 			{collaborative && !collaboration.shared ? (
 				<output className="block min-h-60 rounded-xl border border-border p-6 text-sm text-muted">
@@ -241,10 +267,19 @@ function PageEditor({
 			<CourseReferences
 				pageId={page.id}
 				destination={`${workspace.name} / ${summary.title}`}
-				canEdit={canEdit}
+				canEdit={canEditPage}
 			/>
 
 			{canEdit && (
+				<PageArchiveDialog
+					open={dialog === "archive" || dialog === "restore"}
+					onClose={close}
+					page={summary}
+					action={dialog === "restore" ? "restore" : "archive"}
+				/>
+			)}
+
+			{canEditPage && (
 				<>
 					<NewPageDialog
 						open={dialog === "subpage"}

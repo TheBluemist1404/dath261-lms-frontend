@@ -30,7 +30,7 @@ Model. Fields follow the backend Prisma models in `prisma/models/workspace.prism
 `currentUserRole` (`OWNER` | `CO_OWNER` | `MEMBER`), `pageCount`,
 `memberCount`, `archivedAt`, `createdAt`, `updatedAt`.
 
-`PageSummary`: `id`, `workspaceId`, `title`, `parentPageId`, `createdAt`,
+`PageSummary`: `id`, `workspaceId`, `title`, `parentPageId`, `archivedAt`, `createdAt`,
 `updatedAt`. `Page` adds `content` (the editor document as JSON, or `null`).
 Personal pages store BlockNote blocks as `{ type: "blocknote", blocks }`; older
 pages may still hold `{ type: "plain-text", text }`, which the editor opens as
@@ -50,11 +50,13 @@ server below, which keeps `content` as a `{ type: "plain-text", text }` snapshot
 | PATCH | `/workspaces/:id` | `{ name }` | `200 Workspace` | Owner only. |
 | POST | `/workspaces/:id/archive` | | `200 Workspace` | Owner only; not for `PERSONAL`. |
 | POST | `/workspaces/:id/restore` | | `200 Workspace` | Owner only. |
-| GET | `/workspaces/:id/pages` | | `200 PageSummary[]` | Flat list; the client builds the tree from `parentPageId`. |
-| POST | `/workspaces/:id/pages` | `{ title, parentPageId? }` | `201 Page` | Parent must be in the same workspace. Title 1 to 200 characters. |
+| GET | `/workspaces/:id/pages` | `?archived=true` | `200 PageSummary[]` | Flat list of active pages, or archived ones with `archived=true`; the client builds the tree from `parentPageId`. |
+| POST | `/workspaces/:id/pages` | `{ title, parentPageId? }` | `201 Page` | Parent must be an active page in the same workspace. Title 1 to 200 characters. |
 | GET | `/pages/:id` | | `200 Page` | Members of the page's workspace. |
-| PATCH | `/pages/:id` | `{ title?, parentPageId?, content? }` | `200 Page` | Moving under itself or a descendant returns `400`. |
-| DELETE | `/pages/:id` | | `204` | Deletes the subtree. |
+| PATCH | `/pages/:id` | `{ title?, parentPageId?, content? }` | `200 Page` | Moving under itself, a descendant or an archived page returns `400`. An archived page returns `409`. |
+| POST | `/pages/:id/archive` | | `200 Page` | Archives the page with its active subpages (same `archivedAt`). They leave the tree, search and recent pages and become read-only (edits, references and messages `409`); content is kept. Already archived `409`. |
+| POST | `/pages/:id/restore` | | `200 Page` | Restores the page with the subpages archived together with it. It returns under its parent while that parent is active, otherwise to the root. Not archived `409`. |
+| DELETE | `/pages/:id` | | `204` | Deletes the subtree permanently. Not used by the UI, which archives instead. |
 | GET | `/workspaces/:id/members` | | `200 WorkspaceMember[]` | Members only. |
 | POST | `/workspaces/:id/members` | `{ email, role }` | `201 WorkspaceMember` | `role` is `MEMBER` or `CO_OWNER`. Owner adds either; Co-owner adds `MEMBER` only. `PERSONAL` and archived return `409`. Unknown email `404`, an administrator's email `400`, existing member `409`. |
 | DELETE | `/workspaces/:id/members/:userId` | | `204` | Owner removes Members and Co-owners; Co-owner removes Members; Owners cannot be removed (`403`). Not a member `404`. Archived `409`. |
@@ -141,7 +143,8 @@ proxies it with the rest of `/api`; `VITE_COLLAB_URL` overrides the address.
 - Refusals and server closes carry a reason: `token-invalid` (refresh the
   token and reconnect), `not-found`, `not-collaborative`, `access-revoked`
   (member removed) and `page-deleted` (access ended), and `workspace-changed`
-  (archived or restored: reconnect to get the new scope).
+  or `page-changed` (archived or restored: reconnect to get the new scope;
+  archived pages are served read-only).
 - Discussion updates use the same server: a client subscribes to the document
   `discussion:<pageId>` (same membership rules, always read-only, nothing
   stored) and receives `{ "type": "message.created", "message": PageMessage }`

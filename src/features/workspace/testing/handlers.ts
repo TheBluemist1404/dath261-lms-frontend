@@ -145,6 +145,28 @@ function resolvePage(request: Request, pageId: string) {
 	return { ...access, page };
 }
 
+/** 409 while the page or its workspace is archived, like the backend. */
+function readOnlyError(access: { workspace: MockWorkspaceRecord; page: Page }) {
+	if (access.workspace.archivedAt) {
+		return error(409, "Restore the workspace before editing it");
+	}
+	if (access.page.archivedAt) {
+		return error(409, "Restore the page before editing it");
+	}
+	return null;
+}
+
+/** The page with its subpages that match, stopping at subpages that do not. */
+function subtreeOf(rootId: string, include: (page: Page) => boolean) {
+	const ids = [rootId];
+	for (let index = 0; index < ids.length; index += 1) {
+		for (const page of mockDb.pages) {
+			if (page.parentPageId === ids[index] && include(page)) ids.push(page.id);
+		}
+	}
+	return mockDb.pages.filter((page) => ids.includes(page.id));
+}
+
 function validName(value: unknown, max = 100): value is string {
 	return (
 		typeof value === "string" &&
@@ -257,6 +279,7 @@ function accessiblePages(userId: string) {
 		if (
 			!workspace ||
 			workspace.archivedAt ||
+			page.archivedAt ||
 			!membershipOf(workspace.id, userId)
 		) {
 			return [];
@@ -410,9 +433,15 @@ export const workspaceHandlers = [
 	http.get(api("/workspaces/:workspaceId/pages"), ({ request, params }) => {
 		const access = resolveWorkspace(request, String(params.workspaceId));
 		if (!access.ok) return access.response;
+		const archived =
+			new URL(request.url).searchParams.get("archived") === "true";
 		return HttpResponse.json(
 			mockDb.pages
-				.filter((page) => page.workspaceId === access.workspace.id)
+				.filter(
+					(page) =>
+						page.workspaceId === access.workspace.id &&
+						(page.archivedAt !== null) === archived,
+				)
 				.map(toPageSummary),
 		);
 	}),
@@ -436,10 +465,14 @@ export const workspaceHandlers = [
 				!mockDb.pages.some(
 					(page) =>
 						page.id === parentPageId &&
-						page.workspaceId === access.workspace.id,
+						page.workspaceId === access.workspace.id &&
+						page.archivedAt === null,
 				)
 			) {
-				return error(400, "parentPageId must be a page in this workspace");
+				return error(
+					400,
+					"parentPageId must be an active page in this workspace",
+				);
 			}
 
 			const timestamp = now();
@@ -448,6 +481,7 @@ export const workspaceHandlers = [
 				workspaceId: access.workspace.id,
 				title: body.title.trim(),
 				parentPageId,
+				archivedAt: null,
 				content: null,
 				createdAt: timestamp,
 				updatedAt: timestamp,
@@ -466,9 +500,8 @@ export const workspaceHandlers = [
 	http.patch(api("/pages/:pageId"), async ({ request, params }) => {
 		const access = resolvePage(request, String(params.pageId));
 		if (!access.ok) return access.response;
-		if (access.workspace.archivedAt) {
-			return error(409, "Restore the workspace before editing it");
-		}
+		const readOnly = readOnlyError(access);
+		if (readOnly) return readOnly;
 
 		const body = (await request.json()) as UpdatePageInput;
 		const { page } = access;
@@ -485,6 +518,7 @@ export const workspaceHandlers = [
 				if (
 					!parent ||
 					parent.workspaceId !== page.workspaceId ||
+					parent.archivedAt !== null ||
 					parent.id === page.id ||
 					isDescendant(parent.id, page.id)
 				) {
@@ -501,19 +535,44 @@ export const workspaceHandlers = [
 		return HttpResponse.json(page);
 	}),
 
-	http.delete(api("/pages/:pageId"), ({ request, params }) => {
+	http.post(api("/pages/:pageId/archive"), ({ request, params }) => {
 		const access = resolvePage(request, String(params.pageId));
 		if (!access.ok) return access.response;
 		if (access.workspace.archivedAt) {
 			return error(409, "Restore the workspace before editing it");
 		}
-
-		const removed = new Set([access.page.id]);
-		for (const page of mockDb.pages) {
-			if (isDescendant(page.id, access.page.id)) removed.add(page.id);
+		if (access.page.archivedAt) {
+			return error(409, "The page is already archived");
 		}
-		mockDb.pages = mockDb.pages.filter((page) => !removed.has(page.id));
-		return new HttpResponse(null, { status: 204 });
+		const archivedAt = now();
+		for (const page of subtreeOf(
+			access.page.id,
+			(entry) => entry.archivedAt === null,
+		)) {
+			page.archivedAt = archivedAt;
+		}
+		return HttpResponse.json(access.page);
+	}),
+
+	http.post(api("/pages/:pageId/restore"), ({ request, params }) => {
+		const access = resolvePage(request, String(params.pageId));
+		if (!access.ok) return access.response;
+		if (access.workspace.archivedAt) {
+			return error(409, "Restore the workspace before editing it");
+		}
+		const { archivedAt } = access.page;
+		if (!archivedAt) return error(409, "The page is not archived");
+		for (const page of subtreeOf(
+			access.page.id,
+			(entry) => entry.archivedAt === archivedAt,
+		)) {
+			page.archivedAt = null;
+		}
+		const parent = mockDb.pages.find(
+			(entry) => entry.id === access.page.parentPageId,
+		);
+		if (!parent || parent.archivedAt) access.page.parentPageId = null;
+		return HttpResponse.json(access.page);
 	}),
 
 	http.get(api("/workspaces/:workspaceId/members"), ({ request, params }) => {
@@ -608,9 +667,8 @@ export const workspaceHandlers = [
 	http.post(api("/pages/:pageId/references"), async ({ request, params }) => {
 		const access = resolvePage(request, String(params.pageId));
 		if (!access.ok) return access.response;
-		if (access.workspace.archivedAt) {
-			return error(409, "Restore the workspace before editing it");
-		}
+		const readOnly = readOnlyError(access);
+		if (readOnly) return readOnly;
 
 		const body = (await request.json()) as Partial<CreateReferenceInput>;
 		const block = mockDb.courseBlocks.find(
@@ -666,9 +724,8 @@ export const workspaceHandlers = [
 				? error(404, "Reference not found")
 				: access.response;
 		}
-		if (access.workspace.archivedAt) {
-			return error(409, "Restore the workspace before editing it");
-		}
+		const readOnly = readOnlyError(access);
+		if (readOnly) return readOnly;
 		mockDb.references = mockDb.references.filter((entry) => entry !== record);
 		return new HttpResponse(null, { status: 204 });
 	}),
@@ -764,9 +821,8 @@ export const workspaceHandlers = [
 		if (access.workspace.type === "PERSONAL") {
 			return error(409, "The personal workspace has no discussion");
 		}
-		if (access.workspace.archivedAt) {
-			return error(409, "Restore the workspace before editing it");
-		}
+		const readOnly = readOnlyError(access);
+		if (readOnly) return readOnly;
 		const body = (await request.json()) as Partial<CreateMessageInput>;
 		if (!validName(body.content, 2000)) {
 			return error(400, "content must be 1 to 2000 characters");

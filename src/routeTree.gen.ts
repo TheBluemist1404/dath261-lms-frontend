@@ -17,6 +17,7 @@ import { Route as LayoutWorkspaceArchivedRouteImport } from './routes/~_layout/~
 import { Route as LayoutWorkspaceMeRouteImport } from './routes/~_layout/~workspace/~me'
 import { Route as LayoutWorkspaceSearchRouteImport } from './routes/~_layout/~workspace/~search'
 import { Route as LayoutWorkspaceIdIndexRouteImport } from './routes/~_layout/~workspace/~$id/~index'
+import { Route as LayoutWorkspaceIdArchivedPagesRouteImport } from './routes/~_layout/~workspace/~$id/~archived-pages'
 import { Route as LayoutWorkspaceIdMembersRouteImport } from './routes/~_layout/~workspace/~$id/~members'
 import { Route as LayoutWorkspaceIdSettingsRouteImport } from './routes/~_layout/~workspace/~$id/~settings'
 import { Route as LayoutWorkspaceIdDiscussionPageIdRouteImport } from './routes/~_layout/~workspace/~$id/~discussion/~$pageId'
@@ -61,6 +62,12 @@ const LayoutWorkspaceIdIndexRoute = LayoutWorkspaceIdIndexRouteImport.update({
   path: '/$id/',
   getParentRoute: () => LayoutWorkspaceRoute,
 } as any)
+const LayoutWorkspaceIdArchivedPagesRoute =
+  LayoutWorkspaceIdArchivedPagesRouteImport.update({
+    id: '/$id/archived-pages',
+    path: '/$id/archived-pages',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
 const LayoutWorkspaceIdMembersRoute =
   LayoutWorkspaceIdMembersRouteImport.update({
     id: '/$id/members',
@@ -94,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/workspace/me': typeof LayoutWorkspaceMeRoute
   '/workspace/search': typeof LayoutWorkspaceSearchRoute
   '/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
+  '/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
   '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
   '/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
@@ -106,6 +114,7 @@ export interface FileRoutesByTo {
   '/workspace/me': typeof LayoutWorkspaceMeRoute
   '/workspace/search': typeof LayoutWorkspaceSearchRoute
   '/workspace/$id': typeof LayoutWorkspaceIdIndexRoute
+  '/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
   '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
   '/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
@@ -121,6 +130,7 @@ export interface FileRoutesById {
   '/_layout/workspace/me': typeof LayoutWorkspaceMeRoute
   '/_layout/workspace/search': typeof LayoutWorkspaceSearchRoute
   '/_layout/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
+  '/_layout/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
   '/_layout/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
   '/_layout/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
   '/_layout/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/workspace/me'
     | '/workspace/search'
     | '/workspace/$id/'
+    | '/workspace/$id/archived-pages'
     | '/workspace/$id/members'
     | '/workspace/$id/settings'
     | '/workspace/$id/discussion/$pageId'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/workspace/me'
     | '/workspace/search'
     | '/workspace/$id'
+    | '/workspace/$id/archived-pages'
     | '/workspace/$id/members'
     | '/workspace/$id/settings'
     | '/workspace/$id/discussion/$pageId'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
     | '/_layout/workspace/me'
     | '/_layout/workspace/search'
     | '/_layout/workspace/$id/'
+    | '/_layout/workspace/$id/archived-pages'
     | '/_layout/workspace/$id/members'
     | '/_layout/workspace/$id/settings'
     | '/_layout/workspace/$id/discussion/$pageId'
@@ -230,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutWorkspaceIdIndexRouteImport
       parentRoute: typeof LayoutWorkspaceRoute
     }
+    '/_layout/workspace/$id/archived-pages': {
+      id: '/_layout/workspace/$id/archived-pages'
+      path: '/$id/archived-pages'
+      fullPath: '/workspace/$id/archived-pages'
+      preLoaderRoute: typeof LayoutWorkspaceIdArchivedPagesRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
     '/_layout/workspace/$id/members': {
       id: '/_layout/workspace/$id/members'
       path: '/$id/members'
@@ -267,6 +287,7 @@ interface LayoutWorkspaceRouteChildren {
   LayoutWorkspaceMeRoute: typeof LayoutWorkspaceMeRoute
   LayoutWorkspaceSearchRoute: typeof LayoutWorkspaceSearchRoute
   LayoutWorkspaceIdIndexRoute: typeof LayoutWorkspaceIdIndexRoute
+  LayoutWorkspaceIdArchivedPagesRoute: typeof LayoutWorkspaceIdArchivedPagesRoute
   LayoutWorkspaceIdMembersRoute: typeof LayoutWorkspaceIdMembersRoute
   LayoutWorkspaceIdSettingsRoute: typeof LayoutWorkspaceIdSettingsRoute
   LayoutWorkspaceIdDiscussionPageIdRoute: typeof LayoutWorkspaceIdDiscussionPageIdRoute
@@ -279,6 +300,7 @@ const LayoutWorkspaceRouteChildren: LayoutWorkspaceRouteChildren = {
   LayoutWorkspaceMeRoute: LayoutWorkspaceMeRoute,
   LayoutWorkspaceSearchRoute: LayoutWorkspaceSearchRoute,
   LayoutWorkspaceIdIndexRoute: LayoutWorkspaceIdIndexRoute,
+  LayoutWorkspaceIdArchivedPagesRoute: LayoutWorkspaceIdArchivedPagesRoute,
   LayoutWorkspaceIdMembersRoute: LayoutWorkspaceIdMembersRoute,
   LayoutWorkspaceIdSettingsRoute: LayoutWorkspaceIdSettingsRoute,
   LayoutWorkspaceIdDiscussionPageIdRoute:

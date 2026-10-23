@@ -23,6 +23,8 @@ export interface PageSummary {
 	workspaceId: string;
 	title: string;
 	parentPageId: string | null;
+	/** Set while the page is archived; archived pages are read-only. */
+	archivedAt: string | null;
 	createdAt: string;
 	updatedAt: string;
 }

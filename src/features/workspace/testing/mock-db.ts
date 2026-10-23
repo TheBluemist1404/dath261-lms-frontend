@@ -129,6 +129,7 @@ function page(
 		workspaceId,
 		title,
 		parentPageId,
+		archivedAt: null,
 		content: null,
 		createdAt: seededAt,
 		updatedAt: seededAt,

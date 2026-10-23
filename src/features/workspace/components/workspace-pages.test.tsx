@@ -239,4 +239,66 @@ describe("Workspace pages", () => {
 		expect(screen.queryByRole("button", { name: "Rename" })).toBeNull();
 		expect(screen.queryByRole("button", { name: "New page" })).toBeNull();
 	});
+
+	it("archives a page with its subpages and restores it from the archive", async () => {
+		const { user } = renderAt(personalPage("page-os-notes"));
+
+		await user.click(await screen.findByRole("button", { name: "Archive" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: "Archive this page?",
+		});
+		await user.click(
+			within(dialog).getByRole("button", { name: "Archive page" }),
+		);
+
+		// The page stays open, read-only, and leaves the tree with its subpages.
+		expect(await screen.findByText("Page archived")).toBeInTheDocument();
+		await waitFor(() =>
+			expect(
+				screen.queryByRole("link", { name: "Understanding processes" }),
+			).not.toBeInTheDocument(),
+		);
+		expect(pageRecord("page-os-notes").archivedAt).not.toBeNull();
+		expect(pageRecord("page-processes").archivedAt).toBe(
+			pageRecord("page-os-notes").archivedAt,
+		);
+		expect(
+			screen.queryByRole("button", { name: "Rename" }),
+		).not.toBeInTheDocument();
+		expect(
+			screen.getByRole("textbox", { name: "Page content" }),
+		).toHaveAttribute("readonly");
+
+		await user.click(screen.getByRole("link", { name: "Archived pages" }));
+		const archive = await screen.findByRole("region", {
+			name: "Archived pages",
+		});
+		expect(
+			await within(archive).findAllByText(
+				"Archived with Operating systems notes",
+				{
+					exact: false,
+				},
+			),
+		).toHaveLength(2);
+		await user.click(
+			within(archive).getByRole("button", {
+				name: "Restore Operating systems notes",
+			}),
+		);
+		const restore = await screen.findByRole("dialog", {
+			name: "Restore this page?",
+		});
+		await user.click(
+			within(restore).getByRole("button", { name: "Restore page" }),
+		);
+
+		expect(
+			await within(archive).findByText("No archived pages."),
+		).toBeInTheDocument();
+		expect(pageRecord("page-processes").archivedAt).toBeNull();
+		expect(
+			await screen.findByRole("link", { name: "Understanding processes" }),
+		).toBeInTheDocument();
+	});
 });

@@ -1,5 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createPage, updatePage } from "../api/workspace.api";
+import {
+	archivePage,
+	createPage,
+	restorePage,
+	updatePage,
+} from "../api/workspace.api";
 import { workspaceKeys } from "../api/workspace.queries";
 import type { CreatePageInput, Page, UpdatePageInput } from "../types";
 
@@ -10,6 +15,9 @@ function useSyncPage() {
 		return Promise.all([
 			queryClient.invalidateQueries({
 				queryKey: workspaceKeys.pages(page.workspaceId),
+			}),
+			queryClient.invalidateQueries({
+				queryKey: workspaceKeys.archivedPages(page.workspaceId),
 			}),
 			// Page counts on the workspace cards change with new pages.
 			queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() }),
@@ -33,4 +41,32 @@ export function useUpdatePage(pageId: string) {
 			updatePage(pageId, input),
 		onSuccess: sync,
 	});
+}
+
+/**
+ * Archive or restore a page. Subpages change with it, and archived pages leave
+ * search and recent pages, so those lists are refreshed too.
+ */
+export function usePageArchive() {
+	const sync = useSyncPage();
+	const queryClient = useQueryClient();
+	const onSuccess = (page: Page) =>
+		Promise.all([
+			sync(page),
+			queryClient.invalidateQueries({
+				queryKey: [...workspaceKeys.all, "search"],
+			}),
+			queryClient.invalidateQueries({
+				queryKey: [...workspaceKeys.all, "recent"],
+			}),
+			// Subpages archived or restored with it show the new state when opened.
+			queryClient.invalidateQueries({
+				queryKey: [...workspaceKeys.all, "page"],
+				predicate: (query) => query.queryKey[2] !== page.id,
+			}),
+		]);
+	return {
+		archive: useMutation({ mutationFn: archivePage, onSuccess }),
+		restore: useMutation({ mutationFn: restorePage, onSuccess }),
+	};
 }

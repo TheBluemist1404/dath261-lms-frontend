@@ -92,6 +92,13 @@ export function WorkspaceShell({
 							</Link>
 						)}
 						<Link
+							to="/workspace/$id/archived-pages"
+							params={{ id: workspaceId }}
+							className={headerLinkClass}
+						>
+							Archived pages
+						</Link>
+						<Link
 							to="/workspace/$id/settings"
 							params={{ id: workspaceId }}
 							className={headerLinkClass}

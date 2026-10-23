@@ -3,7 +3,11 @@ import { type FormEvent, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { getApiErrorMessage } from "@/lib/http/errors";
-import { useCreatePage, useUpdatePage } from "../hooks/use-page-mutations";
+import {
+	useCreatePage,
+	usePageArchive,
+	useUpdatePage,
+} from "../hooks/use-page-mutations";
 import { buildPageTree, flattenPageTree, getDescendantIds } from "../page-tree";
 import type { PageSummary } from "../types";
 
@@ -269,6 +273,61 @@ export function MovePageDialog({
 					onCancel={close}
 				/>
 			</form>
+		</Dialog>
+	);
+}
+
+/** Archive or restore confirmation (Figma WS-OV archive/restore page dialogs). */
+export function PageArchiveDialog({
+	open,
+	onClose,
+	page,
+	action,
+}: DialogBaseProps & {
+	page: Pick<PageSummary, "id" | "title">;
+	action: "archive" | "restore";
+}) {
+	const mutations = usePageArchive();
+	const mutation = mutations[action];
+	const archiving = action === "archive";
+	const close = () => {
+		mutation.reset();
+		onClose();
+	};
+
+	return (
+		<Dialog
+			open={open}
+			onClose={close}
+			title={archiving ? "Archive this page?" : "Restore this page?"}
+			description={
+				archiving
+					? "The page is hidden from the active tree. Its content is retained for restoration."
+					: "The page returns to its previous accessible parent or the workspace root."
+			}
+		>
+			<p className="text-sm font-semibold [overflow-wrap:anywhere]">
+				{page.title}
+			</p>
+			<MutationError error={mutation.error} />
+			<div className="flex justify-end gap-3">
+				<Button variant="secondary" onClick={close}>
+					Cancel
+				</Button>
+				<Button
+					variant={archiving ? "danger" : "primary"}
+					disabled={mutation.isPending}
+					onClick={() => mutation.mutate(page.id, { onSuccess: close })}
+				>
+					{mutation.isPending
+						? archiving
+							? "Archiving…"
+							: "Restoring…"
+						: archiving
+							? "Archive page"
+							: "Restore page"}
+				</Button>
+			</div>
 		</Dialog>
 	);
 }

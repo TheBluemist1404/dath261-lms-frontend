@@ -100,6 +100,7 @@ export function PageDiscussion({
 			<Discussion
 				workspace={workspace.data}
 				pageId={pageId}
+				pageArchived={page.data.archivedAt !== null}
 				messages={messages.data}
 			/>
 
@@ -117,10 +118,12 @@ export function PageDiscussion({
 function Discussion({
 	workspace,
 	pageId,
+	pageArchived,
 	messages,
 }: {
 	workspace: Workspace;
 	pageId: string;
+	pageArchived: boolean;
 	messages: PageMessage[];
 }) {
 	const messageId = useId();
@@ -139,7 +142,7 @@ function Discussion({
 			setDraft("");
 		},
 	});
-	const archived = workspace.archivedAt !== null;
+	const workspaceArchived = workspace.archivedAt !== null;
 	const content = draft.trim();
 
 	function submit(event: FormEvent<HTMLFormElement>) {
@@ -214,10 +217,11 @@ function Discussion({
 				)}
 			</section>
 
-			{archived ? (
+			{workspaceArchived || pageArchived ? (
 				<p className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
-					This workspace is archived. The discussion is read-only until an Owner
-					restores it.
+					{workspaceArchived
+						? "This workspace is archived. The discussion is read-only until an Owner restores it."
+						: "This page is archived. The discussion is read-only until the page is restored."}
 				</p>
 			) : (
 				<form onSubmit={submit} className="space-y-3">

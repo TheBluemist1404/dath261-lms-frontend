@@ -70,10 +70,14 @@ export async function restoreWorkspace(workspaceId: string) {
 	return data;
 }
 
-export async function listPages(workspaceId: string, signal?: AbortSignal) {
+export async function listPages(
+	workspaceId: string,
+	signal?: AbortSignal,
+	archived = false,
+) {
 	const { data } = await httpClient.get<PageSummary[]>(
 		`/workspaces/${workspaceId}/pages`,
-		{ signal },
+		{ signal, params: archived ? { archived: true } : undefined },
 	);
 	return data;
 }
@@ -96,8 +100,16 @@ export async function updatePage(pageId: string, input: UpdatePageInput) {
 	return data;
 }
 
-export async function deletePage(pageId: string) {
-	await httpClient.delete(`/pages/${pageId}`);
+/** Archives the page with its subpages; they stay readable but read-only. */
+export async function archivePage(pageId: string) {
+	const { data } = await httpClient.post<Page>(`/pages/${pageId}/archive`);
+	return data;
+}
+
+/** Restores the page with the subpages archived together with it. */
+export async function restorePage(pageId: string) {
+	const { data } = await httpClient.post<Page>(`/pages/${pageId}/restore`);
+	return data;
 }
 
 export async function listMembers(workspaceId: string, signal?: AbortSignal) {

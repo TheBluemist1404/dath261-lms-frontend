@@ -25,6 +25,8 @@ export const workspaceKeys = {
 		[...workspaceKeys.all, "detail", workspaceId] as const,
 	pages: (workspaceId: string) =>
 		[...workspaceKeys.detail(workspaceId), "pages"] as const,
+	archivedPages: (workspaceId: string) =>
+		[...workspaceKeys.detail(workspaceId), "archived-pages"] as const,
 	members: (workspaceId: string) =>
 		[...workspaceKeys.detail(workspaceId), "members"] as const,
 	page: (pageId: string) => [...workspaceKeys.all, "page", pageId] as const,
@@ -60,6 +62,13 @@ export function workspacePagesQuery(workspaceId: string) {
 	return queryOptions({
 		queryKey: workspaceKeys.pages(workspaceId),
 		queryFn: ({ signal }) => listPages(workspaceId, signal),
+	});
+}
+
+export function archivedPagesQuery(workspaceId: string) {
+	return queryOptions({
+		queryKey: workspaceKeys.archivedPages(workspaceId),
+		queryFn: ({ signal }) => listPages(workspaceId, signal, true),
 	});
 }
 
