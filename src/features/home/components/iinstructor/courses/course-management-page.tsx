@@ -6,8 +6,8 @@ import CourseList from "./course-list";
 const initialCourses: Course[] = [
 	{
 		id: "1",
-		schoolYear: "",
-		semester: "",
+		schoolYear: "2026-2027",
+		semester: "Semester 1",
 		title: "Introduction to Programming",
 		courseCode: "CS101",
 		description: "Learn programming fundamentals.",
@@ -18,8 +18,8 @@ const initialCourses: Course[] = [
 	},
 	{
 		id: "2",
-		schoolYear: "",
-		semester: "",
+		schoolYear: "2026-2027",
+		semester: "Semester 2",
 		title: "Computer Networks",
 		courseCode: "CS201",
 		description: "Explore networking concepts and protocols.",

@@ -9,7 +9,24 @@ afterEach(() => {
 });
 
 describe("CourseManagementPage", () => {
-	it("renders the initial course list", () => {
+	function renderPage() {
+		const user = userEvent.setup();
+		render(<CourseManagementPage />);
+		return user;
+	}
+
+	function getCourseCard(title: string): HTMLElement {
+		const titleElement = screen.getByText(title);
+		const card = titleElement.closest("article, .course-card");
+
+		if (!card) {
+			throw new Error(`Could not find course card for "${title}".`);
+		}
+
+		return card as HTMLElement;
+	}
+
+	it("renders the page and initial courses", () => {
 		render(<CourseManagementPage />);
 
 		expect(
@@ -17,17 +34,29 @@ describe("CourseManagementPage", () => {
 		).toBeInTheDocument();
 
 		expect(screen.getByText("Introduction to Programming")).toBeInTheDocument();
-
 		expect(screen.getByText("Computer Networks")).toBeInTheDocument();
+		expect(screen.getByText("2 courses found")).toBeInTheDocument();
 	});
 
-	it("filters courses by title or course code", async () => {
-		const user = userEvent.setup();
-		render(<CourseManagementPage />);
+	it("filters courses by title", async () => {
+		const user = renderPage();
 
 		await user.type(
 			screen.getByRole("searchbox", { name: /search courses/i }),
-			"CS201",
+			"programming",
+		);
+
+		expect(screen.getByText("Introduction to Programming")).toBeInTheDocument();
+		expect(screen.queryByText("Computer Networks")).not.toBeInTheDocument();
+		expect(screen.getByText("1 course found")).toBeInTheDocument();
+	});
+
+	it("filters courses by course code without case sensitivity", async () => {
+		const user = renderPage();
+
+		await user.type(
+			screen.getByRole("searchbox", { name: /search courses/i }),
+			"cs201",
 		);
 
 		expect(screen.getByText("Computer Networks")).toBeInTheDocument();
@@ -36,21 +65,23 @@ describe("CourseManagementPage", () => {
 		).not.toBeInTheDocument();
 	});
 
-	it("shows an empty state when no courses match the search", async () => {
-		const user = userEvent.setup();
-		render(<CourseManagementPage />);
+	it("shows the empty result count when no course matches", async () => {
+		const user = renderPage();
 
 		await user.type(
 			screen.getByRole("searchbox", { name: /search courses/i }),
 			"NO-SUCH-COURSE",
 		);
 
-		expect(screen.getByText(/0 courses found/i)).toBeInTheDocument();
+		expect(screen.getByText("0 courses found")).toBeInTheDocument();
+		expect(
+			screen.queryByText("Introduction to Programming"),
+		).not.toBeInTheDocument();
+		expect(screen.queryByText("Computer Networks")).not.toBeInTheDocument();
 	});
 
-	it("opens an empty form when Create Course is clicked", async () => {
-		const user = userEvent.setup();
-		render(<CourseManagementPage />);
+	it("opens a blank create form", async () => {
+		const user = renderPage();
 
 		await user.click(screen.getByRole("button", { name: "Create Course" }));
 
@@ -62,64 +93,91 @@ describe("CourseManagementPage", () => {
 		expect(screen.getByLabelText(/course code/i)).toHaveValue("");
 	});
 
-	it("shows validation errors and does not create an invalid course", async () => {
-		const user = userEvent.setup();
-		render(<CourseManagementPage />);
+	it("shows validation errors when required fields are empty", async () => {
+		const user = renderPage();
 
 		await user.click(screen.getByRole("button", { name: "Create Course" }));
 
-		// Submit the form without filling in its required fields.
-		await user.click(screen.getByRole("button", { name: "Create Course" }));
+		// The page and form both have a "Create Course" button.
+		const submitButtons = screen.getAllByRole("button", {
+			name: "Create Course",
+		});
+		await user.click(submitButtons[submitButtons.length - 1]);
 
 		expect(screen.getByText("Course title is required.")).toBeInTheDocument();
-
 		expect(screen.getByText("Course code is required.")).toBeInTheDocument();
 
-		expect(screen.queryByText(/0 courses found/i)).not.toBeInTheDocument();
+		// Invalid submission must not add a course.
+		expect(screen.getByText("2 courses found")).toBeInTheDocument();
 	});
 
 	it("creates a course with valid data", async () => {
-		const user = userEvent.setup();
-		render(<CourseManagementPage />);
+		const user = renderPage();
 
 		await user.click(screen.getByRole("button", { name: "Create Course" }));
 
 		await user.type(screen.getByLabelText(/school year/i), "2026-2027");
-
 		await user.selectOptions(screen.getByLabelText(/semester/i), "Semester 1");
-
 		await user.type(
 			screen.getByLabelText(/course title/i),
 			"Software Engineering",
 		);
-
 		await user.type(screen.getByLabelText(/course code/i), "SE101");
-
 		await user.type(
-			screen.getByLabelText(/course description/i),
+			screen.getByLabelText(/description/i),
 			"Introduction to software engineering.",
 		);
 
-		await user.click(screen.getByRole("button", { name: "Create Course" }));
+		const createButtons = screen.getAllByRole("button", {
+			name: "Create Course",
+		});
+
+		await user.click(createButtons[createButtons.length - 1]);
 
 		expect(screen.getByText("Software Engineering")).toBeInTheDocument();
-
 		expect(screen.getByText("SE101")).toBeInTheDocument();
-		expect(screen.getByText(/3 courses found/i)).toBeInTheDocument();
+		expect(screen.getByText("3 courses found")).toBeInTheDocument();
+
+		// Newly created courses start as drafts in the current implementation.
+		expect(
+			within(getCourseCard("Software Engineering")).getByText("Draft"),
+		).toBeInTheDocument();
 	});
 
-	it("opens the edit form with existing course values", async () => {
-		const user = userEvent.setup();
-		render(<CourseManagementPage />);
+	it("rejects a duplicate course code", async () => {
+		const user = renderPage();
 
-		const courseCard = screen
-			.getByText("Introduction to Programming")
-			.closest("article, .course-card");
+		// Open the create-course form.
+		await user.click(screen.getByRole("button", { name: "Create Course" }));
 
-		expect(courseCard).not.toBeNull();
+		await user.type(screen.getByLabelText(/school year/i), "2026-2027");
+		await user.selectOptions(screen.getByLabelText(/semester/i), "Semester 1");
+		await user.type(
+			screen.getByLabelText(/course title/i),
+			"Another Programming Course",
+		);
+		await user.type(screen.getByLabelText(/course code/i), "cs101");
+		await user.type(
+			screen.getByLabelText(/description/i),
+			"A course with a duplicate code.",
+		);
+
+		// Click the form's submit button (the second matching button).
+		const createButtons = screen.getAllByRole("button", {
+			name: "Create Course",
+		});
+		await user.click(createButtons[createButtons.length - 1]);
+
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			"A course with this course code already exists.",
+		);
+		expect(screen.getByText("2 courses found")).toBeInTheDocument();
+	});
+	it("opens the edit form with existing course data", async () => {
+		const user = renderPage();
 
 		await user.click(
-			within(courseCard as HTMLElement).getByRole("button", {
+			within(getCourseCard("Introduction to Programming")).getByRole("button", {
 				name: "Edit",
 			}),
 		);
@@ -131,92 +189,96 @@ describe("CourseManagementPage", () => {
 		expect(screen.getByLabelText(/course title/i)).toHaveValue(
 			"Introduction to Programming",
 		);
-
 		expect(screen.getByLabelText(/course code/i)).toHaveValue("CS101");
 	});
 
-	it("updates a course when the edit form is saved", async () => {
-		const user = userEvent.setup();
-		render(<CourseManagementPage />);
+	it("updates a course without adding another course", async () => {
+		const user = renderPage();
 
-		const courseCard = screen
-			.getByText("Introduction to Programming")
-			.closest("article, .course-card") as HTMLElement;
-
-		await user.click(within(courseCard).getByRole("button", { name: "Edit" }));
+		await user.click(
+			within(getCourseCard("Introduction to Programming")).getByRole("button", {
+				name: "Edit",
+			}),
+		);
 
 		const titleInput = screen.getByLabelText(/course title/i);
-
 		await user.clear(titleInput);
 		await user.type(titleInput, "Programming Fundamentals");
 
 		await user.click(screen.getByRole("button", { name: "Save Changes" }));
 
 		expect(screen.getByText("Programming Fundamentals")).toBeInTheDocument();
-
 		expect(
 			screen.queryByText("Introduction to Programming"),
 		).not.toBeInTheDocument();
+		expect(screen.getByText("2 courses found")).toBeInTheDocument();
 	});
 
-	it("does not delete a course when deletion is cancelled", async () => {
-		const user = userEvent.setup();
-		const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
-
-		render(<CourseManagementPage />);
-
-		const courseCard = screen
-			.getByText("Introduction to Programming")
-			.closest("article, .course-card") as HTMLElement;
+	it("allows a course to keep its existing course code when edited", async () => {
+		const user = renderPage();
 
 		await user.click(
-			within(courseCard).getByRole("button", { name: "Delete" }),
+			within(getCourseCard("Introduction to Programming")).getByRole("button", {
+				name: "Edit",
+			}),
+		);
+
+		const titleInput = screen.getByLabelText(/course title/i);
+		await user.clear(titleInput);
+		await user.type(titleInput, "Programming Fundamentals");
+
+		// Keep CS101 unchanged: it must not count as a duplicate of itself.
+		await user.click(screen.getByRole("button", { name: "Save Changes" }));
+
+		expect(screen.getByText("Programming Fundamentals")).toBeInTheDocument();
+		expect(screen.getByText("CS101")).toBeInTheDocument();
+		expect(screen.getByText("2 courses found")).toBeInTheDocument();
+	});
+
+	it("does not delete a course when confirmation is cancelled", async () => {
+		const user = renderPage();
+		const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+		await user.click(
+			within(getCourseCard("Introduction to Programming")).getByRole("button", {
+				name: "Delete",
+			}),
 		);
 
 		expect(confirmSpy).toHaveBeenCalled();
 		expect(screen.getByText("Introduction to Programming")).toBeInTheDocument();
+		expect(screen.getByText("2 courses found")).toBeInTheDocument();
 	});
 
 	it("deletes a course when deletion is confirmed", async () => {
-		const user = userEvent.setup();
-
+		const user = renderPage();
 		vi.spyOn(window, "confirm").mockReturnValue(true);
 
-		render(<CourseManagementPage />);
-
-		const courseCard = screen
-			.getByText("Introduction to Programming")
-			.closest("article, .course-card") as HTMLElement;
-
 		await user.click(
-			within(courseCard).getByRole("button", { name: "Delete" }),
+			within(getCourseCard("Introduction to Programming")).getByRole("button", {
+				name: "Delete",
+			}),
 		);
 
 		expect(
 			screen.queryByText("Introduction to Programming"),
 		).not.toBeInTheDocument();
-
-		expect(screen.getByText(/1 course found/i)).toBeInTheDocument();
+		expect(screen.getByText("Computer Networks")).toBeInTheDocument();
+		expect(screen.getByText("1 course found")).toBeInTheDocument();
 	});
 
-	it("toggles publication status in the current local-state implementation", async () => {
-		const user = userEvent.setup();
-		render(<CourseManagementPage />);
+	it("toggles a course between published and draft states", async () => {
+		const user = renderPage();
+		const card = getCourseCard("Introduction to Programming");
 
-		const courseCard = screen
-			.getByText("Introduction to Programming")
-			.closest("article, .course-card") as HTMLElement;
+		expect(within(card).getByText("Published")).toBeInTheDocument();
 
-		expect(within(courseCard).getByText("Published")).toBeInTheDocument();
+		await user.click(within(card).getByRole("button", { name: "Hide" }));
 
-		await user.click(within(courseCard).getByRole("button", { name: "Hide" }));
+		expect(within(card).getByText("Draft")).toBeInTheDocument();
 
-		expect(within(courseCard).getByText("Draft")).toBeInTheDocument();
+		await user.click(within(card).getByRole("button", { name: "Publish" }));
 
-		await user.click(
-			within(courseCard).getByRole("button", { name: "Publish" }),
-		);
-
-		expect(within(courseCard).getByText("Published")).toBeInTheDocument();
+		expect(within(card).getByText("Published")).toBeInTheDocument();
 	});
 });

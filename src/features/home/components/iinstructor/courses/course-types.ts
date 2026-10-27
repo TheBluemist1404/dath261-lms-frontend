@@ -15,7 +15,16 @@ export type CourseInput = Omit<Course, "id" | "published">;
 
 export type CourseUpdateInput = Partial<CourseInput>;
 
-export type CourseFormData = CourseInput;
+export interface CourseFormData {
+	title: string;
+	description: string;
+	courseCode: string;
+	schoolYear: string;
+	semester: string;
+	courseStartDate: string;
+	courseEndDate: string;
+	teachingAssistants: string;
+}
 
 export type CourseFormErrors = Partial<
 	Record<keyof CourseFormData | "form", string>

@@ -8,36 +8,25 @@ export function validateCourse(
 	const errors: CourseFormErrors = {};
 
 	// Required fields
-	if (!formData.title?.trim()) {
-		errors.title = "Course title is required.";
-	}
+	const requiredFields: Array<{
+		field: "title" | "courseCode" | "description" | "schoolYear" | "semester";
+		message: string;
+	}> = [
+		{ field: "title", message: "Course title is required." },
+		{ field: "courseCode", message: "Course code is required." },
+		{ field: "description", message: "Course description is required." },
+		{ field: "schoolYear", message: "School year is required." },
+		{ field: "semester", message: "Semester is required." },
+	];
 
-	if (!formData.courseCode?.trim()) {
-		errors.courseCode = "Course code is required.";
-	}
-
-	if (!formData.description?.trim()) {
-		errors.description = "Course description is required.";
-	}
-
-	if (!formData.schoolYear?.trim()) {
-		errors.schoolYear = "School year is required.";
-	}
-
-	if (!formData.semester?.trim()) {
-		errors.semester = "Semester is required.";
-	}
-
-	if (!formData.courseStartDate?.trim()) {
-		errors.courseStartDate = "Start date is required.";
-	}
-
-	if (!formData.courseEndDate?.trim()) {
-		errors.courseEndDate = "End date is required.";
+	for (const { field, message } of requiredFields) {
+		if (!formData[field].trim()) {
+			errors[field] = message;
+		}
 	}
 
 	// Course code must be unique, excluding the course being edited.
-	const normalizedCode = formData.courseCode?.trim().toLowerCase();
+	const normalizedCode = formData.courseCode.trim().toLowerCase();
 
 	if (
 		normalizedCode &&
@@ -51,8 +40,8 @@ export function validateCourse(
 	}
 
 	// End date must not be earlier than start date.
-	const startDate = formData.courseStartDate?.trim();
-	const endDate = formData.courseEndDate?.trim();
+	const startDate = formData.courseStartDate.trim();
+	const endDate = formData.courseEndDate.trim();
 
 	if (startDate && endDate && endDate < startDate) {
 		errors.courseEndDate = "End date cannot be earlier than start date.";
