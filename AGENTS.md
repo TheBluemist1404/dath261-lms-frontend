@@ -1,3 +1,9 @@
+# Repository Agent Instructions
+
+Before starting work, read [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for the project source map and current implementation context, then [CONTRIBUTING.md](CONTRIBUTING.md) for the repository workflow.
+
+Consult the relevant canonical Notion documents linked there for product/domain decisions. For UI work, inspect the relevant Figma screen and states before implementing or comparing designs. Keep product context in that context file and the canonical sources, rather than duplicating the model in this instruction file.
+
 <!-- intent-skills:start -->
 # TanStack Intent - before editing files, run the matching guidance command.
 tanstackIntent:

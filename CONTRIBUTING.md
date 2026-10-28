@@ -76,12 +76,12 @@ Choose the smallest test level that gives useful confidence:
 - pure logic/utilities → Vitest;
 - React UI and hooks → React Testing Library;
 - API-facing frontend behavior → MSW;
-- complete user journeys → Playwright once E2E infrastructure is introduced.
+- complete user journeys and the real editor → Playwright (`e2e/`).
 
 Before opening a PR, run:
 
 ```bash
-pnpm ci
+pnpm run ci
 ```
 
 This checks Biome, TypeScript, tests, and the production build.

@@ -12,7 +12,18 @@ import { Route as rootRouteImport } from './routes/~__root'
 import { Route as LayoutRouteImport } from './routes/~_layout'
 import { Route as AdminRouteImport } from './routes/~admin'
 import { Route as LayoutIndexRouteImport } from './routes/~_layout.index'
+import { Route as LayoutWorkspaceRouteImport } from './routes/~_layout/~workspace'
 import { Route as AdminIndexRouteImport } from './routes/~admin.index'
+import { Route as LayoutWorkspaceIndexRouteImport } from './routes/~_layout/~workspace/~index'
+import { Route as LayoutWorkspaceArchivedRouteImport } from './routes/~_layout/~workspace/~archived'
+import { Route as LayoutWorkspaceMeRouteImport } from './routes/~_layout/~workspace/~me'
+import { Route as LayoutWorkspaceSearchRouteImport } from './routes/~_layout/~workspace/~search'
+import { Route as LayoutWorkspaceIdIndexRouteImport } from './routes/~_layout/~workspace/~$id/~index'
+import { Route as LayoutWorkspaceIdArchivedPagesRouteImport } from './routes/~_layout/~workspace/~$id/~archived-pages'
+import { Route as LayoutWorkspaceIdMembersRouteImport } from './routes/~_layout/~workspace/~$id/~members'
+import { Route as LayoutWorkspaceIdSettingsRouteImport } from './routes/~_layout/~workspace/~$id/~settings'
+import { Route as LayoutWorkspaceIdDiscussionPageIdRouteImport } from './routes/~_layout/~workspace/~$id/~discussion/~$pageId'
+import { Route as LayoutWorkspaceIdPagesPageIdRouteImport } from './routes/~_layout/~workspace/~$id/~pages/~$pageId'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -28,34 +39,168 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutWorkspaceRoute = LayoutWorkspaceRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const LayoutWorkspaceIndexRoute = LayoutWorkspaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
+const LayoutWorkspaceArchivedRoute = LayoutWorkspaceArchivedRouteImport.update({
+  id: '/archived',
+  path: '/archived',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
+const LayoutWorkspaceMeRoute = LayoutWorkspaceMeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
+const LayoutWorkspaceSearchRoute = LayoutWorkspaceSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
+const LayoutWorkspaceIdIndexRoute = LayoutWorkspaceIdIndexRouteImport.update({
+  id: '/$id/',
+  path: '/$id/',
+  getParentRoute: () => LayoutWorkspaceRoute,
+} as any)
+const LayoutWorkspaceIdArchivedPagesRoute =
+  LayoutWorkspaceIdArchivedPagesRouteImport.update({
+    id: '/$id/archived-pages',
+    path: '/$id/archived-pages',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
+const LayoutWorkspaceIdMembersRoute =
+  LayoutWorkspaceIdMembersRouteImport.update({
+    id: '/$id/members',
+    path: '/$id/members',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
+const LayoutWorkspaceIdSettingsRoute =
+  LayoutWorkspaceIdSettingsRouteImport.update({
+    id: '/$id/settings',
+    path: '/$id/settings',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
+const LayoutWorkspaceIdDiscussionPageIdRoute =
+  LayoutWorkspaceIdDiscussionPageIdRouteImport.update({
+    id: '/$id/discussion/$pageId',
+    path: '/$id/discussion/$pageId',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
+const LayoutWorkspaceIdPagesPageIdRoute =
+  LayoutWorkspaceIdPagesPageIdRouteImport.update({
+    id: '/$id/pages/$pageId',
+    path: '/$id/pages/$pageId',
+    getParentRoute: () => LayoutWorkspaceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/workspace/': typeof LayoutWorkspaceIndexRoute
+  '/workspace/archived': typeof LayoutWorkspaceArchivedRoute
+  '/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/workspace/search': typeof LayoutWorkspaceSearchRoute
+  '/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
+  '/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
+  '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
+  '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
+  '/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/admin': typeof AdminIndexRoute
+  '/workspace': typeof LayoutWorkspaceIndexRoute
+  '/workspace/archived': typeof LayoutWorkspaceArchivedRoute
+  '/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/workspace/search': typeof LayoutWorkspaceSearchRoute
+  '/workspace/$id': typeof LayoutWorkspaceIdIndexRoute
+  '/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
+  '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
+  '/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
+  '/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
+  '/_layout/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/_layout/workspace/': typeof LayoutWorkspaceIndexRoute
+  '/_layout/workspace/archived': typeof LayoutWorkspaceArchivedRoute
+  '/_layout/workspace/me': typeof LayoutWorkspaceMeRoute
+  '/_layout/workspace/search': typeof LayoutWorkspaceSearchRoute
+  '/_layout/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
+  '/_layout/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
+  '/_layout/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
+  '/_layout/workspace/$id/settings': typeof LayoutWorkspaceIdSettingsRoute
+  '/_layout/workspace/$id/discussion/$pageId': typeof LayoutWorkspaceIdDiscussionPageIdRoute
+  '/_layout/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/admin/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/workspace'
+    | '/admin/'
+    | '/workspace/'
+    | '/workspace/archived'
+    | '/workspace/me'
+    | '/workspace/search'
+    | '/workspace/$id/'
+    | '/workspace/$id/archived-pages'
+    | '/workspace/$id/members'
+    | '/workspace/$id/settings'
+    | '/workspace/$id/discussion/$pageId'
+    | '/workspace/$id/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin'
-  id: '__root__' | '/_layout' | '/admin' | '/_layout/' | '/admin/'
+  to:
+    | '/'
+    | '/admin'
+    | '/workspace'
+    | '/workspace/archived'
+    | '/workspace/me'
+    | '/workspace/search'
+    | '/workspace/$id'
+    | '/workspace/$id/archived-pages'
+    | '/workspace/$id/members'
+    | '/workspace/$id/settings'
+    | '/workspace/$id/discussion/$pageId'
+    | '/workspace/$id/pages/$pageId'
+  id:
+    | '__root__'
+    | '/_layout'
+    | '/admin'
+    | '/_layout/workspace'
+    | '/_layout/'
+    | '/admin/'
+    | '/_layout/workspace/'
+    | '/_layout/workspace/archived'
+    | '/_layout/workspace/me'
+    | '/_layout/workspace/search'
+    | '/_layout/workspace/$id/'
+    | '/_layout/workspace/$id/archived-pages'
+    | '/_layout/workspace/$id/members'
+    | '/_layout/workspace/$id/settings'
+    | '/_layout/workspace/$id/discussion/$pageId'
+    | '/_layout/workspace/$id/pages/$pageId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -86,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/workspace': {
+      id: '/_layout/workspace'
+      path: '/workspace'
+      fullPath: '/workspace'
+      preLoaderRoute: typeof LayoutWorkspaceRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -93,14 +245,117 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_layout/workspace/': {
+      id: '/_layout/workspace/'
+      path: '/'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof LayoutWorkspaceIndexRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/archived': {
+      id: '/_layout/workspace/archived'
+      path: '/archived'
+      fullPath: '/workspace/archived'
+      preLoaderRoute: typeof LayoutWorkspaceArchivedRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/me': {
+      id: '/_layout/workspace/me'
+      path: '/me'
+      fullPath: '/workspace/me'
+      preLoaderRoute: typeof LayoutWorkspaceMeRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/search': {
+      id: '/_layout/workspace/search'
+      path: '/search'
+      fullPath: '/workspace/search'
+      preLoaderRoute: typeof LayoutWorkspaceSearchRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/$id/': {
+      id: '/_layout/workspace/$id/'
+      path: '/$id'
+      fullPath: '/workspace/$id/'
+      preLoaderRoute: typeof LayoutWorkspaceIdIndexRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/$id/archived-pages': {
+      id: '/_layout/workspace/$id/archived-pages'
+      path: '/$id/archived-pages'
+      fullPath: '/workspace/$id/archived-pages'
+      preLoaderRoute: typeof LayoutWorkspaceIdArchivedPagesRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/$id/members': {
+      id: '/_layout/workspace/$id/members'
+      path: '/$id/members'
+      fullPath: '/workspace/$id/members'
+      preLoaderRoute: typeof LayoutWorkspaceIdMembersRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/$id/settings': {
+      id: '/_layout/workspace/$id/settings'
+      path: '/$id/settings'
+      fullPath: '/workspace/$id/settings'
+      preLoaderRoute: typeof LayoutWorkspaceIdSettingsRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/$id/discussion/$pageId': {
+      id: '/_layout/workspace/$id/discussion/$pageId'
+      path: '/$id/discussion/$pageId'
+      fullPath: '/workspace/$id/discussion/$pageId'
+      preLoaderRoute: typeof LayoutWorkspaceIdDiscussionPageIdRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
+    '/_layout/workspace/$id/pages/$pageId': {
+      id: '/_layout/workspace/$id/pages/$pageId'
+      path: '/$id/pages/$pageId'
+      fullPath: '/workspace/$id/pages/$pageId'
+      preLoaderRoute: typeof LayoutWorkspaceIdPagesPageIdRouteImport
+      parentRoute: typeof LayoutWorkspaceRoute
+    }
   }
 }
 
+interface LayoutWorkspaceRouteChildren {
+  LayoutWorkspaceIndexRoute: typeof LayoutWorkspaceIndexRoute
+  LayoutWorkspaceArchivedRoute: typeof LayoutWorkspaceArchivedRoute
+  LayoutWorkspaceMeRoute: typeof LayoutWorkspaceMeRoute
+  LayoutWorkspaceSearchRoute: typeof LayoutWorkspaceSearchRoute
+  LayoutWorkspaceIdIndexRoute: typeof LayoutWorkspaceIdIndexRoute
+  LayoutWorkspaceIdArchivedPagesRoute: typeof LayoutWorkspaceIdArchivedPagesRoute
+  LayoutWorkspaceIdMembersRoute: typeof LayoutWorkspaceIdMembersRoute
+  LayoutWorkspaceIdSettingsRoute: typeof LayoutWorkspaceIdSettingsRoute
+  LayoutWorkspaceIdDiscussionPageIdRoute: typeof LayoutWorkspaceIdDiscussionPageIdRoute
+  LayoutWorkspaceIdPagesPageIdRoute: typeof LayoutWorkspaceIdPagesPageIdRoute
+}
+
+const LayoutWorkspaceRouteChildren: LayoutWorkspaceRouteChildren = {
+  LayoutWorkspaceIndexRoute: LayoutWorkspaceIndexRoute,
+  LayoutWorkspaceArchivedRoute: LayoutWorkspaceArchivedRoute,
+  LayoutWorkspaceMeRoute: LayoutWorkspaceMeRoute,
+  LayoutWorkspaceSearchRoute: LayoutWorkspaceSearchRoute,
+  LayoutWorkspaceIdIndexRoute: LayoutWorkspaceIdIndexRoute,
+  LayoutWorkspaceIdArchivedPagesRoute: LayoutWorkspaceIdArchivedPagesRoute,
+  LayoutWorkspaceIdMembersRoute: LayoutWorkspaceIdMembersRoute,
+  LayoutWorkspaceIdSettingsRoute: LayoutWorkspaceIdSettingsRoute,
+  LayoutWorkspaceIdDiscussionPageIdRoute:
+    LayoutWorkspaceIdDiscussionPageIdRoute,
+  LayoutWorkspaceIdPagesPageIdRoute: LayoutWorkspaceIdPagesPageIdRoute,
+}
+
+const LayoutWorkspaceRouteWithChildren = LayoutWorkspaceRoute._addFileChildren(
+  LayoutWorkspaceRouteChildren,
+)
+
 interface LayoutRouteChildren {
+  LayoutWorkspaceRoute: typeof LayoutWorkspaceRouteWithChildren
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutWorkspaceRoute: LayoutWorkspaceRouteWithChildren,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

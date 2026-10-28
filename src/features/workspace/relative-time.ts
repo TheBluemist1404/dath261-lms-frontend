@@ -1,0 +1,20 @@
+const units: [Intl.RelativeTimeFormatUnit, number][] = [
+	["year", 365 * 24 * 3600],
+	["month", 30 * 24 * 3600],
+	["day", 24 * 3600],
+	["hour", 3600],
+	["minute", 60],
+];
+
+const format = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+/** "just now", "4 minutes ago", "yesterday", … relative to `now`. */
+export function formatRelativeTime(iso: string, now = Date.now()) {
+	const seconds = Math.round((new Date(iso).getTime() - now) / 1000);
+	for (const [unit, size] of units) {
+		if (Math.abs(seconds) >= size) {
+			return format.format(Math.round(seconds / size), unit);
+		}
+	}
+	return "just now";
+}
