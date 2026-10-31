@@ -4,7 +4,7 @@ import {
 	createRouter,
 	RouterProvider,
 } from "@tanstack/react-router";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
 import {
@@ -53,8 +53,12 @@ describe("/admin route", () => {
 		expect(
 			await screen.findByRole("heading", { name: "Operational overview" }),
 		).toBeInTheDocument();
+		// The admin area reuses the shared app layout and its sidebar.
 		expect(
-			screen.getByRole("navigation", { name: "Administration navigation" }),
+			screen.getByRole("navigation", {
+				name: "Primary navigation",
+				hidden: true,
+			}),
 		).toBeInTheDocument();
 	});
 
@@ -69,7 +73,7 @@ describe("/admin route", () => {
 			await screen.findByRole("heading", { name: "Access denied" }),
 		).toBeInTheDocument();
 		expect(
-			screen.queryByRole("navigation", { name: "Administration navigation" }),
+			screen.queryByRole("heading", { name: "Operational overview" }),
 		).not.toBeInTheDocument();
 	});
 
@@ -81,7 +85,7 @@ describe("/admin route", () => {
 			await screen.findByRole("heading", { name: "Sign in required" }),
 		).toBeInTheDocument();
 		expect(
-			screen.queryByRole("navigation", { name: "Administration navigation" }),
+			screen.queryByRole("heading", { name: "Operational overview" }),
 		).not.toBeInTheDocument();
 	});
 
@@ -99,5 +103,20 @@ describe("/admin route", () => {
 		});
 		const adminLinks = Array.from(nav.querySelectorAll('a[href="/admin"]'));
 		expect(adminLinks).toHaveLength(visible ? 1 : 0);
+	});
+
+	it("shows unbuilt admin sections without linking them", async () => {
+		useAuthStore.getState().setUser(userWithRole("admin"));
+		renderAt("/admin");
+
+		const nav = await screen.findByRole("navigation", {
+			name: "Primary navigation",
+			hidden: true,
+		});
+		for (const label of ["Users", "Courses", "Reports"]) {
+			const item = within(nav).getByText(label);
+			expect(item.closest("a")).toBeNull();
+			expect(item).toHaveAttribute("aria-disabled", "true");
+		}
 	});
 });
