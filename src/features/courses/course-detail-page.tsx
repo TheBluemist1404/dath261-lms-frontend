@@ -1,6 +1,6 @@
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { getCourse } from "../../course-service";
+import { getCourse } from "../home/components/course-service";
 import type { Course } from "./course-form";
 
 export default function CourseDetailPage() {

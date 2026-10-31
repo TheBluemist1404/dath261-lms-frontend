@@ -1,5 +1,5 @@
 import { httpClient } from "@/lib/http/client";
-import type { Course } from "./iinstructor/courses/course-form";
+import type { Course } from "../../courses/course-types";
 
 /**
  * Instructor course API.
