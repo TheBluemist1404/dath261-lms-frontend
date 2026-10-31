@@ -98,6 +98,7 @@ export function CourseBlockForm({
 
 	return (
 		<form
+			noValidate
 			onSubmit={submit}
 			className="flex flex-col gap-3 rounded-lg border border-border bg-canvas p-4"
 		>

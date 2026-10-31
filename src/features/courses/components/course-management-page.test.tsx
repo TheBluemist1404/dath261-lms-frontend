@@ -89,10 +89,18 @@ describe("CourseManagementPage", () => {
 			id,
 		}));
 		vi.mocked(deleteCourse).mockResolvedValue(undefined);
-		vi.mocked(updateCourseStatus).mockImplementation(async (id, status) => ({
-			...courses.find((course) => course.id === id)!,
-			status,
-		}));
+		vi.mocked(updateCourseStatus).mockImplementation(async (id, status) => {
+			const course = courses.find((course) => course.id === id);
+
+			if (!course) {
+				throw new Error(`Course with id ${id} not found`);
+			}
+
+			return {
+				...course,
+				status,
+			};
+		});
 	});
 	it("loads server courses into the Figma-aligned table", async () => {
 		renderPage();

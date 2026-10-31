@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CourseBlockForm } from "./course-block-form";
@@ -39,10 +39,9 @@ describe("CourseBlockForm", () => {
 		);
 		await user.type(screen.getByLabelText("Title *"), "Reading");
 		await user.clear(screen.getByLabelText("Content payload (JSON object)"));
-		await user.type(
-			screen.getByLabelText("Content payload (JSON object)"),
-			"[]",
-		);
+		fireEvent.change(screen.getByLabelText("Content payload (JSON object)"), {
+			target: { value: "[]" },
+		});
 		await user.click(screen.getByRole("button", { name: "Add block" }));
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"valid JSON object",

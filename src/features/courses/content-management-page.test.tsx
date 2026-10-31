@@ -24,7 +24,7 @@ vi.mock("@tanstack/react-router", () => ({
 	useParams: useParamsMock,
 }));
 
-vi.mock("../../course-service", () => ({
+vi.mock("../home/components/course-service", () => ({
 	getCourse: getCourseMock,
 }));
 
