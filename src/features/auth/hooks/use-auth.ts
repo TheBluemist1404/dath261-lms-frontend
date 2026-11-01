@@ -1,9 +1,10 @@
 import { useCallback } from "react";
 import { setAccessToken } from "@/lib/auth/access-token";
+import { broadcastLogin } from "@/lib/auth/cross-tab-sync";
 import { buildAuthUser, decodeJwtClaims } from "@/lib/auth/jwt-decoder";
-import { endSession } from "@/lib/auth/session";
+import { terminateSession } from "@/lib/auth/session-termination";
 import { useAuthStore } from "@/stores/auth.store";
-import { loginApi, logoutApi, registerApi } from "../api/auth.api";
+import { loginApi, registerApi } from "../api/auth.api";
 import type {
 	AuthStatus,
 	AuthTokenResponseDto,
@@ -30,11 +31,20 @@ export function useAuth(): UseAuthReturn {
 	const isAuthenticated = status === "authenticated";
 
 	const login = useCallback(async (credentials: LoginCredentials) => {
+		try {
+			if (typeof window !== "undefined") {
+				localStorage.removeItem("nodus_logout_tombstone");
+			}
+		} catch {
+			// Ignore localStorage errors
+		}
+
 		const result = await loginApi(credentials);
 		setAccessToken(result.accessToken);
 		const claims = decodeJwtClaims(result.accessToken);
 		const authUser = buildAuthUser(claims, credentials.email);
 		useAuthStore.getState().setUser(authUser);
+		broadcastLogin(authUser.id);
 		return result;
 	}, []);
 
@@ -43,11 +53,7 @@ export function useAuth(): UseAuthReturn {
 	}, []);
 
 	const logout = useCallback(async () => {
-		try {
-			await logoutApi();
-		} finally {
-			endSession();
-		}
+		await terminateSession();
 	}, []);
 
 	return {

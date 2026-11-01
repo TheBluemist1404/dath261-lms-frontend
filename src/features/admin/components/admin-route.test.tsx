@@ -70,7 +70,10 @@ describe("/admin route", () => {
 		renderAt("/admin");
 
 		expect(
-			await screen.findByRole("heading", { name: "Access denied" }),
+			await screen.findByRole("heading", {
+				name: "Learner-Oriented LMS",
+				level: 1,
+			}),
 		).toBeInTheDocument();
 		expect(
 			screen.queryByRole("heading", { name: "Operational overview" }),
@@ -82,7 +85,7 @@ describe("/admin route", () => {
 		renderAt("/admin");
 
 		expect(
-			await screen.findByRole("heading", { name: "Sign in required" }),
+			await screen.findByRole("heading", { name: "Sign in to Nodus" }),
 		).toBeInTheDocument();
 		expect(
 			screen.queryByRole("heading", { name: "Operational overview" }),
