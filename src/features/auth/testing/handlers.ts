@@ -1,4 +1,5 @@
 import { HttpResponse, http } from "msw";
+import { cookieStore } from "../../../../node_modules/msw/lib/core/utils/cookieStore.mjs";
 import type {
 	AuthTokenResponseDto,
 	AuthUser,
@@ -16,6 +17,25 @@ export function setMockCurrentUser(user: AuthUser | null): void {
 
 export function resetMockAuth(): void {
 	activeMockUser = null;
+	if (typeof window !== "undefined") {
+		const win = window as unknown as {
+			_document?: { _cookieJar?: { removeAllCookiesSync?: () => void } };
+		};
+		win._document?._cookieJar?.removeAllCookiesSync?.();
+	}
+	if (typeof localStorage !== "undefined") {
+		localStorage.removeItem("__msw-cookie-store__");
+	}
+	try {
+		cookieStore.setCookie(
+			"refresh_token=; Path=/api/auth; Max-Age=0",
+			"http://localhost:3000/api/auth",
+		);
+		cookieStore.setCookie(
+			"refresh_token=; Path=/api/auth; Max-Age=0",
+			"http://localhost/api/auth",
+		);
+	} catch {}
 }
 
 function base64Url(value: string): string {
@@ -40,7 +60,16 @@ function createMockJwt(claims: Record<string, unknown>): string {
 
 export const authHandlers = [
 	http.post("/api/auth/login", async ({ request }) => {
-		const body = (await request.json()) as LoginCredentials;
+		const body = (await request
+			.json()
+			.catch(() => null)) as Partial<LoginCredentials> | null;
+
+		if (!body?.email || !body?.password) {
+			return HttpResponse.json(
+				{ message: "Invalid request body." },
+				{ status: 400 },
+			);
+		}
 
 		if (
 			body.email === "invalid@example.com" ||
@@ -143,7 +172,11 @@ export const authHandlers = [
 	http.post("/api/auth/refresh", ({ cookies }) => {
 		const refreshToken = cookies.refresh_token;
 
-		if (refreshToken === "invalid-token" || refreshToken === "missing") {
+		if (
+			!refreshToken ||
+			refreshToken === "invalid-token" ||
+			refreshToken === "missing"
+		) {
 			return HttpResponse.json(
 				{ message: "Refresh token is missing, invalid, revoked, or expired." },
 				{ status: 401 },

@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from "axios";
 import { httpClient } from "@/lib/http/client";
 import type {
 	AuthTokenResponseDto,
@@ -15,6 +16,7 @@ export async function loginApi(
 	const response = await httpClient.post<AuthTokenResponseDto>(
 		"/auth/login",
 		credentials,
+		{ withCredentials: true, skipAuthRefresh: true },
 	);
 	return response.data;
 }
@@ -39,14 +41,24 @@ export async function registerApi(
 	return response.data;
 }
 
-export async function refreshApi(): Promise<AuthTokenResponseDto> {
+export async function refreshApi(
+	config?: AxiosRequestConfig,
+): Promise<AuthTokenResponseDto> {
 	const response = await httpClient.post<AuthTokenResponseDto>(
 		"/auth/refresh",
 		null,
+		{
+			withCredentials: true,
+			skipAuthRefresh: true,
+			...config,
+		},
 	);
 	return response.data;
 }
 
 export async function logoutApi(): Promise<void> {
-	await httpClient.post<void>("/auth/logout");
+	await httpClient.post<void>("/auth/logout", null, {
+		withCredentials: true,
+		skipAuthRefresh: true,
+	});
 }

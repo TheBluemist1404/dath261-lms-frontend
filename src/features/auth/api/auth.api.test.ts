@@ -42,6 +42,15 @@ describe("auth API client contracts", () => {
 				}),
 			).rejects.toThrow();
 		});
+
+		it("throws on missing credentials (400)", async () => {
+			await expect(
+				loginApi({
+					email: "",
+					password: "",
+				}),
+			).rejects.toThrow();
+		});
 	});
 
 	describe("registerApi", () => {
@@ -115,10 +124,20 @@ describe("auth API client contracts", () => {
 	});
 
 	describe("refreshApi", () => {
-		it("returns rotated accessToken", async () => {
-			const result = await refreshApi();
+		it("throws 401 Unauthorized when refresh cookie is omitted", async () => {
+			await expect(refreshApi()).rejects.toThrow();
+		});
+
+		it("returns rotated accessToken when valid cookie is presented", async () => {
+			const result = await refreshApi({
+				headers: {
+					Cookie: "refresh_token=mock-valid-refresh-token",
+				},
+			});
+
 			expect(result).toHaveProperty("accessToken");
 			expect(typeof result.accessToken).toBe("string");
+			expect(result.accessToken.split(".").length).toBe(3);
 		});
 	});
 
