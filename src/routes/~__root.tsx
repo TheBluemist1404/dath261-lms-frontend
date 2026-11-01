@@ -4,11 +4,16 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { useEffect, useState } from "react";
 import { NotFoundPage } from "@/components/layout/not-found-page";
+import { bootstrapSessionSafe } from "@/lib/auth/session-barrier";
 import type { AppRouterContext } from "@/router-context";
 
 import "../styles.css";
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
+	beforeLoad: async () => {
+		const auth = await bootstrapSessionSafe();
+		return { auth };
+	},
 	component: RootComponent,
 	notFoundComponent: NotFoundPage,
 });

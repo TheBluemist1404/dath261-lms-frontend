@@ -1,14 +1,11 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { AdminGuard } from "@/features/admin/components/admin-guard";
+import { requireRole } from "@/features/auth/routing/guards";
 
 export const Route = createFileRoute("/_layout/admin")({
+	beforeLoad: requireRole(["admin"]),
 	component: AdminRoute,
 });
 
 function AdminRoute() {
-	return (
-		<AdminGuard>
-			<Outlet />
-		</AdminGuard>
-	);
+	return <Outlet />;
 }

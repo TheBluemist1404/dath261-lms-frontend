@@ -19,3 +19,11 @@ pnpm-debug.log*
 # Playwright
 /test-results/
 /playwright-report/
+
+# Local agents and temporary fixtures
+/.agents/
+/backend-openapi.json
+.run.pid
+
+# Local agent tooling
+/.cursor/

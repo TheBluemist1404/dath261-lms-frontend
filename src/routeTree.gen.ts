@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/~__root'
 import { Route as LayoutRouteImport } from './routes/~_layout'
+import { Route as LoginRouteImport } from './routes/~login'
+import { Route as RegisterRouteImport } from './routes/~register'
 import { Route as LayoutIndexRouteImport } from './routes/~_layout.index'
 import { Route as LayoutAdminRouteImport } from './routes/~_layout/~admin'
 import { Route as LayoutWorkspaceRouteImport } from './routes/~_layout/~workspace'
@@ -27,6 +29,16 @@ import { Route as LayoutWorkspaceIdPagesPageIdRouteImport } from './routes/~_lay
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
@@ -107,6 +119,8 @@ const LayoutWorkspaceIdPagesPageIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/admin': typeof LayoutAdminRouteWithChildren
   '/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/admin/': typeof LayoutAdminIndexRoute
@@ -122,6 +136,8 @@ export interface FileRoutesByFullPath {
   '/workspace/$id/pages/$pageId': typeof LayoutWorkspaceIdPagesPageIdRoute
 }
 export interface FileRoutesByTo {
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/': typeof LayoutIndexRoute
   '/admin': typeof LayoutAdminIndexRoute
   '/workspace': typeof LayoutWorkspaceIndexRoute
@@ -138,6 +154,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/_layout/admin': typeof LayoutAdminRouteWithChildren
   '/_layout/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
@@ -157,6 +175,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
+    | '/register'
     | '/admin'
     | '/workspace'
     | '/admin/'
@@ -172,6 +192,8 @@ export interface FileRouteTypes {
     | '/workspace/$id/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/login'
+    | '/register'
     | '/'
     | '/admin'
     | '/workspace'
@@ -187,6 +209,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
+    | '/login'
+    | '/register'
     | '/_layout/admin'
     | '/_layout/workspace'
     | '/_layout/'
@@ -205,6 +229,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -214,6 +240,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof LayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_layout/': {
@@ -377,6 +417,8 @@ const LayoutRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

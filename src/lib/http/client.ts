@@ -4,6 +4,15 @@ import axios, {
 	type InternalAxiosRequestConfig,
 } from "axios";
 
+declare module "axios" {
+	interface AxiosRequestConfig {
+		/** Skips the refresh-and-retry flow, for the auth endpoints themselves. */
+		skipAuthRefresh?: boolean;
+		/** Set on the single retry after a refresh. */
+		authRetried?: boolean;
+	}
+}
+
 type MaybePromise<T> = T | Promise<T>;
 
 export interface HttpInterceptorHandlers {
@@ -17,6 +26,7 @@ export interface HttpInterceptorHandlers {
 
 export const httpClient = axios.create({
 	baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api",
+	withCredentials: true,
 	headers: {
 		Accept: "application/json",
 	},
