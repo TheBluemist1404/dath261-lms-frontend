@@ -52,7 +52,7 @@ const courses: Course[] = [
 		enrollmentStartAt: null,
 		enrollmentEndAt: null,
 		updatedAt: "2026-10-01T00:00:00.000Z",
-		_count: { enrollments: 42 },
+		enrollmentCount: 42,
 	},
 	{
 		id: "c2",
@@ -63,7 +63,7 @@ const courses: Course[] = [
 		enrollmentStartAt: null,
 		enrollmentEndAt: null,
 		updatedAt: "2026-10-02T00:00:00.000Z",
-		_count: { enrollments: 0 },
+		enrollmentCount: 0,
 	},
 ];
 

@@ -11,9 +11,7 @@ export interface Course {
 	enrollmentEndAt: string | null;
 	createdAt?: string;
 	updatedAt?: string;
-	_count?: { enrollments?: number };
-	/** Optional flattened count if the API serializes it directly. */
-	learnerCount?: number;
+	enrollmentCount?: number;
 }
 
 export interface CourseInput {

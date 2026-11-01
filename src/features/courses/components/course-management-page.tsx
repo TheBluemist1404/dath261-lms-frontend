@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
 	createCourse,
-	deleteCourse,
 	updateCourse,
 	updateCourseStatus,
 } from "../api/course.api";
@@ -56,10 +55,6 @@ export default function CourseManagementPage() {
 				error instanceof Error ? error.message : "Unable to save course.",
 			),
 	});
-	const deleteMutation = useMutation({
-		mutationFn: deleteCourse,
-		onSuccess: refresh,
-	});
 	const statusMutation = useMutation({
 		mutationFn: ({ id, status }: { id: string; status: CourseStatus }) =>
 			updateCourseStatus(id, status),
@@ -96,15 +91,6 @@ export default function CourseManagementPage() {
 	async function submit(input: CourseInput) {
 		setFormError(null);
 		await saveMutation.mutateAsync({ id: editing?.id, input });
-	}
-	async function remove(course: Course) {
-		if (window.confirm(`Delete “${course.title}”? This cannot be undone.`)) {
-			try {
-				await deleteMutation.mutateAsync(course.id);
-			} catch {
-				/* The query state below provides retry/error feedback. */
-			}
-		}
 	}
 	async function toggleStatus(course: Course) {
 		try {
@@ -274,7 +260,7 @@ export default function CourseManagementPage() {
 												</span>
 											</td>
 											<td className="px-4 py-4 text-sm">
-												{course.learnerCount ?? course._count?.enrollments ?? 0}
+												{course.enrollmentCount ?? 0}
 											</td>
 											<td className="px-4 py-4 text-sm text-muted">
 												{updatedLabel(course.updatedAt)}
@@ -298,14 +284,6 @@ export default function CourseManagementPage() {
 															? "Unpublish"
 															: "Publish"}
 													</button>
-													<button
-														type="button"
-														className="inline-flex min-h-10 items-center rounded-lg border border-error/30 px-3 text-sm font-semibold text-error hover:bg-error/5"
-														disabled={deleteMutation.isPending}
-														onClick={() => void remove(course)}
-													>
-														Delete
-													</button>
 												</div>
 											</td>
 										</tr>
@@ -317,15 +295,6 @@ export default function CourseManagementPage() {
 							Showing {filtered.length} of {courses.length} courses
 						</div>
 					</>
-				)}
-				{(deleteMutation.isError || statusMutation.isError) && (
-					<p
-						className="border-t border-border p-4 text-sm text-error"
-						role="alert"
-					>
-						{(deleteMutation.error ?? statusMutation.error)?.message ??
-							"The action failed. Please try again."}
-					</p>
 				)}
 			</section>
 		</main>

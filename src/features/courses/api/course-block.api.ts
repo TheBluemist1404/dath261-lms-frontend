@@ -9,26 +9,31 @@ export async function listCourseBlocks(
 	courseId: string,
 	signal?: AbortSignal,
 ): Promise<CourseBlock[]> {
-	const { data } = await httpClient.get<CourseBlock[]>("/courseblock", {
-		params: { courseId },
-		signal,
-	});
+	const { data } = await httpClient.get<CourseBlock[]>(
+		`/courseblock/get-all/${encodeURIComponent(courseId)}`,
+		{ signal },
+	);
 	return data;
 }
 
 export async function createCourseBlock(
+	courseId: string,
 	input: CourseBlockInput,
 ): Promise<CourseBlock> {
-	const { data } = await httpClient.post<CourseBlock>("/courseblock", input);
+	const { data } = await httpClient.post<CourseBlock>(
+		`/courseblock/create/${encodeURIComponent(courseId)}`,
+		input,
+	);
 	return data;
 }
 
 export async function updateCourseBlock(
+	courseId: string,
 	blockId: string,
 	input: Partial<Omit<CourseBlockInput, "courseId">>,
 ): Promise<CourseBlock> {
 	const { data } = await httpClient.patch<CourseBlock>(
-		`/courseblock/${encodeURIComponent(blockId)}`,
+		`/courseblock/update/${encodeURIComponent(courseId)}/${encodeURIComponent(blockId)}`,
 		input,
 	);
 	return data;

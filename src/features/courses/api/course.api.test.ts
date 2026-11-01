@@ -1,12 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { httpClient } from "@/lib/http/client";
 import type { Course } from "../types/course.types";
-import {
-	createCourse,
-	deleteCourse,
-	listCourses,
-	updateCourseStatus,
-} from "./course.api";
+import { createCourse, listCourses, updateCourseStatus } from "./course.api";
 
 vi.mock("@/lib/http/client", () => ({
 	httpClient: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
@@ -48,13 +43,22 @@ describe("course API", () => {
 			data: { ...course, status: "PUBLISHED" },
 		} as never);
 		await updateCourseStatus("course/1", "PUBLISHED");
-		expect(httpClient.patch).toHaveBeenCalledWith("/courses/course%2F1", {
+		expect(httpClient.patch).toHaveBeenCalledWith(
+			"/courses/course%2F1/status",
+			{
+				status: "PUBLISHED",
+			},
+		);
+	});
+	it("updates course status through the status endpoint", async () => {
+		vi.mocked(httpClient.patch).mockResolvedValue({
+			data: { ...course, status: "PUBLISHED" },
+		} as never);
+
+		await updateCourseStatus("course-1", "PUBLISHED");
+
+		expect(httpClient.patch).toHaveBeenCalledWith("/courses/course-1/status", {
 			status: "PUBLISHED",
 		});
-	});
-	it("deletes a course through the shared client", async () => {
-		vi.mocked(httpClient.delete).mockResolvedValue({} as never);
-		await deleteCourse("course-1");
-		expect(httpClient.delete).toHaveBeenCalledWith("/courses/course-1");
 	});
 });

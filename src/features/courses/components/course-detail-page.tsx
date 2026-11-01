@@ -57,11 +57,14 @@ export default function CourseDetailPage() {
 				| CourseBlockInput
 				| (Partial<Omit<CourseBlockInput, "courseId">> & { courseId?: string }),
 		) => {
+			if (!courseId) {
+				throw new Error("Course ID is required");
+			}
 			if (editing) {
 				const { courseId: _courseId, ...patch } = input;
-				return updateCourseBlock(editing.id, patch);
+				return updateCourseBlock(courseId, editing.id, patch);
 			}
-			return createCourseBlock(input as CourseBlockInput);
+			return createCourseBlock(courseId as string, input as CourseBlockInput);
 		},
 		onSuccess: async () => {
 			await refreshBlocks();

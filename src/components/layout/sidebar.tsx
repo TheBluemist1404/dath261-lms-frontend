@@ -26,7 +26,7 @@ const menus: Record<UserRole, MenuItem[]> = {
 	admin: [
 		{ label: "Overview", icon: "dashboard" },
 		{ label: "Users", icon: "users" },
-		{ label: "Courses", icon: "courses", to: "/instructor/courses" },
+		{ label: "Courses", icon: "courses" },
 		{ label: "Reports", icon: "reports" },
 	],
 };

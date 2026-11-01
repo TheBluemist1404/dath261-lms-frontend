@@ -42,16 +42,12 @@ export async function updateCourse(
 	return data;
 }
 
-export async function deleteCourse(courseId: string): Promise<void> {
-	await httpClient.delete(`/courses/${encodeURIComponent(courseId)}`);
-}
-
 export async function updateCourseStatus(
 	courseId: string,
 	status: Course["status"],
 ): Promise<Course> {
 	const { data } = await httpClient.patch<Course>(
-		`/courses/${encodeURIComponent(courseId)}`,
+		`/courses/${encodeURIComponent(courseId)}/status`,
 		{ status },
 	);
 	return data;
