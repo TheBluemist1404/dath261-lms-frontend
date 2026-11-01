@@ -5,7 +5,7 @@ import { type UserRole, useAuthStore } from "@/stores/auth.store";
 type MenuItem = {
 	label: string;
 	icon: IconName;
-	to?: "/" | "/workspace" | "/admin";
+	to?: "/" | "/workspace" | "/instructor/courses" | "/admin";
 	// Shown but not clickable until the feature exists.
 	disabled?: boolean;
 };
@@ -20,7 +20,7 @@ const menus: Record<UserRole, MenuItem[]> = {
 		{ label: "Notifications", icon: "bell" },
 	],
 	lecturer: [
-		{ label: "My Courses", icon: "courses" },
+		{ label: "My Courses", icon: "courses", to: "/instructor/courses" },
 		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
 		{ label: "Notifications", icon: "bell" },
