@@ -1,49 +1,118 @@
-import axios, { type AxiosInstance } from "axios";
+import axios, {
+	type AxiosInstance,
+	type AxiosResponse,
+	type InternalAxiosRequestConfig,
+} from "axios";
 import { getAccessToken } from "@/lib/auth/access-token";
+import { isTokenExpiringSoon } from "@/lib/auth/jwt-decoder";
 import { refreshAccessToken } from "@/lib/auth/session";
 import { httpClient, registerHttpInterceptors } from "./client";
 
 declare module "axios" {
 	interface AxiosRequestConfig {
-		/** Skips the refresh-and-retry flow, for the auth endpoints themselves. */
 		skipAuthRefresh?: boolean;
-		/** Set on the single retry after a refresh. */
 		authRetried?: boolean;
 	}
 }
 
-/**
- * Sends the in-memory access token as a Bearer header and, on a 401, refreshes
- * it once through the refresh cookie before retrying the original request.
- */
+interface QueuedRequest {
+	resolve: (token: string) => void;
+	reject: (error: unknown) => void;
+}
+
+let isRefreshing = false;
+let failedQueue: QueuedRequest[] = [];
+
+function processQueue(error: unknown, token: string | null = null) {
+	const queue = failedQueue;
+	failedQueue = [];
+	for (const subscriber of queue) {
+		if (token) {
+			subscriber.resolve(token);
+		} else {
+			subscriber.reject(error);
+		}
+	}
+}
+
 export function installAuthInterceptors(client: AxiosInstance = httpClient) {
-	return registerHttpInterceptors(
+	const unregister = registerHttpInterceptors(
 		{
-			onRequest: (config) => {
-				const token = getAccessToken();
+			onRequest: async (config) => {
+				if (config.skipAuthRefresh || config.url?.includes("/auth/")) {
+					return config;
+				}
+
+				let token = getAccessToken();
+				if (token && isTokenExpiringSoon(token, 30)) {
+					const refreshed = await refreshAccessToken();
+					if (refreshed) {
+						token = refreshed;
+					}
+				}
+
 				if (token && !config.headers.has("Authorization")) {
 					config.headers.set("Authorization", `Bearer ${token}`);
 				}
 				return config;
 			},
-			onResponseError: async (error) => {
+			onResponseError: async (error: unknown) => {
 				if (!axios.isAxiosError(error) || error.response?.status !== 401) {
 					throw error;
 				}
 
-				const config = error.config;
-				if (!config || config.skipAuthRefresh || config.authRetried) {
+				const config = error.config as InternalAxiosRequestConfig | undefined;
+				if (
+					!config ||
+					config.skipAuthRefresh ||
+					config.authRetried ||
+					config.url?.includes("/auth/")
+				) {
 					throw error;
 				}
 
-				const token = await refreshAccessToken();
-				if (!token) throw error;
+				if (isRefreshing) {
+					return new Promise<AxiosResponse>((resolve, reject) => {
+						failedQueue.push({
+							resolve: (token: string) => {
+								config.authRetried = true;
+								config.headers.set("Authorization", `Bearer ${token}`);
+								resolve(client.request(config));
+							},
+							reject: (err: unknown) => {
+								reject(err);
+							},
+						});
+					});
+				}
 
-				config.authRetried = true;
-				config.headers.set("Authorization", `Bearer ${token}`);
-				return client.request(config);
+				isRefreshing = true;
+
+				try {
+					const token = await refreshAccessToken();
+					if (!token) {
+						processQueue(error, null);
+						throw error;
+					}
+
+					processQueue(null, token);
+					config.authRetried = true;
+					config.headers.set("Authorization", `Bearer ${token}`);
+					return await client.request(config);
+				} catch (refreshErr) {
+					processQueue(refreshErr, null);
+					throw refreshErr;
+				} finally {
+					isRefreshing = false;
+				}
 			},
 		},
 		client,
 	);
+
+	return () => {
+		unregister();
+		isRefreshing = false;
+		failedQueue = [];
+	};
 }
