@@ -1,6 +1,7 @@
-import type { AuthUser } from "@/stores/auth.store";
+import type { AuthState, AuthUser } from "@/stores/auth.store";
 
 export type { AuthState, AuthUser, UserRole } from "@/stores/auth.store";
+export type AuthStatus = AuthState["status"];
 
 export type UserRoleDto = "STUDENT" | "LECTURER" | "ADMIN";
 export type AccountStatusDto = "ACTIVE" | "SUSPENDED";
