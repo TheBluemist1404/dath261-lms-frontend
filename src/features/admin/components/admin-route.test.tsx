@@ -85,7 +85,9 @@ describe("/admin route", () => {
 		renderAt("/admin");
 
 		expect(
-			await screen.findByRole("heading", { name: "Sign in to Nodus" }),
+			await screen.findByRole("heading", {
+				name: /welcome back|sign in to nodus/i,
+			}),
 		).toBeInTheDocument();
 		expect(
 			screen.queryByRole("heading", { name: "Operational overview" }),

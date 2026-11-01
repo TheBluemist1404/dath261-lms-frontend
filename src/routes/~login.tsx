@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { LoginForm } from "@/features/auth/components/login-form";
 import { requireGuest } from "@/features/auth/routing/guards";
 
 export const Route = createFileRoute("/login")({
-	validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+	validateSearch: (
+		search: Record<string, unknown>,
+	): { redirect?: string; email?: string; registered?: boolean } => ({
 		redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+		email: typeof search.email === "string" ? search.email : undefined,
+		registered:
+			search.registered === true || search.registered === "true"
+				? true
+				: undefined,
 	}),
 	beforeLoad: ({ context, search }) => {
 		requireGuest({ context, search });
@@ -12,11 +20,5 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginComponent() {
-	return (
-		<div className="flex min-h-dvh items-center justify-center bg-canvas p-4 text-ink">
-			<div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
-				<h1 className="text-2xl font-bold tracking-tight">Sign in to Nodus</h1>
-			</div>
-		</div>
-	);
+	return <LoginForm />;
 }

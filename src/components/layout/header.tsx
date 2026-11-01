@@ -6,9 +6,10 @@ import { Brand } from "./brand";
 export default function Header() {
 	const user = useAuthStore((state) => state.user);
 	const status = useAuthStore((state) => state.status);
-	const initials = user?.name
+	const initials = (user?.name || "")
 		.trim()
 		.split(/\s+/)
+		.filter(Boolean)
 		.map((part) => part[0])
 		.slice(0, 2)
 		.join("")
@@ -32,7 +33,9 @@ export default function Header() {
 						</Link>
 						<Link
 							to="/"
-							aria-label={`Profile for ${user.name}`}
+							aria-label={
+								user?.name ? `Profile for ${user.name}` : "User Profile"
+							}
 							className="flex size-10 items-center justify-center rounded-full bg-primary-subtle text-sm font-semibold text-primary"
 						>
 							<span aria-hidden="true">{initials || "N"}</span>
