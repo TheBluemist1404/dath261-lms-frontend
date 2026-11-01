@@ -39,6 +39,11 @@ export async function updateCourseBlock(
 	return data;
 }
 
-export async function deleteCourseBlock(blockId: string): Promise<void> {
-	await httpClient.delete(`/courseblock/${encodeURIComponent(blockId)}`);
+export async function deleteCourseBlock(
+	courseId: string,
+	blockId: string,
+): Promise<void> {
+	await httpClient.delete(
+		`/courseblock/delete/${encodeURIComponent(courseId)}/${encodeURIComponent(blockId)}`,
+	);
 }

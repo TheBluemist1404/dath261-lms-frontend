@@ -174,4 +174,16 @@ describe("CourseManagementPage", () => {
 			expect(updateCourseStatus).toHaveBeenCalledWith("c2", "PUBLISHED"),
 		);
 	});
+	it("shows an error when the status change fails", async () => {
+		const user = userEvent.setup();
+		updateCourseStatus.mockRejectedValue(new Error("Cannot publish"));
+		renderPage();
+		await screen.findByText("Computer Networks");
+		const row = screen.getByText("Computer Networks").closest("tr");
+		if (!row) throw new Error("Course row not found");
+		await user.click(within(row).getByRole("button", { name: "Publish" }));
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"Cannot publish",
+		);
+	});
 });

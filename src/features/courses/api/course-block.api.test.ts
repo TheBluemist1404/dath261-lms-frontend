@@ -54,13 +54,15 @@ describe("course block API", () => {
 		vi.mocked(httpClient.patch).mockResolvedValue({ data: block } as never);
 		vi.mocked(httpClient.delete).mockResolvedValue({} as never);
 		await updateCourseBlock("course-1", "block-1", { title: "Updated" });
-		await deleteCourseBlock("block-1");
+		await deleteCourseBlock("course-1", "block-1");
 		expect(httpClient.patch).toHaveBeenCalledWith(
 			"/courseblock/update/course-1/block-1",
 			{
 				title: "Updated",
 			},
 		);
-		expect(httpClient.delete).toHaveBeenCalledWith("/courseblock/block-1");
+		expect(httpClient.delete).toHaveBeenCalledWith(
+			"/courseblock/delete/course-1/block-1",
+		);
 	});
 });
