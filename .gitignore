@@ -24,3 +24,6 @@ pnpm-debug.log*
 /.agents/
 /backend-openapi.json
 .run.pid
+
+# Local agent tooling
+/.cursor/
