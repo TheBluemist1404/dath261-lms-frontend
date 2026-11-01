@@ -11,6 +11,14 @@ interface AuthTokenResponse {
 let pendingRefresh: Promise<string | null> | null = null;
 
 export function refreshAccessToken(): Promise<string | null> {
+	if (
+		typeof window !== "undefined" &&
+		localStorage.getItem("nodus_logout_tombstone") === "true"
+	) {
+		endSession();
+		return Promise.resolve(null);
+	}
+
 	pendingRefresh ??= httpClient
 		.post<AuthTokenResponse>("/auth/refresh", undefined, {
 			withCredentials: true,
