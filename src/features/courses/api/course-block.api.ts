@@ -10,7 +10,7 @@ export async function listCourseBlocks(
 	signal?: AbortSignal,
 ): Promise<CourseBlock[]> {
 	const { data } = await httpClient.get<CourseBlock[]>(
-		`/courseblock/get-all/${encodeURIComponent(courseId)}`,
+		`/courses/${encodeURIComponent(courseId)}/blocks`,
 		{ signal },
 	);
 	return data;
@@ -21,7 +21,7 @@ export async function createCourseBlock(
 	input: CourseBlockInput,
 ): Promise<CourseBlock> {
 	const { data } = await httpClient.post<CourseBlock>(
-		`/courseblock/create/${encodeURIComponent(courseId)}`,
+		`/courses/${encodeURIComponent(courseId)}/blocks`,
 		input,
 	);
 	return data;
@@ -33,7 +33,7 @@ export async function updateCourseBlock(
 	input: Partial<Omit<CourseBlockInput, "courseId">>,
 ): Promise<CourseBlock> {
 	const { data } = await httpClient.patch<CourseBlock>(
-		`/courseblock/update/${encodeURIComponent(courseId)}/${encodeURIComponent(blockId)}`,
+		`/courses/${encodeURIComponent(courseId)}/blocks/${encodeURIComponent(blockId)}`,
 		input,
 	);
 	return data;
@@ -44,6 +44,6 @@ export async function deleteCourseBlock(
 	blockId: string,
 ): Promise<void> {
 	await httpClient.delete(
-		`/courseblock/delete/${encodeURIComponent(courseId)}/${encodeURIComponent(blockId)}`,
+		`/courses/${encodeURIComponent(courseId)}/blocks/${encodeURIComponent(blockId)}`,
 	);
 }

@@ -1,5 +1,5 @@
 import { HttpResponse, http } from "msw";
-import type { Course } from "../types/course.types";
+import type { Course, CoursePage } from "../types/course.types";
 
 const seededAt = "2026-10-01T08:00:00.000Z";
 
@@ -44,9 +44,23 @@ export const mockPublishedCourses: Course[] = [
 	),
 ];
 
-// Public catalog read; the path follows the provisional client in course.api.
+export function coursePage(courses: Course[]): CoursePage {
+	return {
+		data: courses,
+		meta: {
+			total: courses.length,
+			page: 1,
+			limit: 20,
+			totalPages: courses.length ? 1 : 0,
+			hasNextPage: false,
+			hasPrevPage: false,
+		},
+	};
+}
+
+// Public catalog read (GET /courses/catalog).
 export const catalogHandlers = [
-	http.get("*/api/courses/published", () =>
-		HttpResponse.json(mockPublishedCourses),
+	http.get("*/api/courses/catalog", () =>
+		HttpResponse.json(coursePage(mockPublishedCourses)),
 	),
 ];

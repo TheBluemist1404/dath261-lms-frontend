@@ -8,8 +8,8 @@ const previewSize = 3;
 const tints = ["bg-primary-subtle", "bg-[#ece8f7]", "bg-[#e6eef6]"];
 
 export function CoursePreview() {
-	const { data } = useQuery(publishedCourseListQuery());
-	const courses = data?.slice(0, previewSize) ?? [];
+	const { data } = useQuery(publishedCourseListQuery({ limit: previewSize }));
+	const courses = data?.data.slice(0, previewSize) ?? [];
 
 	// Loading, failure and an empty catalog all hide the section.
 	if (courses.length === 0) return null;

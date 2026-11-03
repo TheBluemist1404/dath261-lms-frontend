@@ -23,13 +23,12 @@ const block: CourseBlock = {
 afterEach(() => vi.clearAllMocks());
 
 describe("course block API", () => {
-	it("queries course blocks through the courseblock resource", async () => {
+	it("queries course blocks through the nested course resource", async () => {
 		vi.mocked(httpClient.get).mockResolvedValue({ data: [block] } as never);
 		expect(await listCourseBlocks("course-1")).toEqual([block]);
-		expect(httpClient.get).toHaveBeenCalledWith(
-			"/courseblock/get-all/course-1",
-			{ signal: undefined },
-		);
+		expect(httpClient.get).toHaveBeenCalledWith("/courses/course-1/blocks", {
+			signal: undefined,
+		});
 	});
 	it("creates nested content as a CourseBlock", async () => {
 		vi.mocked(httpClient.post).mockResolvedValue({ data: block } as never);
@@ -46,7 +45,7 @@ describe("course block API", () => {
 		await createCourseBlock("course-1", input);
 
 		expect(httpClient.post).toHaveBeenCalledWith(
-			"/courseblock/create/course-1",
+			"/courses/course-1/blocks",
 			input,
 		);
 	});
@@ -56,13 +55,13 @@ describe("course block API", () => {
 		await updateCourseBlock("course-1", "block-1", { title: "Updated" });
 		await deleteCourseBlock("course-1", "block-1");
 		expect(httpClient.patch).toHaveBeenCalledWith(
-			"/courseblock/update/course-1/block-1",
+			"/courses/course-1/blocks/block-1",
 			{
 				title: "Updated",
 			},
 		);
 		expect(httpClient.delete).toHaveBeenCalledWith(
-			"/courseblock/delete/course-1/block-1",
+			"/courses/course-1/blocks/block-1",
 		);
 	});
 });
