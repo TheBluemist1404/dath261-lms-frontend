@@ -37,7 +37,7 @@ describe("AuthHeader", () => {
 
 		const coursesLink = screen.getByRole("link", { name: "Explore courses" });
 		expect(coursesLink).toBeInTheDocument();
-		expect(coursesLink).toHaveAttribute("href", "/");
+		expect(coursesLink).toHaveAttribute("href", "/catalog");
 	});
 
 	it("renders 'Log in' and 'Get started' action links", () => {

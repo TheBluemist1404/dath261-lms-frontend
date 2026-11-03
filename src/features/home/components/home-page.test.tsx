@@ -71,6 +71,9 @@ describe("landing page", () => {
 		}
 		// The shared shell's header stays in place.
 		expect(screen.getByRole("link", { name: "Nodus home" })).toBeVisible();
+		expect(
+			screen.getByRole("link", { name: "Explore courses" }),
+		).toHaveAttribute("href", "/catalog");
 		// Signed-out visitors get no app menu.
 		expect(
 			screen.queryByRole("navigation", {
@@ -80,7 +83,7 @@ describe("landing page", () => {
 		).not.toBeInTheDocument();
 	});
 
-	it("previews the first three published courses", async () => {
+	it("previews the first three published courses and links them to the catalog", async () => {
 		server.use(
 			http.get(catalogUrl, () => HttpResponse.json(mockPublishedCourses)),
 		);
@@ -97,8 +100,26 @@ describe("landing page", () => {
 		expect(
 			within(section).queryByText("Computer Networks"),
 		).not.toBeInTheDocument();
-		// No catalog route exists yet (FE #19), so nothing links there.
-		expect(within(section).queryAllByRole("link")).toHaveLength(0);
+		const links = within(section).getAllByRole("link");
+		expect(links).toHaveLength(4);
+		for (const link of links) {
+			expect(link).toHaveAttribute("href", "/catalog");
+		}
+	});
+
+	it("serves a catalog placeholder to guests that leads back home", async () => {
+		const router = renderAt("/catalog");
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "Explore courses" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("link", { name: "Explore courses" }),
+		).toHaveAttribute("aria-current", "page");
+		expect(
+			screen.getByRole("link", { name: "← Back to home" }),
+		).toHaveAttribute("href", "/");
+		expect(router.state.location.pathname).toBe("/catalog");
 	});
 
 	it.each([

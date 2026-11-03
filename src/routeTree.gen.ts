@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/~login'
 import { Route as RegisterRouteImport } from './routes/~register'
 import { Route as LayoutIndexRouteImport } from './routes/~_layout.index'
 import { Route as LayoutAdminRouteImport } from './routes/~_layout/~admin'
+import { Route as LayoutCatalogRouteImport } from './routes/~_layout/~catalog'
 import { Route as LayoutInstructorRouteImport } from './routes/~_layout/~instructor'
 import { Route as LayoutWorkspaceRouteImport } from './routes/~_layout/~workspace'
 import { Route as LayoutAdminIndexRouteImport } from './routes/~_layout/~admin/~index'
@@ -53,6 +54,11 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutCatalogRoute = LayoutCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutInstructorRoute = LayoutInstructorRouteImport.update({
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/admin': typeof LayoutAdminRouteWithChildren
+  '/catalog': typeof LayoutCatalogRoute
   '/instructor': typeof LayoutInstructorRouteWithChildren
   '/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/admin/': typeof LayoutAdminIndexRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/catalog': typeof LayoutCatalogRoute
   '/instructor': typeof LayoutInstructorRouteWithChildren
   '/': typeof LayoutIndexRoute
   '/admin': typeof LayoutAdminIndexRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_layout/admin': typeof LayoutAdminRouteWithChildren
+  '/_layout/catalog': typeof LayoutCatalogRoute
   '/_layout/instructor': typeof LayoutInstructorRouteWithChildren
   '/_layout/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/admin'
+    | '/catalog'
     | '/instructor'
     | '/workspace'
     | '/admin/'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/register'
+    | '/catalog'
     | '/instructor'
     | '/'
     | '/admin'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/_layout/admin'
+    | '/_layout/catalog'
     | '/_layout/instructor'
     | '/_layout/workspace'
     | '/_layout/'
@@ -316,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof LayoutAdminRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/catalog': {
+      id: '/_layout/catalog'
+      path: '/catalog'
+      fullPath: '/catalog'
+      preLoaderRoute: typeof LayoutCatalogRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/instructor': {
@@ -505,6 +524,7 @@ const LayoutWorkspaceRouteWithChildren = LayoutWorkspaceRoute._addFileChildren(
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRouteWithChildren
+  LayoutCatalogRoute: typeof LayoutCatalogRoute
   LayoutInstructorRoute: typeof LayoutInstructorRouteWithChildren
   LayoutWorkspaceRoute: typeof LayoutWorkspaceRouteWithChildren
   LayoutIndexRoute: typeof LayoutIndexRoute
@@ -512,6 +532,7 @@ interface LayoutRouteChildren {
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRouteWithChildren,
+  LayoutCatalogRoute: LayoutCatalogRoute,
   LayoutInstructorRoute: LayoutInstructorRouteWithChildren,
   LayoutWorkspaceRoute: LayoutWorkspaceRouteWithChildren,
   LayoutIndexRoute: LayoutIndexRoute,

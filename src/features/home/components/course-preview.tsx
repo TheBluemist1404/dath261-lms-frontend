@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
 import { publishedCourseListQuery } from "@/features/courses/api/course.queries";
 
-// Cards link nowhere yet: the catalog and course detail routes belong to FE #19.
+// Cards open the catalog until FE #19 adds a course preview route.
 const previewSize = 3;
 const tints = ["bg-primary-subtle", "bg-[#ece8f7]", "bg-[#e6eef6]"];
 
@@ -15,13 +16,24 @@ export function CoursePreview() {
 
 	return (
 		<section aria-labelledby="preview-title">
-			<h2 id="preview-title" className="font-heading text-2xl font-bold">
-				Explore courses
-			</h2>
+			<div className="flex flex-wrap items-end justify-between gap-3">
+				<h2 id="preview-title" className="font-heading text-2xl font-bold">
+					Explore courses
+				</h2>
+				<Link
+					to="/catalog"
+					className="rounded-lg text-sm font-semibold text-primary hover:underline"
+				>
+					Browse the catalog
+				</Link>
+			</div>
 			<ul className="mt-6 grid gap-4 md:grid-cols-3">
 				{courses.map((course, index) => (
 					<li key={course.id}>
-						<article className="flex h-full flex-col rounded-2xl bg-white p-4">
+						<Link
+							to="/catalog"
+							className="flex h-full flex-col rounded-2xl bg-white p-4 hover:shadow-sm"
+						>
 							<span
 								className={`flex h-32 items-center justify-center rounded-xl text-primary ${tints[index % tints.length]}`}
 							>
@@ -35,7 +47,7 @@ export function CoursePreview() {
 									{course.description}
 								</p>
 							)}
-						</article>
+						</Link>
 					</li>
 				))}
 			</ul>

@@ -34,7 +34,7 @@ export function AuthHeader({ className = "" }: AuthHeaderProps) {
 				</Link>
 
 				<Link
-					to="/"
+					to="/catalog"
 					className="hidden text-sm font-medium text-muted transition-colors hover:text-ink sm:inline-block"
 				>
 					Explore courses

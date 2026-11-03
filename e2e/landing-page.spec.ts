@@ -32,7 +32,9 @@ test.describe("Public landing page", () => {
 		const preview = page.getByRole("region", { name: "Explore courses" });
 		await expect(preview.getByRole("listitem")).toHaveCount(3);
 		await expect(preview.getByText("Operating Systems")).toBeVisible();
-		await expect(page.locator('a[href="/catalog"]')).toHaveCount(0);
+		await expect(
+			preview.getByRole("link", { name: "Browse the catalog" }),
+		).toHaveAttribute("href", "/catalog");
 		await expect(
 			page.getByRole("navigation", { name: "Primary navigation" }),
 		).toHaveCount(0);
@@ -51,6 +53,27 @@ test.describe("Public landing page", () => {
 		await expect(
 			page.getByRole("heading", { name: "Welcome back" }),
 		).toBeVisible();
+	});
+
+	test("moves between home and the catalog placeholder", async ({ page }) => {
+		await visitSignedOut(page);
+
+		await page
+			.getByRole("banner")
+			.getByRole("link", { name: "Explore courses" })
+			.click();
+		await expect(page).toHaveURL(/\/catalog$/);
+		await expect(
+			page.getByRole("heading", { level: 1, name: "Explore courses" }),
+		).toBeVisible();
+
+		await page.getByRole("link", { name: "← Back to home" }).click();
+		await expect(page).toHaveURL(/\/$/);
+		await page
+			.getByRole("region", { name: "Explore courses" })
+			.getByRole("link", { name: "Browse the catalog" })
+			.click();
+		await expect(page).toHaveURL(/\/catalog$/);
 	});
 
 	test("fits a phone screen without sideways scrolling", async ({ page }) => {
