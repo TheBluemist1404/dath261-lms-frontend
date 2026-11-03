@@ -1,5 +1,6 @@
 {
 	"name": "dath261-lms-frontend",
+	"description": "Nodus web client: course learning, personal knowledge workspaces, and real-time collaboration.",
 	"private": true,
 	"packageManager": "pnpm@12.4.2",
 	"engines": {

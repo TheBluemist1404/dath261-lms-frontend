@@ -41,7 +41,11 @@ test("places a course reference in the text from the slash menu", async ({
 	await expect(card).toBeVisible();
 	await expect(editor(page).getByText(/Starts at 12:05/)).toBeVisible();
 
-	// Writing continues below the reference.
+	// Writing continues below the reference. Wait for the editor to take focus
+	// back from the closing picker, or the first keystrokes can be lost.
+	await expect(
+		editor(page).locator(".bn-block-content").last(),
+	).toHaveAttribute("data-is-empty-and-focused", "true");
 	await page.keyboard.type("Notes after the video");
 	await expect(editor(page).locator(".bn-block-content").last()).toHaveText(
 		"Notes after the video",
