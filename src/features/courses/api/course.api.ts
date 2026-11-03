@@ -1,7 +1,9 @@
 import { httpClient } from "@/lib/http/client";
 import type {
+	CatalogQuery,
 	Course,
 	CourseInput,
+	CoursePage,
 	CourseUpdateInput,
 } from "../types/course.types";
 
@@ -16,14 +18,20 @@ export async function listCourses(signal?: AbortSignal): Promise<Course[]> {
 }
 
 /**
- * Public catalog read (BE #26). The path is provisional until that PR merges;
- * callers must treat any failure as "no catalog yet". Guests have no session
- * to refresh, so a 401 here must not start the refresh flow.
+ * Public catalog read: published, non-suspended courses, paginated. Guests
+ * call it without a session, so a 401 here must not start the refresh flow.
  */
 export async function listPublishedCourses(
+	query: CatalogQuery = {},
 	signal?: AbortSignal,
-): Promise<Course[]> {
-	const { data } = await httpClient.get<Course[]>("/courses/published", {
+): Promise<CoursePage> {
+	const { enrollmentOpen, ...rest } = query;
+	const params =
+		enrollmentOpen === undefined
+			? rest
+			: { ...rest, enrollmentOpen: String(enrollmentOpen) };
+	const { data } = await httpClient.get<CoursePage>("/courses/catalog", {
+		params,
 		signal,
 		skipAuthRefresh: true,
 	});
@@ -41,8 +49,14 @@ export async function getCourse(
 	return data;
 }
 
+/**
+ * The backend rejects unknown body fields, and status is not a course field:
+ * new courses always start as DRAFT, and publication changes go through
+ * PATCH /courses/:courseId/status.
+ */
 export async function createCourse(input: CourseInput): Promise<Course> {
-	const { data } = await httpClient.post<Course>("/courses", input);
+	const { status: _status, ...fields } = input;
+	const { data } = await httpClient.post<Course>("/courses", fields);
 	return data;
 }
 
@@ -50,11 +64,13 @@ export async function updateCourse(
 	courseId: string,
 	input: CourseUpdateInput,
 ): Promise<Course> {
+	const { status, ...fields } = input;
 	const { data } = await httpClient.patch<Course>(
 		`/courses/${encodeURIComponent(courseId)}`,
-		input,
+		fields,
 	);
-	return data;
+	if (status === undefined || status === data.status) return data;
+	return updateCourseStatus(courseId, status);
 }
 
 export async function updateCourseStatus(

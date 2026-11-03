@@ -7,7 +7,10 @@ import {
 import { render, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockPublishedCourses } from "@/features/courses/testing/handlers";
+import {
+	coursePage,
+	mockPublishedCourses,
+} from "@/features/courses/testing/handlers";
 import { routeTree } from "@/routeTree.gen";
 import { type UserRole, useAuthStore } from "@/stores/auth.store";
 import { server } from "@/test/mocks/server";
@@ -16,7 +19,7 @@ import { createTestQueryClient } from "@/test/render";
 // The root route mounts dev-only devtools, which cannot run under jsdom.
 vi.mock("@tanstack/react-devtools", () => ({ TanStackDevtools: () => null }));
 
-const catalogUrl = "*/api/courses/published";
+const catalogUrl = "*/api/courses/catalog";
 
 function renderAt(path: string) {
 	const queryClient = createTestQueryClient();
@@ -47,7 +50,7 @@ describe("landing page", () => {
 	});
 
 	it("pitches the product to signed-out visitors with register and log in", async () => {
-		server.use(http.get(catalogUrl, () => HttpResponse.json([])));
+		server.use(http.get(catalogUrl, () => HttpResponse.json(coursePage([]))));
 		renderAt("/");
 
 		const hero = (await findLanding()).closest("section");
@@ -105,7 +108,9 @@ describe("landing page", () => {
 
 	it("previews the first three published courses and links them to the catalog", async () => {
 		server.use(
-			http.get(catalogUrl, () => HttpResponse.json(mockPublishedCourses)),
+			http.get(catalogUrl, () =>
+				HttpResponse.json(coursePage(mockPublishedCourses)),
+			),
 		);
 		renderAt("/");
 
@@ -153,7 +158,7 @@ describe("landing page", () => {
 			() => new HttpResponse(null, { status: 404 }),
 		],
 		["guests are refused", () => new HttpResponse(null, { status: 401 })],
-		["no course is published", () => HttpResponse.json([])],
+		["no course is published", () => HttpResponse.json(coursePage([]))],
 	])("hides the course preview when %s", async (_case, respond) => {
 		let calls = 0;
 		server.use(
