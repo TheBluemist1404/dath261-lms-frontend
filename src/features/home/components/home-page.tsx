@@ -88,8 +88,11 @@ export function HomePage() {
 			<CoursePreview />
 			<Testimonials />
 			<Contact />
-			<footer className="border-t border-border pt-6 pb-2 text-sm text-muted">
-				Nodus · Guided learning. Personal knowledge. Built together.
+			<footer className="flex flex-col gap-1 border-t border-border pt-6 pb-2 text-sm text-muted sm:flex-row sm:justify-between">
+				<span>
+					Nodus · Guided learning. Personal knowledge. Built together.
+				</span>
+				<span>© {new Date().getFullYear()} Nodus. All rights reserved.</span>
 			</footer>
 		</div>
 	);

@@ -91,6 +91,9 @@ describe("landing page", () => {
 		expect(
 			screen.getByRole("link", { name: "hello@nodus.example" }),
 		).toHaveAttribute("href", "mailto:hello@nodus.example");
+		expect(screen.getByText(/All rights reserved\./)).toHaveTextContent(
+			`© ${new Date().getFullYear()} Nodus. All rights reserved.`,
+		);
 		// Signed-out visitors get no app menu.
 		expect(
 			screen.queryByRole("navigation", {
