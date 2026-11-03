@@ -178,7 +178,7 @@ export function RegisterForm({ onSuccess, className = "" }: RegisterFormProps) {
 								Create your account
 							</h1>
 							<p className="text-sm text-muted">
-								Choose how you will use Learner LMS.
+								Choose how you will use Nodus.
 							</p>
 						</div>
 

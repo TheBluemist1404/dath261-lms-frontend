@@ -12,7 +12,7 @@ export function AuthHeader({ className = "" }: AuthHeaderProps) {
 			<div className="flex items-center gap-6 sm:gap-8">
 				<Link
 					to="/"
-					aria-label="Learner LMS home"
+					aria-label="Nodus home"
 					className="flex items-center gap-2.5 text-primary transition-opacity hover:opacity-90"
 				>
 					<svg
@@ -29,7 +29,7 @@ export function AuthHeader({ className = "" }: AuthHeaderProps) {
 						<path d="M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z" />
 					</svg>
 					<span className="font-heading text-lg font-bold tracking-tight text-primary">
-						Learner LMS
+						Nodus
 					</span>
 				</Link>
 

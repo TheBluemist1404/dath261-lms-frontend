@@ -26,10 +26,10 @@ describe("AuthHeader", () => {
 	it("renders brand logo and title pointing to homepage", () => {
 		render(<AuthHeader />);
 
-		const brandLink = screen.getByRole("link", { name: "Learner LMS home" });
+		const brandLink = screen.getByRole("link", { name: "Nodus home" });
 		expect(brandLink).toBeInTheDocument();
 		expect(brandLink).toHaveAttribute("href", "/");
-		expect(brandLink).toHaveTextContent("Learner LMS");
+		expect(brandLink).toHaveTextContent("Nodus");
 	});
 
 	it("renders 'Explore courses' navigation link", () => {
