@@ -71,9 +71,26 @@ describe("landing page", () => {
 		}
 		// The shared shell's header stays in place.
 		expect(screen.getByRole("link", { name: "Nodus home" })).toBeVisible();
+		const site = screen.getByRole("navigation", { name: "Site" });
+		const tabs = within(site).getAllByRole("link");
 		expect(
-			screen.getByRole("link", { name: "Explore courses" }),
-		).toHaveAttribute("href", "/catalog");
+			tabs.map((tab) => [tab.textContent, tab.getAttribute("href")]),
+		).toEqual([
+			["Home", "/"],
+			["Catalog", "/catalog"],
+			["Testimonials", "/#testimonials"],
+			["Contact", "/#contact"],
+		]);
+		expect(within(site).getByRole("link", { name: "Home" })).toHaveAttribute(
+			"aria-current",
+			"page",
+		);
+		expect(
+			screen.getByRole("heading", { level: 2, name: "What learners say" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("link", { name: "hello@nodus.example" }),
+		).toHaveAttribute("href", "mailto:hello@nodus.example");
 		// Signed-out visitors get no app menu.
 		expect(
 			screen.queryByRole("navigation", {
@@ -113,9 +130,14 @@ describe("landing page", () => {
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Explore courses" }),
 		).toBeInTheDocument();
+		const site = screen.getByRole("navigation", { name: "Site" });
+		expect(within(site).getByRole("link", { name: "Catalog" })).toHaveAttribute(
+			"aria-current",
+			"page",
+		);
 		expect(
-			screen.getByRole("link", { name: "Explore courses" }),
-		).toHaveAttribute("aria-current", "page");
+			within(site).getByRole("link", { name: "Home" }),
+		).not.toHaveAttribute("aria-current");
 		expect(
 			screen.getByRole("link", { name: "← Back to home" }),
 		).toHaveAttribute("href", "/");

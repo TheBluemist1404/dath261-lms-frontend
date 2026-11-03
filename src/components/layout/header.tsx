@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { Brand } from "./brand";
+import { GuestHeader } from "./guest-header";
 
 export default function Header() {
 	const { user, status, logout } = useAuth();
@@ -14,22 +15,13 @@ export default function Header() {
 		.join("")
 		.toUpperCase();
 
+	if (status === "unauthenticated") return <GuestHeader />;
+
 	return (
 		<header className="sticky top-0 z-20 flex h-16 items-center justify-between bg-white px-5 text-ink sm:px-8">
-			<div className="flex items-center gap-6 sm:gap-8">
-				<Link to="/" aria-label="Nodus home" className="rounded-lg">
-					<Brand audience={user?.role} />
-				</Link>
-				{status === "unauthenticated" && (
-					<Link
-						to="/catalog"
-						className="hidden min-h-11 items-center rounded-lg px-2 text-sm font-medium text-muted hover:text-ink sm:flex"
-						activeProps={{ className: "text-ink", "aria-current": "page" }}
-					>
-						Explore courses
-					</Link>
-				)}
-			</div>
+			<Link to="/" aria-label="Nodus home" className="rounded-lg">
+				<Brand audience={user?.role} />
+			</Link>
 			<div className="flex items-center gap-2">
 				{user ? (
 					<>
@@ -59,13 +51,6 @@ export default function Header() {
 							Sign out
 						</button>
 					</>
-				) : status === "unauthenticated" ? (
-					<Link
-						to="/login"
-						className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-primary hover:bg-primary-subtle"
-					>
-						Sign in
-					</Link>
 				) : null}
 			</div>
 		</header>

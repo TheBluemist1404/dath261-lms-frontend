@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { Contact } from "./contact";
 import { CoursePreview } from "./course-preview";
+import { Testimonials } from "./testimonials";
 
 const features: { icon: IconName; title: string; body: string }[] = [
 	{
@@ -84,6 +86,11 @@ export function HomePage() {
 			</section>
 
 			<CoursePreview />
+			<Testimonials />
+			<Contact />
+			<footer className="border-t border-border pt-6 pb-2 text-sm text-muted">
+				Nodus · Guided learning. Personal knowledge. Built together.
+			</footer>
 		</div>
 	);
 }

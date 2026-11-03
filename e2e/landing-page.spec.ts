@@ -58,10 +58,8 @@ test.describe("Public landing page", () => {
 	test("moves between home and the catalog placeholder", async ({ page }) => {
 		await visitSignedOut(page);
 
-		await page
-			.getByRole("banner")
-			.getByRole("link", { name: "Explore courses" })
-			.click();
+		const site = page.getByRole("navigation", { name: "Site" });
+		await site.getByRole("link", { name: "Catalog" }).click();
 		await expect(page).toHaveURL(/\/catalog$/);
 		await expect(
 			page.getByRole("heading", { level: 1, name: "Explore courses" }),
@@ -76,6 +74,28 @@ test.describe("Public landing page", () => {
 		await expect(page).toHaveURL(/\/catalog$/);
 	});
 
+	test("scrolls to testimonials and contact from the top bar", async ({
+		page,
+	}) => {
+		await visitSignedOut(page);
+		const site = page.getByRole("navigation", { name: "Site" });
+
+		await site.getByRole("link", { name: "Testimonials" }).click();
+		await expect(page).toHaveURL(/\/#testimonials$/);
+		await expect(
+			page.getByRole("heading", { name: "What learners say" }),
+		).toBeInViewport();
+		await expect(
+			site.getByRole("link", { name: "Testimonials" }),
+		).toHaveAttribute("aria-current", "page");
+
+		await site.getByRole("link", { name: "Contact" }).click();
+		await expect(page).toHaveURL(/\/#contact$/);
+		await expect(
+			page.getByRole("link", { name: "hello@nodus.example" }),
+		).toBeInViewport();
+	});
+
 	test("fits a phone screen without sideways scrolling", async ({ page }) => {
 		await page.setViewportSize({ width: 375, height: 812 });
 		await visitSignedOut(page);
@@ -84,6 +104,10 @@ test.describe("Public landing page", () => {
 			() => document.documentElement.scrollWidth - window.innerWidth,
 		);
 		expect(overflow).toBeLessThanOrEqual(0);
+		const site = page.getByRole("navigation", { name: "Site" });
+		for (const tab of ["Home", "Catalog", "Testimonials", "Contact"]) {
+			await expect(site.getByRole("link", { name: tab })).toBeInViewport();
+		}
 		const hero = page.getByRole("region", { name: heroName });
 		await expect(
 			hero.getByRole("link", { name: "Get started" }),
