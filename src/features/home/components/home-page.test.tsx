@@ -71,9 +71,16 @@ describe("landing page", () => {
 		}
 		// The shared shell's header stays in place.
 		expect(screen.getByRole("link", { name: "Nodus home" })).toBeVisible();
+		// Signed-out visitors get no app menu.
+		expect(
+			screen.queryByRole("navigation", {
+				name: "Primary navigation",
+				hidden: true,
+			}),
+		).not.toBeInTheDocument();
 	});
 
-	it("previews the first three published courses and links them to the catalog", async () => {
+	it("previews the first three published courses", async () => {
 		server.use(
 			http.get(catalogUrl, () => HttpResponse.json(mockPublishedCourses)),
 		);
@@ -90,9 +97,8 @@ describe("landing page", () => {
 		expect(
 			within(section).queryByText("Computer Networks"),
 		).not.toBeInTheDocument();
-		for (const link of within(section).getAllByRole("link")) {
-			expect(link).toHaveAttribute("href", "/catalog");
-		}
+		// No catalog route exists yet (FE #19), so nothing links there.
+		expect(within(section).queryAllByRole("link")).toHaveLength(0);
 	});
 
 	it.each([

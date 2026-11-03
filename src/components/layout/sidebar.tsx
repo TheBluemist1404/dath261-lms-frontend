@@ -35,10 +35,10 @@ const menus: Record<UserRole, MenuItem[]> = {
 
 export default function Sidebar() {
 	const role = useAuthStore((state) => state.user?.role);
-	const items: MenuItem[] = role
-		? menus[role]
-		: [{ label: "Catalog", icon: "book" }];
-	const caption = role === "admin" ? "Admin" : (role ?? "Explore");
+	// Signed-out visitors only reach public pages, which need no app menu.
+	if (!role) return null;
+	const items = menus[role];
+	const caption = role === "admin" ? "Admin" : role;
 
 	return (
 		<aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-60 shrink-0 flex-col overflow-y-auto bg-white p-6 min-[1200px]:flex">
