@@ -5,7 +5,7 @@ import { type UserRole, useAuthStore } from "@/stores/auth.store";
 type MenuItem = {
 	label: string;
 	icon: IconName;
-	to?: "/" | "/workspace" | "/instructor/courses" | "/admin";
+	to?: "/" | "/catalog" | "/workspace" | "/instructor/courses" | "/admin";
 	// Shown but not clickable until the feature exists.
 	disabled?: boolean;
 };
@@ -14,7 +14,7 @@ const menus: Record<UserRole, MenuItem[]> = {
 	student: [
 		{ label: "Dashboard", icon: "dashboard" },
 		{ label: "My Courses", icon: "courses" },
-		{ label: "Catalog", icon: "book" },
+		{ label: "Catalog", icon: "book", to: "/catalog" },
 		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
 		{ label: "Notifications", icon: "bell" },
@@ -35,10 +35,10 @@ const menus: Record<UserRole, MenuItem[]> = {
 
 export default function Sidebar() {
 	const role = useAuthStore((state) => state.user?.role);
-	const items: MenuItem[] = role
-		? menus[role]
-		: [{ label: "Catalog", icon: "book" }];
-	const caption = role === "admin" ? "Admin" : (role ?? "Explore");
+	// Signed-out visitors only reach public pages, which need no app menu.
+	if (!role) return null;
+	const items = menus[role];
+	const caption = role === "admin" ? "Admin" : role;
 
 	return (
 		<aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-60 shrink-0 flex-col overflow-y-auto bg-white p-6 min-[1200px]:flex">

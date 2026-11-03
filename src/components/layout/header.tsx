@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { Brand } from "./brand";
+import { GuestHeader } from "./guest-header";
 
 export default function Header() {
 	const { user, status, logout } = useAuth();
@@ -13,6 +14,8 @@ export default function Header() {
 		.slice(0, 2)
 		.join("")
 		.toUpperCase();
+
+	if (status === "unauthenticated") return <GuestHeader />;
 
 	return (
 		<header className="sticky top-0 z-20 flex h-16 items-center justify-between bg-white px-5 text-ink sm:px-8">
@@ -48,13 +51,6 @@ export default function Header() {
 							Sign out
 						</button>
 					</>
-				) : status === "unauthenticated" ? (
-					<Link
-						to="/login"
-						className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-primary hover:bg-primary-subtle"
-					>
-						Sign in
-					</Link>
 				) : null}
 			</div>
 		</header>

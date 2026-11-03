@@ -229,12 +229,10 @@ describe("Workspace routing", () => {
 		);
 		expect(screen.queryByRole("link", { name: "Go to workspaces" })).toBeNull();
 		await user.click(screen.getByRole("link", { name: "Back to home" }));
+		// Home sends a signed-in admin on to the admin overview.
 		expect(
-			await screen.findByRole("heading", {
-				name: "Learner-Oriented LMS",
-				level: 1,
-			}),
+			await screen.findByRole("heading", { name: "Operational overview" }),
 		).toBeInTheDocument();
-		expect(router.state.location.pathname).toBe("/");
+		expect(router.state.location.pathname).toBe("/admin");
 	});
 });

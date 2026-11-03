@@ -4,7 +4,7 @@ import {
 	createRouter,
 	RouterProvider,
 } from "@tanstack/react-router";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
 import {
@@ -39,6 +39,7 @@ function renderAt(path: string) {
 			<RouterProvider router={router} />
 		</QueryClientProvider>,
 	);
+	return router;
 }
 
 describe("/admin route", () => {
@@ -63,18 +64,14 @@ describe("/admin route", () => {
 	});
 
 	it.each([
-		"student",
-		"lecturer",
-	] as const)("blocks a %s from the admin shell", async (role) => {
+		["student", "/workspace"],
+		["lecturer", "/instructor/courses"],
+	] as const)("blocks a %s from the admin shell", async (role, home) => {
 		useAuthStore.getState().setUser(userWithRole(role));
-		renderAt("/admin");
+		const router = renderAt("/admin");
 
-		expect(
-			await screen.findByRole("heading", {
-				name: "Learner-Oriented LMS",
-				level: 1,
-			}),
-		).toBeInTheDocument();
+		// The fallback is the landing page, which sends them to their own home.
+		await waitFor(() => expect(router.state.location.pathname).toBe(home));
 		expect(
 			screen.queryByRole("heading", { name: "Operational overview" }),
 		).not.toBeInTheDocument();

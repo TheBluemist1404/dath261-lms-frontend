@@ -15,6 +15,21 @@ export async function listCourses(signal?: AbortSignal): Promise<Course[]> {
 	return data;
 }
 
+/**
+ * Public catalog read (BE #26). The path is provisional until that PR merges;
+ * callers must treat any failure as "no catalog yet". Guests have no session
+ * to refresh, so a 401 here must not start the refresh flow.
+ */
+export async function listPublishedCourses(
+	signal?: AbortSignal,
+): Promise<Course[]> {
+	const { data } = await httpClient.get<Course[]>("/courses/published", {
+		signal,
+		skipAuthRefresh: true,
+	});
+	return data;
+}
+
 export async function getCourse(
 	courseId: string,
 	signal?: AbortSignal,
