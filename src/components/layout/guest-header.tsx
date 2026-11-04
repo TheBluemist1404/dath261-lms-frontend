@@ -3,7 +3,6 @@ import { Brand } from "./brand";
 
 type Tab = { label: string } & Pick<LinkProps, "to" | "hash">;
 
-// Testimonials and Contact are sections of the landing page.
 const tabs: Tab[] = [
 	{ label: "Home", to: "/" },
 	{ label: "Catalog", to: "/catalog" },
@@ -14,7 +13,6 @@ const tabs: Tab[] = [
 const action =
 	"inline-flex min-h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold transition-colors";
 
-/** Top bar for signed-out visitors, after the Figma PA-01 catalog top bar. */
 export function GuestHeader() {
 	return (
 		<header className="sticky top-0 z-20 grid grid-cols-[1fr_auto] items-center bg-white px-5 text-ink sm:px-8 lg:grid-cols-[1fr_auto_1fr]">
@@ -34,7 +32,11 @@ export function GuestHeader() {
 						key={tab.label}
 						to={tab.to}
 						hash={tab.hash}
-						activeOptions={{ exact: true, includeHash: true }}
+						activeOptions={{
+							exact: true,
+							includeHash: true,
+							includeSearch: false,
+						}}
 						activeProps={{ "aria-current": "page" }}
 						className="group flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:text-ink data-[status=active]:text-ink"
 					>

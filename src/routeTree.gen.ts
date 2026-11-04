@@ -18,6 +18,7 @@ import { Route as LayoutCatalogRouteImport } from './routes/~_layout/~catalog'
 import { Route as LayoutInstructorRouteImport } from './routes/~_layout/~instructor'
 import { Route as LayoutWorkspaceRouteImport } from './routes/~_layout/~workspace'
 import { Route as LayoutAdminIndexRouteImport } from './routes/~_layout/~admin/~index'
+import { Route as LayoutCoursesCourseIdRouteImport } from './routes/~_layout/~courses/~$courseId'
 import { Route as LayoutInstructorCoursesRouteImport } from './routes/~_layout/~instructor/~courses'
 import { Route as LayoutWorkspaceIndexRouteImport } from './routes/~_layout/~workspace/~index'
 import { Route as LayoutWorkspaceArchivedRouteImport } from './routes/~_layout/~workspace/~archived'
@@ -75,6 +76,11 @@ const LayoutAdminIndexRoute = LayoutAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LayoutAdminRoute,
+} as any)
+const LayoutCoursesCourseIdRoute = LayoutCoursesCourseIdRouteImport.update({
+  id: '/courses/$courseId',
+  path: '/courses/$courseId',
+  getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutInstructorCoursesRoute = LayoutInstructorCoursesRouteImport.update({
   id: '/courses',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/workspace': typeof LayoutWorkspaceRouteWithChildren
   '/admin/': typeof LayoutAdminIndexRoute
   '/workspace/': typeof LayoutWorkspaceIndexRoute
+  '/courses/$courseId': typeof LayoutCoursesCourseIdRoute
   '/instructor/courses': typeof LayoutInstructorCoursesRouteWithChildren
   '/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/workspace/me': typeof LayoutWorkspaceMeRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/admin': typeof LayoutAdminIndexRoute
   '/workspace': typeof LayoutWorkspaceIndexRoute
+  '/courses/$courseId': typeof LayoutCoursesCourseIdRoute
   '/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/workspace/me': typeof LayoutWorkspaceMeRoute
   '/workspace/search': typeof LayoutWorkspaceSearchRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/admin/': typeof LayoutAdminIndexRoute
   '/_layout/workspace/': typeof LayoutWorkspaceIndexRoute
+  '/_layout/courses/$courseId': typeof LayoutCoursesCourseIdRoute
   '/_layout/instructor/courses': typeof LayoutInstructorCoursesRouteWithChildren
   '/_layout/workspace/archived': typeof LayoutWorkspaceArchivedRoute
   '/_layout/workspace/me': typeof LayoutWorkspaceMeRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/admin/'
     | '/workspace/'
+    | '/courses/$courseId'
     | '/instructor/courses'
     | '/workspace/archived'
     | '/workspace/me'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/workspace'
+    | '/courses/$courseId'
     | '/workspace/archived'
     | '/workspace/me'
     | '/workspace/search'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/_layout/'
     | '/_layout/admin/'
     | '/_layout/workspace/'
+    | '/_layout/courses/$courseId'
     | '/_layout/instructor/courses'
     | '/_layout/workspace/archived'
     | '/_layout/workspace/me'
@@ -357,6 +369,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof LayoutAdminIndexRouteImport
       parentRoute: typeof LayoutAdminRoute
+    }
+    '/_layout/courses/$courseId': {
+      id: '/_layout/courses/$courseId'
+      path: '/courses/$courseId'
+      fullPath: '/courses/$courseId'
+      preLoaderRoute: typeof LayoutCoursesCourseIdRouteImport
+      parentRoute: typeof LayoutRoute
     }
     '/_layout/instructor/courses': {
       id: '/_layout/instructor/courses'
@@ -528,6 +547,7 @@ interface LayoutRouteChildren {
   LayoutInstructorRoute: typeof LayoutInstructorRouteWithChildren
   LayoutWorkspaceRoute: typeof LayoutWorkspaceRouteWithChildren
   LayoutIndexRoute: typeof LayoutIndexRoute
+  LayoutCoursesCourseIdRoute: typeof LayoutCoursesCourseIdRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -536,6 +556,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutInstructorRoute: LayoutInstructorRouteWithChildren,
   LayoutWorkspaceRoute: LayoutWorkspaceRouteWithChildren,
   LayoutIndexRoute: LayoutIndexRoute,
+  LayoutCoursesCourseIdRoute: LayoutCoursesCourseIdRoute,
 }
 
 const LayoutRouteWithChildren =

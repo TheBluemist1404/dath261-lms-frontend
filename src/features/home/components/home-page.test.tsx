@@ -126,7 +126,7 @@ describe("landing page", () => {
 		}
 	});
 
-	it("serves a catalog placeholder to guests that leads back home", async () => {
+	it("serves the course catalog to guests with active navigation", async () => {
 		const router = renderAt("/catalog");
 
 		expect(
@@ -140,9 +140,10 @@ describe("landing page", () => {
 		expect(
 			within(site).getByRole("link", { name: "Home" }),
 		).not.toHaveAttribute("aria-current");
-		expect(
-			screen.getByRole("link", { name: "← Back to home" }),
-		).toHaveAttribute("href", "/");
+		expect(within(site).getByRole("link", { name: "Home" })).toHaveAttribute(
+			"href",
+			"/",
+		);
 		expect(router.state.location.pathname).toBe("/catalog");
 	});
 
