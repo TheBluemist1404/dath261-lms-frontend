@@ -8,7 +8,6 @@ import type {
 	RegisterResponseDto,
 	RegisterRoleDto,
 } from "../types";
-import { partitionFullName } from "../utils/name-partitioner";
 
 export async function loginApi(
 	credentials: LoginCredentials,
@@ -24,14 +23,12 @@ export async function loginApi(
 export async function registerApi(
 	payload: RegisterPayload,
 ): Promise<RegisterResponseDto> {
-	const { firstName, lastName } = partitionFullName(payload.fullName);
-
 	const dto: RegisterDto = {
 		email: payload.email,
 		password: payload.password,
 		role: payload.role.toUpperCase() as RegisterRoleDto,
-		firstName,
-		lastName,
+		firstName: payload.firstName,
+		lastName: payload.lastName,
 	};
 
 	const response = await httpClient.post<RegisterResponseDto>(

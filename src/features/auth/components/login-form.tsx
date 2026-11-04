@@ -1,5 +1,6 @@
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/http/errors";
 import { useAuth } from "../hooks/use-auth";
 import { sanitizeRedirect } from "../routing/guards";
 import { AuthBanner } from "./auth-banner";
@@ -14,28 +15,16 @@ export interface LoginFormProps {
 }
 
 export function LoginForm({
-	initialEmail,
-	registered,
-	redirect,
+	initialEmail = "",
+	registered = false,
+	redirect = "/workspace",
 	onSuccess,
 	className = "",
 }: LoginFormProps) {
 	const navigate = useNavigate();
 	const { login } = useAuth();
 
-	const routeSearch = useSearch({ strict: false }) ?? {};
-
-	const resolvedEmail =
-		initialEmail ??
-		(typeof routeSearch.email === "string" ? routeSearch.email : "");
-	const resolvedRegistered = registered ?? Boolean(routeSearch.registered);
-	const resolvedRedirect =
-		redirect ??
-		(typeof routeSearch.redirect === "string"
-			? routeSearch.redirect
-			: "/workspace");
-
-	const [email, setEmail] = useState(resolvedEmail);
+	const [email, setEmail] = useState(initialEmail);
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 
@@ -85,20 +74,11 @@ export function LoginForm({
 			if (onSuccess) {
 				onSuccess();
 			} else {
-				const destination = sanitizeRedirect(resolvedRedirect, "/workspace");
+				const destination = sanitizeRedirect(redirect, "/workspace");
 				await navigate({ to: destination });
 			}
 		} catch (error: unknown) {
-			const axiosError = error as {
-				response?: {
-					status?: number;
-					data?: {
-						message?: string | string[];
-					};
-				};
-			};
-
-			const status = axiosError.response?.status;
+			const status = getApiErrorStatus(error);
 
 			if (status === 401) {
 				setBannerError("Invalid email or password.");
@@ -107,7 +87,12 @@ export function LoginForm({
 				setBannerError("Your account has been suspended by an administrator.");
 			} else {
 				setBannerError(
-					"Unable to connect to login service. Please try again later.",
+					status && status < 500
+						? getApiErrorMessage(
+								error,
+								"Unable to connect to login service. Please try again later.",
+							)
+						: "Unable to connect to login service. Please try again later.",
 				);
 			}
 		} finally {
@@ -164,7 +149,7 @@ export function LoginForm({
 							</p>
 						</div>
 
-						{resolvedRegistered && !bannerError && !isSuspended && (
+						{registered && !bannerError && !isSuspended && (
 							<div className="mb-5">
 								<AuthBanner
 									variant="success"
