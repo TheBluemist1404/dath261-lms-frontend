@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	buildAuthUser,
-	cacheUserProfile,
 	decodeJwtClaims,
-	getCachedProfile,
 	isTokenExpiringSoon,
 } from "./jwt-decoder";
 
@@ -156,10 +154,15 @@ describe("buildAuthUser", () => {
 	});
 
 	it("uses cached profile data when available", () => {
-		cacheUserProfile("usr-cached", {
-			name: "Cached Name",
-			email: "cached@nodus.edu",
-		});
+		localStorage.setItem(
+			"nodus_user_profiles",
+			JSON.stringify({
+				"usr-cached": {
+					name: "Cached Name",
+					email: "cached@nodus.edu",
+				},
+			}),
+		);
 
 		const user = buildAuthUser({
 			sub: "usr-cached",
@@ -223,20 +226,5 @@ describe("isTokenExpiringSoon", () => {
 
 	it("returns false for invalid token strings", () => {
 		expect(isTokenExpiringSoon("invalid-token")).toBe(false);
-	});
-});
-
-describe("cacheUserProfile", () => {
-	beforeEach(() => {
-		localStorage.clear();
-	});
-
-	it("persists and retrieves profile entries by user ID", () => {
-		cacheUserProfile("u-1", { name: "User One", email: "one@nodus.edu" });
-		expect(getCachedProfile("u-1")).toEqual({
-			name: "User One",
-			email: "one@nodus.edu",
-		});
-		expect(getCachedProfile("u-unknown")).toBeNull();
 	});
 });
