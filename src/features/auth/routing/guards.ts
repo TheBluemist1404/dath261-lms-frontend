@@ -85,11 +85,7 @@ export function requireAuth({
 		isLoading: useAuthStore.getState().status === "loading",
 	};
 
-	if (auth.isLoading) {
-		throw new Error("Route guard evaluated while auth context is loading");
-	}
-
-	if (!auth.isAuthenticated || !auth.user) {
+	if (auth.isLoading || !auth.isAuthenticated || !auth.user) {
 		throw redirect({
 			to: "/login",
 			search: {

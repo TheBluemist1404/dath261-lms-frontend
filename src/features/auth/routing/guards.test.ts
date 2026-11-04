@@ -94,8 +94,8 @@ describe("requireAuth guard", () => {
 		expect(result).toEqual({ user });
 	});
 
-	it("throws error if evaluated while auth context is loading", () => {
-		expect(() =>
+	it("redirects to login with redirect param if evaluated while auth context is loading", () => {
+		try {
 			requireAuth({
 				context: {
 					auth: {
@@ -105,8 +105,17 @@ describe("requireAuth guard", () => {
 					},
 				},
 				location: { href: "/dashboard" },
-			}),
-		).toThrow("Route guard evaluated while auth context is loading");
+			});
+			expect.unreachable("expected requireAuth to throw redirect");
+		} catch (error) {
+			expect(isRedirect(error)).toBe(true);
+			if (isRedirect(error)) {
+				expect(error.options.to).toBe("/login");
+				expect(error.options.search).toEqual({
+					redirect: "/dashboard",
+				});
+			}
+		}
 	});
 
 	it("redirects unauthenticated visitor to login with redirect param", () => {
