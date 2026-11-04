@@ -1,6 +1,11 @@
 export type CourseStatus = "DRAFT" | "PUBLISHED";
 
-/** Frontend shape of the backend Prisma Course model. */
+export interface CourseLecturer {
+	id: string;
+	name: string;
+	email?: string;
+}
+
 export interface Course {
 	id: string;
 	title: string;
@@ -12,10 +17,14 @@ export interface Course {
 	createdAt?: string;
 	updatedAt?: string;
 	enrollmentCount?: number;
-	lecturer?: { id: string; name: string };
+	lecturer?: CourseLecturer;
 }
 
-/** Pagination block returned with the public catalog (GET /courses/catalog). */
+export function isEnrollmentClosed(course: Course): boolean {
+	if (!course.enrollmentEndAt) return false;
+	return new Date(course.enrollmentEndAt).getTime() < Date.now();
+}
+
 export interface PageMeta {
 	total: number;
 	page: number;

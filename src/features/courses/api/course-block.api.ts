@@ -4,7 +4,6 @@ import type {
 	CourseBlockInput,
 } from "../types/course-block.types";
 
-/** Course content is represented by CourseBlock records, not separate lessons. */
 export async function listCourseBlocks(
 	courseId: string,
 	signal?: AbortSignal,
