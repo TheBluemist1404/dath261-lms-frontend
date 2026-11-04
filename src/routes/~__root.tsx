@@ -4,14 +4,15 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { useEffect, useState } from "react";
 import { NotFoundPage } from "@/components/layout/not-found-page";
-import { bootstrapSessionSafe } from "@/lib/auth/session-barrier";
+import { initCrossTabSync } from "@/lib/auth/cross-tab-sync";
+import { bootstrapSession } from "@/lib/auth/session";
 import type { AppRouterContext } from "@/router-context";
 
 import "../styles.css";
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
 	beforeLoad: async () => {
-		const auth = await bootstrapSessionSafe();
+		const auth = await bootstrapSession();
 		return { auth };
 	},
 	component: RootComponent,
@@ -20,6 +21,13 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 
 function RootComponent() {
 	const [devtoolsReady, setDevtoolsReady] = useState(false);
+
+	useEffect(() => {
+		const cleanupSync = initCrossTabSync();
+		return () => {
+			cleanupSync();
+		};
+	}, []);
 
 	useEffect(() => {
 		if (!import.meta.env.DEV) return;

@@ -3,15 +3,15 @@ import { getAccessToken, setAccessToken } from "@/lib/auth/access-token";
 import { httpClient } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/auth.store";
 import {
-	bootstrapSessionSafe,
+	bootstrapSession,
 	getSessionEpoch,
 	invalidateSessionEpoch,
-	resetSessionBarrierForTest,
-} from "./session-barrier";
+	resetSessionForTest,
+} from "./session";
 
-describe("session-barrier", () => {
+describe("session lifecycle and barrier", () => {
 	beforeEach(() => {
-		resetSessionBarrierForTest();
+		resetSessionForTest();
 		setAccessToken(null);
 		useAuthStore.getState().reset();
 		localStorage.clear();
@@ -30,7 +30,7 @@ describe("session-barrier", () => {
 		localStorage.setItem("nodus_logout_tombstone", "true");
 		const postSpy = vi.spyOn(httpClient, "post");
 
-		const result = await bootstrapSessionSafe();
+		const result = await bootstrapSession();
 
 		expect(result).toEqual({
 			user: null,
@@ -51,7 +51,7 @@ describe("session-barrier", () => {
 		useAuthStore.getState().setUser(mockUser);
 		const postSpy = vi.spyOn(httpClient, "post");
 
-		const result = await bootstrapSessionSafe();
+		const result = await bootstrapSession();
 
 		expect(result).toEqual({
 			user: mockUser,
@@ -61,7 +61,7 @@ describe("session-barrier", () => {
 		expect(postSpy).not.toHaveBeenCalled();
 	});
 
-	it("deduplicates concurrent bootstrapSessionSafe invocations into a single HTTP call", async () => {
+	it("deduplicates concurrent bootstrapSession invocations into a single HTTP call", async () => {
 		let resolveCall!: (value: unknown) => void;
 		const delayedPromise = new Promise((resolve) => {
 			resolveCall = resolve;
@@ -71,9 +71,9 @@ describe("session-barrier", () => {
 			.spyOn(httpClient, "post")
 			.mockImplementation(() => delayedPromise as Promise<never>);
 
-		const call1 = bootstrapSessionSafe();
-		const call2 = bootstrapSessionSafe();
-		const call3 = bootstrapSessionSafe();
+		const call1 = bootstrapSession();
+		const call2 = bootstrapSession();
+		const call3 = bootstrapSession();
 
 		expect(postSpy).toHaveBeenCalledTimes(1);
 
@@ -100,9 +100,8 @@ describe("session-barrier", () => {
 			() => delayedPromise as Promise<never>,
 		);
 
-		const inFlightBootstrap = bootstrapSessionSafe();
+		const inFlightBootstrap = bootstrapSession();
 
-		// Simulate user clicking logout while refresh request is in flight
 		invalidateSessionEpoch();
 		expect(getSessionEpoch()).toBe(1);
 
@@ -118,7 +117,6 @@ describe("session-barrier", () => {
 			isLoading: false,
 			isAuthenticated: false,
 		});
-		// Ensure state was NOT committed to memory or store
 		expect(getAccessToken()).toBeNull();
 		expect(useAuthStore.getState().user).toBeNull();
 	});
@@ -126,7 +124,7 @@ describe("session-barrier", () => {
 	it("handles HTTP failure gracefully and sets unauthenticated state", async () => {
 		vi.spyOn(httpClient, "post").mockRejectedValue(new Error("Network Error"));
 
-		const result = await bootstrapSessionSafe();
+		const result = await bootstrapSession();
 
 		expect(result).toEqual({
 			user: null,
@@ -134,5 +132,51 @@ describe("session-barrier", () => {
 			isAuthenticated: false,
 		});
 		expect(useAuthStore.getState().status).toBe("unauthenticated");
+	});
+
+	it("short-circuits and returns unauthenticated context without calling /auth/refresh when status is already unauthenticated", async () => {
+		useAuthStore.getState().clearAuth();
+		const postSpy = vi.spyOn(httpClient, "post");
+
+		const result = await bootstrapSession();
+
+		expect(result).toEqual({
+			user: null,
+			isLoading: false,
+			isAuthenticated: false,
+		});
+		expect(postSpy).not.toHaveBeenCalled();
+	});
+
+	it("short-circuits subsequent bootstrapSession calls after an initial failed refresh", async () => {
+		const postSpy = vi
+			.spyOn(httpClient, "post")
+			.mockRejectedValue(new Error("401 Unauthorized"));
+
+		const firstResult = await bootstrapSession();
+		expect(firstResult.isAuthenticated).toBe(false);
+		expect(postSpy).toHaveBeenCalledTimes(1);
+
+		const secondResult = await bootstrapSession();
+		expect(secondResult.isAuthenticated).toBe(false);
+		expect(postSpy).toHaveBeenCalledTimes(1);
+	});
+
+	it("allows /auth/refresh to fire again when store status is reset to loading", async () => {
+		useAuthStore.getState().clearAuth();
+		const postSpy = vi.spyOn(httpClient, "post").mockResolvedValue({
+			data: {
+				accessToken:
+					"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfcmVzZXQiLCJlbWFpbCI6InJlc2V0QGV4YW1wbGUuY29tIiwicm9sZSI6IlNUVURFTlQiLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MjAwMDAwMDAwMH0.signature",
+			},
+		} as never);
+
+		await bootstrapSession();
+		expect(postSpy).not.toHaveBeenCalled();
+
+		useAuthStore.getState().reset();
+		const result = await bootstrapSession();
+		expect(postSpy).toHaveBeenCalledTimes(1);
+		expect(result.isAuthenticated).toBe(true);
 	});
 });
