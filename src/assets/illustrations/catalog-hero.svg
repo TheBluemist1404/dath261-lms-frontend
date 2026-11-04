@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="hero-grad-teal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#0F766E" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="hero-grad-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E"/>
+      <stop offset="100%" stop-color="#115E59"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" rx="16" fill="url(#hero-grad-teal)"/>
+  <circle cx="80" cy="100" r="36" fill="#0F766E" fill-opacity="0.1"/>
+  <circle cx="80" cy="100" r="24" fill="url(#hero-grad-accent)"/>
+  <path d="M68 96l12-6 12 6-12 6-12-6z M80 102v8" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="240" cy="80" r="28" fill="#0F766E" fill-opacity="0.12"/>
+  <circle cx="240" cy="80" r="16" fill="url(#hero-grad-accent)"/>
+  <path d="M234 76h12v8h-12z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="160" cy="140" r="20" fill="#0F766E" fill-opacity="0.1"/>
+  <circle cx="160" cy="140" r="10" fill="url(#hero-grad-accent)"/>
+  <path d="M80 100 L160 140 L240 80" stroke="#0F766E" stroke-width="2" stroke-dasharray="4 4" stroke-opacity="0.4"/>
+</svg>

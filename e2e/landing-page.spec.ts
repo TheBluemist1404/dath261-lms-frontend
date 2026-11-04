@@ -65,7 +65,7 @@ test.describe("Public landing page", () => {
 			page.getByRole("heading", { level: 1, name: "Explore courses" }),
 		).toBeVisible();
 
-		await page.getByRole("link", { name: "← Back to home" }).click();
+		await site.getByRole("link", { name: "Home" }).click();
 		await expect(page).toHaveURL(/\/$/);
 		await page
 			.getByRole("region", { name: "Explore courses" })
