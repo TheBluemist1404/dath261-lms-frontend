@@ -5,15 +5,20 @@ import { type UserRole, useAuthStore } from "@/stores/auth.store";
 type MenuItem = {
 	label: string;
 	icon: IconName;
-	to?: "/" | "/catalog" | "/workspace" | "/instructor/courses" | "/admin";
-	// Shown but not clickable until the feature exists.
+	to?:
+		| "/"
+		| "/my-courses"
+		| "/catalog"
+		| "/workspace"
+		| "/instructor/courses"
+		| "/admin";
 	disabled?: boolean;
 };
 
 const menus: Record<UserRole, MenuItem[]> = {
 	student: [
 		{ label: "Dashboard", icon: "dashboard" },
-		{ label: "My Courses", icon: "courses" },
+		{ label: "My Courses", icon: "courses", to: "/my-courses" },
 		{ label: "Catalog", icon: "book", to: "/catalog" },
 		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
