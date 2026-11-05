@@ -7,20 +7,11 @@ import type {
 	CourseUpdateInput,
 } from "../types/course.types";
 
-/**
- * Course endpoints use the shared authenticated HTTP client.
- * Keep endpoint and DTO changes centralized here so they can be aligned with
- * the backend Swagger contract without changing UI components.
- */
 export async function listCourses(signal?: AbortSignal): Promise<Course[]> {
 	const { data } = await httpClient.get<Course[]>("/courses", { signal });
 	return data;
 }
 
-/**
- * Public catalog read: published, non-suspended courses, paginated. Guests
- * call it without a session, so a 401 here must not start the refresh flow.
- */
 export async function listPublishedCourses(
 	query: CatalogQuery = {},
 	signal?: AbortSignal,
@@ -49,11 +40,6 @@ export async function getCourse(
 	return data;
 }
 
-/**
- * The backend rejects unknown body fields, and status is not a course field:
- * new courses always start as DRAFT, and publication changes go through
- * PATCH /courses/:courseId/status.
- */
 export async function createCourse(input: CourseInput): Promise<Course> {
 	const { status: _status, ...fields } = input;
 	const { data } = await httpClient.post<Course>("/courses", fields);

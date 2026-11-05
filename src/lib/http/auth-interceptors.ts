@@ -10,6 +10,7 @@ import { httpClient, registerHttpInterceptors } from "./client";
 
 declare module "axios" {
 	interface AxiosRequestConfig {
+		skipAuthToken?: boolean;
 		skipAuthRefresh?: boolean;
 		authRetried?: boolean;
 	}
@@ -39,12 +40,21 @@ export function installAuthInterceptors(client: AxiosInstance = httpClient) {
 	const unregister = registerHttpInterceptors(
 		{
 			onRequest: async (config) => {
-				if (config.skipAuthRefresh || config.url?.includes("/auth/")) {
+				if (
+					config.skipAuthToken ||
+					config.url?.includes("/auth/login") ||
+					config.url?.includes("/auth/register")
+				) {
 					return config;
 				}
 
 				let token = getAccessToken();
-				if (token && isTokenExpiringSoon(token, 30)) {
+				if (
+					token &&
+					isTokenExpiringSoon(token, 30) &&
+					!config.skipAuthRefresh &&
+					!config.url?.includes("/auth/")
+				) {
 					const refreshed = await refreshAccessToken();
 					if (refreshed) {
 						token = refreshed;
