@@ -42,7 +42,8 @@ export interface RegisterResponseDto {
 }
 
 export interface RegisterPayload {
-	fullName: string;
+	firstName: string;
+	lastName: string;
 	email: string;
 	password: string;
 	role: "student" | "lecturer" | "STUDENT" | "LECTURER";

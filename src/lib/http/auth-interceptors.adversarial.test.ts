@@ -659,13 +659,13 @@ describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
 			);
 
 			const response = await registerApi({
-				fullName: "Registered Student",
+				firstName: "Registered",
+				lastName: "Student",
 				email: "registered@nodus.edu",
 				password: "Password123!",
 				role: "student",
 			});
 
-			// Verify wire payload format
 			expect(sentBody).toEqual({
 				email: "registered@nodus.edu",
 				password: "Password123!",
@@ -674,10 +674,8 @@ describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
 				lastName: "Student",
 			});
 
-			// Verify response
 			expect(response.user.id).toBe("usr-new-registered");
 
-			// Invariants: Store must NOT be mutated!
 			expect(useAuthStore.getState().status).toBe("unauthenticated");
 			expect(useAuthStore.getState().user).toBeNull();
 			expect(getAccessToken()).toBeNull();

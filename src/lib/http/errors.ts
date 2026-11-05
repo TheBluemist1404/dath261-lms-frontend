@@ -8,8 +8,13 @@ export function getApiErrorMessage(
 	if (axios.isAxiosError(error)) {
 		const message: unknown = error.response?.data?.message;
 		if (typeof message === "string") return message;
-		if (Array.isArray(message) && typeof message[0] === "string") {
-			return message[0];
+		if (Array.isArray(message)) {
+			const stringMessages = message.filter(
+				(item): item is string => typeof item === "string",
+			);
+			if (stringMessages.length > 0) {
+				return stringMessages.join(". ");
+			}
 		}
 	}
 	return fallback;

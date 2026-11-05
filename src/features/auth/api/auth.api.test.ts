@@ -54,9 +54,10 @@ describe("auth API client contracts", () => {
 	});
 
 	describe("registerApi", () => {
-		it("partitions name and registers new student (201 Created)", async () => {
+		it("registers new student with distinct name fields (201 Created)", async () => {
 			const result = await registerApi({
-				fullName: "Alex Learner",
+				firstName: "Alex",
+				lastName: "Learner",
 				email: "alex.learner@nodus.edu",
 				password: "securePassword123",
 				role: "student",
@@ -73,7 +74,8 @@ describe("auth API client contracts", () => {
 
 		it("registers new lecturer successfully", async () => {
 			const result = await registerApi({
-				fullName: "Elena Rostova",
+				firstName: "Elena",
+				lastName: "Rostova",
 				email: "elena@nodus.edu",
 				password: "securePassword123",
 				role: "lecturer",
@@ -87,23 +89,11 @@ describe("auth API client contracts", () => {
 			});
 		});
 
-		it("rejects mononym before network call", async () => {
-			await expect(
-				registerApi({
-					fullName: "Plato",
-					email: "plato@nodus.edu",
-					password: "securePassword123",
-					role: "student",
-				}),
-			).rejects.toThrow(
-				"Please enter your full name (both first and last name).",
-			);
-		});
-
 		it("throws 409 when email already exists", async () => {
 			await expect(
 				registerApi({
-					fullName: "Existing User",
+					firstName: "Existing",
+					lastName: "User",
 					email: "exists@example.com",
 					password: "securePassword123",
 					role: "student",
@@ -114,7 +104,8 @@ describe("auth API client contracts", () => {
 		it("throws 400 when password is under 8 characters", async () => {
 			await expect(
 				registerApi({
-					fullName: "Short Password",
+					firstName: "Short",
+					lastName: "Password",
 					email: "short@example.com",
 					password: "short",
 					role: "student",
