@@ -1,7 +1,6 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { registerApi } from "@/features/auth/api/auth.api";
-import { bootstrapSession } from "@/features/auth/session";
 import {
 	getAccessToken,
 	readAccessTokenClaims,
@@ -13,7 +12,11 @@ import {
 	decodeJwtClaims,
 	isTokenExpiringSoon,
 } from "@/lib/auth/jwt-decoder";
-import { endSession, refreshAccessToken } from "@/lib/auth/session";
+import {
+	bootstrapSession,
+	endSession,
+	refreshAccessToken,
+} from "@/lib/auth/session";
 import { useAuthStore } from "@/stores/auth.store";
 import { server } from "@/test/mocks/server";
 import { installAuthInterceptors } from "./auth-interceptors";

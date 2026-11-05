@@ -13,7 +13,7 @@ import {
 	getSessionEpoch,
 	invalidateSessionEpoch,
 	resetSessionBarrierForTest,
-} from "@/lib/auth/session-barrier";
+} from "@/lib/auth/session";
 import { terminateSession } from "@/lib/auth/session-termination";
 import { httpClient } from "@/lib/http/client";
 import { Route as RootRoute } from "@/routes/~__root";

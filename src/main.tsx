@@ -7,7 +7,6 @@ import {
 	hocuspocusAdapter,
 	hocuspocusDiscussionChannel,
 } from "@/features/workspace/collaboration/hocuspocus-adapter";
-import { restoreSession } from "@/lib/auth/session";
 import { installAuthInterceptors } from "@/lib/http/auth-interceptors";
 import { queryClient } from "@/lib/query/client";
 import { router } from "@/router";
@@ -33,12 +32,10 @@ installAuthInterceptors();
 
 const root = ReactDOM.createRoot(rootElement);
 
-startApiMocking()
-	.then(restoreSession)
-	.finally(() => {
-		root.render(
-			<QueryClientProvider client={queryClient}>
-				<RouterProvider router={router} />
-			</QueryClientProvider>,
-		);
-	});
+startApiMocking().finally(() => {
+	root.render(
+		<QueryClientProvider client={queryClient}>
+			<RouterProvider router={router} />
+		</QueryClientProvider>,
+	);
+});
