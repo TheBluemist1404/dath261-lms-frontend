@@ -26,7 +26,7 @@ import { useAuthStore } from "@/stores/auth.store";
 const VALID_STUDENT_JWT =
 	"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3Jfc3R1ZGVudF8xIiwiZW1haWwiOiJzdHVkZW50QG5vZHVzLmVkdSIsInJvbGUiOiJTVFVERU5UIiwiZmlyc3ROYW1lIjoiQWxleCIsImxhc3ROYW1lIjoiTGVhcm5lciIsImlhdCI6MTYwMDAwMDAwMCwiZXhwIjoyMDAwMDAwMDAwfQ.signature";
 
-describe("ADVERSARIAL STRESS SUITE: PR #14 Concurrency Barrier & Route Guards", () => {
+describe("Session Concurrency Barrier & Route Guards", () => {
 	beforeEach(() => {
 		resetSessionBarrierForTest();
 		setAccessToken(null);
@@ -43,10 +43,7 @@ describe("ADVERSARIAL STRESS SUITE: PR #14 Concurrency Barrier & Route Guards", 
 		vi.restoreAllMocks();
 	});
 
-	// =========================================================================
-	// TASK 1: In-Flight Bootstrap vs. User Logout Race Condition
-	// =========================================================================
-	describe("Task 1: In-Flight Bootstrap vs. Logout Race Hazard", () => {
+	describe("In-Flight Bootstrap vs. Logout Race Hazard", () => {
 		it("discards session resolution when terminateSession() is invoked while bootstrap is in flight", async () => {
 			let resolveRefresh!: (value: { data: AuthTokenResponseDto }) => void;
 			const delayedRefresh = new Promise<{ data: AuthTokenResponseDto }>(
@@ -211,10 +208,7 @@ describe("ADVERSARIAL STRESS SUITE: PR #14 Concurrency Barrier & Route Guards", 
 		});
 	});
 
-	// =========================================================================
-	// TASK 2: Logout Tombstone Revival Defense
-	// =========================================================================
-	describe("Task 2: Logout Tombstone Revival Defense", () => {
+	describe("Logout Tombstone Revival Defense", () => {
 		it("terminateSession() writes tombstone to localStorage and suppresses refresh on next boot", async () => {
 			const postSpy = vi.spyOn(httpClient, "post").mockResolvedValue({
 				data: undefined,
@@ -295,10 +289,7 @@ describe("ADVERSARIAL STRESS SUITE: PR #14 Concurrency Barrier & Route Guards", 
 		});
 	});
 
-	// =========================================================================
-	// TASK 3: Open Redirect Sanitization in sanitizeRedirect
-	// =========================================================================
-	describe("Task 3: Open Redirect Sanitization in sanitizeRedirect", () => {
+	describe("Open Redirect Sanitization in sanitizeRedirect", () => {
 		describe("Protocol-relative URLs", () => {
 			it("blocks standard protocol-relative URLs", () => {
 				expect(sanitizeRedirect("//evil.com")).toBe("/");
@@ -416,10 +407,7 @@ describe("ADVERSARIAL STRESS SUITE: PR #14 Concurrency Barrier & Route Guards", 
 		});
 	});
 
-	// =========================================================================
-	// TASK 4: Route Protection on /workspace and /admin
-	// =========================================================================
-	describe("Task 4: Route Protection on /workspace and /admin", () => {
+	describe("Route Protection on /workspace and /admin", () => {
 		const studentUser = {
 			id: "usr_student_1",
 			email: "student@nodus.edu",

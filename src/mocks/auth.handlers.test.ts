@@ -1,17 +1,22 @@
 import axios from "axios";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { LoginDto, RegisterDto } from "@/features/auth/types";
 import { readAccessTokenClaims } from "@/lib/auth/access-token";
 import { server } from "@/test/mocks/server";
-import type { LoginDto, RegisterDto } from "../types";
-import { mockLecturer, mockStudent } from "./fixtures";
-import { authHandlers, resetMockAuth, setMockCurrentUser } from "./handlers";
+import {
+	authHandlers,
+	mockLecturer,
+	mockStudent,
+	resetMockAuth,
+	setMockCurrentUser,
+} from "./auth.handlers";
 
 const testClient = axios.create({
 	baseURL: "/api",
-	validateStatus: () => true, // Allows inspecting 4xx and 5xx responses without throwing
+	validateStatus: () => true,
 });
 
-describe("MSW Auth Handlers & Network Contracts Empirical Challenge", () => {
+describe("MSW Auth Handlers & Network Contracts", () => {
 	beforeEach(() => {
 		server.use(...authHandlers);
 		resetMockAuth();
@@ -46,11 +51,9 @@ describe("MSW Auth Handlers & Network Contracts Empirical Challenge", () => {
 			expect(typeof response.data.user.createdAt).toBe("string");
 			expect(typeof response.data.user.updatedAt).toBe("string");
 
-			// CRITICAL: Must NOT contain any token in response body
 			expect(response.data).not.toHaveProperty("accessToken");
 			expect(response.data).not.toHaveProperty("token");
 
-			// CRITICAL: Must NOT set any session cookie
 			const setCookie = response.headers["set-cookie"];
 			expect(setCookie).toBeUndefined();
 		});
@@ -191,16 +194,13 @@ describe("MSW Auth Handlers & Network Contracts Empirical Challenge", () => {
 			expect(response.data).toHaveProperty("accessToken");
 			expect(typeof response.data.accessToken).toBe("string");
 
-			// CRITICAL: Response body MUST NOT contain user object
 			expect(response.data).not.toHaveProperty("user");
 
-			// CRITICAL: Verify valid 3-part base64url JWT decodable by readAccessTokenClaims
 			const claims = readAccessTokenClaims(response.data.accessToken);
 			expect(claims).not.toBeNull();
 			expect(claims?.userId).toBe(mockStudent.id);
 			expect(claims?.role).toBe("student");
 
-			// CRITICAL: Verify Set-Cookie header contains refresh_token, Path=/api/auth, HttpOnly, SameSite=Lax
 			const setCookie = response.headers["set-cookie"];
 			expect(setCookie).toBeDefined();
 			const cookieStr = Array.isArray(setCookie)
@@ -230,7 +230,7 @@ describe("MSW Auth Handlers & Network Contracts Empirical Challenge", () => {
 		it("returns 401 Unauthorized for invalid email or wrong password", async () => {
 			const res1 = await testClient.post("/auth/login", {
 				email: "invalid@example.com",
-				password: "password123",
+				password: "valid-password",
 			});
 
 			expect(res1.status).toBe(401);
@@ -290,7 +290,6 @@ describe("MSW Auth Handlers & Network Contracts Empirical Challenge", () => {
 			expect(claims).not.toBeNull();
 			expect(claims?.role).toBe("student");
 
-			// CRITICAL: Verifies cookie rotation
 			const setCookie = response.headers["set-cookie"];
 			expect(setCookie).toBeDefined();
 			const cookieStr = Array.isArray(setCookie)
@@ -360,10 +359,8 @@ describe("MSW Auth Handlers & Network Contracts Empirical Challenge", () => {
 
 			expect(response.status).toBe(204);
 
-			// CRITICAL: Empty body check
 			expect(response.data).toBe("");
 
-			// CRITICAL: Cookie invalidation check
 			const setCookie = response.headers["set-cookie"];
 			expect(setCookie).toBeDefined();
 			const cookieStr = Array.isArray(setCookie)
