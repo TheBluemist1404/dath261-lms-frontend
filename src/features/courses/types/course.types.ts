@@ -18,6 +18,7 @@ export interface Course {
 	updatedAt?: string;
 	enrollmentCount?: number;
 	lecturer?: CourseLecturer;
+	isSuspended?: boolean;
 }
 
 export function isEnrollmentClosed(course: Course): boolean {
