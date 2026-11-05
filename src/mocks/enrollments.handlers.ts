@@ -1,4 +1,5 @@
 import { HttpResponse, http } from "msw";
+import type { EnrollmentStatus } from "@/features/courses/types/enrollment.types";
 import { requireMockAuth } from "@/test/mocks/mock-auth-guard";
 import {
 	mockEnrollmentActive,
@@ -11,27 +12,60 @@ import {
 	mockStudentProgress,
 } from "./enrollments.fixtures";
 
+const enrollmentStateMap = new Map<string, EnrollmentStatus>([
+	["course-active", "ACTIVE"],
+	["course-intro-cs", "ACTIVE"],
+	["course-left", "LEFT"],
+	["course-completed", "COMPLETED"],
+	["course-algo", "COMPLETED"],
+	["course-unavailable", "ACTIVE"],
+	["course-draft-os", "ACTIVE"],
+]);
+
+export function resetEnrollmentMockState() {
+	enrollmentStateMap.clear();
+	enrollmentStateMap.set("course-active", "ACTIVE");
+	enrollmentStateMap.set("course-intro-cs", "ACTIVE");
+	enrollmentStateMap.set("course-left", "LEFT");
+	enrollmentStateMap.set("course-completed", "COMPLETED");
+	enrollmentStateMap.set("course-algo", "COMPLETED");
+	enrollmentStateMap.set("course-unavailable", "ACTIVE");
+	enrollmentStateMap.set("course-draft-os", "ACTIVE");
+}
+
 export const enrollmentsHandlers = [
 	http.get("*/api/courses/:courseId/enrollments/me", ({ request, params }) => {
 		const authError = requireMockAuth(request);
 		if (authError) return authError;
 
-		const { courseId } = params;
-		if (courseId === "course-left") {
-			return HttpResponse.json(mockEnrollmentLeft);
-		}
-		if (courseId === "course-active" || courseId === "course-intro-cs") {
-			return HttpResponse.json(mockEnrollmentActive);
-		}
-		if (courseId === "course-completed" || courseId === "course-algo") {
-			return HttpResponse.json(mockEnrollmentCompleted);
-		}
+		const courseId = String(params.courseId);
 		if (courseId === "course-unavailable" || courseId === "course-draft-os") {
 			return HttpResponse.json(mockEnrollmentUnavailable);
 		}
+
+		const status = enrollmentStateMap.get(courseId);
+		if (status === "ACTIVE") {
+			return HttpResponse.json({
+				...mockEnrollmentActive,
+				courseId,
+			});
+		}
+		if (status === "LEFT") {
+			return HttpResponse.json({
+				...mockEnrollmentLeft,
+				courseId,
+			});
+		}
+		if (status === "COMPLETED") {
+			return HttpResponse.json({
+				...mockEnrollmentCompleted,
+				courseId,
+			});
+		}
+
 		return HttpResponse.json({
 			...mockEnrollmentNone,
-			courseId: String(courseId),
+			courseId,
 		});
 	}),
 
@@ -41,17 +75,19 @@ export const enrollmentsHandlers = [
 			const authError = requireMockAuth(request);
 			if (authError) return authError;
 
-			const { courseId } = params;
+			const courseId = String(params.courseId);
 			if (courseId === "course-fail") {
 				return HttpResponse.json(
 					{ message: "Could not enroll in course." },
 					{ status: 400 },
 				);
 			}
+
+			enrollmentStateMap.set(courseId, "ACTIVE");
 			return HttpResponse.json(
 				{
-					enrollmentId: "mock-enrollment-id",
-					courseId: String(courseId),
+					enrollmentId: `enr-${courseId}`,
+					courseId,
 					status: "ACTIVE",
 					canAccessCourse: true,
 				},
@@ -66,16 +102,18 @@ export const enrollmentsHandlers = [
 			const authError = requireMockAuth(request);
 			if (authError) return authError;
 
-			const { courseId } = params;
+			const courseId = String(params.courseId);
 			if (courseId === "course-fail") {
 				return HttpResponse.json(
 					{ message: "Could not leave course." },
 					{ status: 400 },
 				);
 			}
+
+			enrollmentStateMap.set(courseId, "LEFT");
 			return HttpResponse.json({
-				enrollmentId: "mock-enrollment-id",
-				courseId: String(courseId),
+				enrollmentId: `enr-${courseId}`,
+				courseId,
 				status: "LEFT",
 				canAccessCourse: false,
 			});
