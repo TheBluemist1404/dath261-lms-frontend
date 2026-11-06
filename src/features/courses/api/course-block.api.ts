@@ -4,15 +4,16 @@ import type {
 	CourseBlockInput,
 } from "../types/course-block.types";
 
-/** Course content is represented by CourseBlock records, not separate lessons. */
+/** Course content is represented by CourseBlock records. */
 export async function listCourseBlocks(
 	courseId: string,
 	signal?: AbortSignal,
 ): Promise<CourseBlock[]> {
 	const { data } = await httpClient.get<CourseBlock[]>(
-		`/courseblock/get-all/${encodeURIComponent(courseId)}`,
+		`/courses/${encodeURIComponent(courseId)}/blocks`,
 		{ signal },
 	);
+
 	return data;
 }
 
@@ -21,9 +22,10 @@ export async function createCourseBlock(
 	input: CourseBlockInput,
 ): Promise<CourseBlock> {
 	const { data } = await httpClient.post<CourseBlock>(
-		`/courseblock/create/${encodeURIComponent(courseId)}`,
+		`/courses/${encodeURIComponent(courseId)}/blocks`,
 		input,
 	);
+
 	return data;
 }
 
@@ -33,12 +35,18 @@ export async function updateCourseBlock(
 	input: Partial<Omit<CourseBlockInput, "courseId">>,
 ): Promise<CourseBlock> {
 	const { data } = await httpClient.patch<CourseBlock>(
-		`/courseblock/update/${encodeURIComponent(courseId)}/${encodeURIComponent(blockId)}`,
+		`/courses/${encodeURIComponent(courseId)}/blocks/${encodeURIComponent(blockId)}`,
 		input,
 	);
+
 	return data;
 }
 
-export async function deleteCourseBlock(blockId: string): Promise<void> {
-	await httpClient.delete(`/courseblock/${encodeURIComponent(blockId)}`);
+export async function deleteCourseBlock(
+	courseId: string,
+	blockId: string,
+): Promise<void> {
+	await httpClient.delete(
+		`/courses/${encodeURIComponent(courseId)}/blocks/${encodeURIComponent(blockId)}`,
+	);
 }

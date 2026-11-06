@@ -1,5 +1,6 @@
 {
 	"name": "dath261-lms-frontend",
+	"description": "Nodus web client: course learning, personal knowledge workspaces, and real-time collaboration.",
 	"private": true,
 	"packageManager": "pnpm@12.4.2",
 	"engines": {
@@ -49,7 +50,7 @@
 		"@biomejs/biome": "2.4.5",
 		"@commitlint/cli": "^21.2.3",
 		"@commitlint/config-conventional": "^21.2.2",
-		"@playwright/test": "1.56.1",
+		"@playwright/test": "1.64.1",
 		"@tanstack/devtools-vite": "^0.8.5",
 		"@tanstack/react-devtools": "^0.10.12",
 		"@tanstack/react-query-devtools": "^5.103.1",

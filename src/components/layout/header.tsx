@@ -1,18 +1,21 @@
 import { Link } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import { Brand } from "./brand";
+import { GuestHeader } from "./guest-header";
 
 export default function Header() {
-	const user = useAuthStore((state) => state.user);
-	const status = useAuthStore((state) => state.status);
-	const initials = user?.name
+	const { user, status, logout } = useAuth();
+	const initials = (user?.name || "")
 		.trim()
 		.split(/\s+/)
+		.filter(Boolean)
 		.map((part) => part[0])
 		.slice(0, 2)
 		.join("")
 		.toUpperCase();
+
+	if (status === "unauthenticated") return <GuestHeader />;
 
 	return (
 		<header className="sticky top-0 z-20 flex h-16 items-center justify-between bg-white px-5 text-ink sm:px-8">
@@ -32,19 +35,22 @@ export default function Header() {
 						</Link>
 						<Link
 							to="/"
-							aria-label={`Profile for ${user.name}`}
+							aria-label={
+								user?.name ? `Profile for ${user.name}` : "User Profile"
+							}
 							className="flex size-10 items-center justify-center rounded-full bg-primary-subtle text-sm font-semibold text-primary"
 						>
 							<span aria-hidden="true">{initials || "N"}</span>
 						</Link>
+						<button
+							type="button"
+							onClick={() => logout()}
+							aria-label="Sign out"
+							className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-muted hover:bg-subtle hover:text-ink"
+						>
+							Sign out
+						</button>
 					</>
-				) : status === "unauthenticated" ? (
-					<Link
-						to="/"
-						className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-primary hover:bg-primary-subtle"
-					>
-						Sign in
-					</Link>
 				) : null}
 			</div>
 		</header>

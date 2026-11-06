@@ -12,6 +12,32 @@ export interface Course {
 	createdAt?: string;
 	updatedAt?: string;
 	enrollmentCount?: number;
+	lecturer?: { id: string; name: string };
+}
+
+/** Pagination block returned with the public catalog. */
+export interface PageMeta {
+	total: number;
+	page: number;
+	limit: number;
+	totalPages: number;
+	hasNextPage: boolean;
+	hasPrevPage: boolean;
+}
+
+export interface CoursePage {
+	data: Course[];
+	meta: PageMeta;
+}
+
+export interface CatalogQuery {
+	search?: string;
+	lecturerId?: string;
+	enrollmentOpen?: boolean;
+	sortBy?: "createdAt" | "title" | "enrollmentStartAt";
+	sortOrder?: "asc" | "desc";
+	page?: number;
+	limit?: number;
 }
 
 export interface CourseInput {

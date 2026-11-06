@@ -296,6 +296,15 @@ export default function CourseManagementPage() {
 						</div>
 					</>
 				)}
+				{statusMutation.isError && (
+					<p
+						className="border-t border-border p-4 text-sm text-error"
+						role="alert"
+					>
+						{statusMutation.error.message ||
+							"Unable to change the course status. Please try again."}
+					</p>
+				)}
 			</section>
 		</main>
 	);

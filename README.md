@@ -1,8 +1,8 @@
-# Learner-Oriented LMS — Frontend
+# Nodus — Frontend
 
 [![CI](https://github.com/TheBluemist1404/dath261-lms-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/TheBluemist1404/dath261-lms-frontend/actions/workflows/ci.yml)
 
-Frontend application for the **DATH 261 Learner-Oriented Learning Management System**.
+Frontend application for **Nodus**, the learner-oriented learning management system built for DATH 261.
 
 The project combines conventional LMS workflows with a personal knowledge workspace so that learning material, student notes, contextual references, collaboration, assessments, and progress can live in one permission-aware learning environment.
 

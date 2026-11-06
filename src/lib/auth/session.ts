@@ -1,7 +1,8 @@
 import axios from "axios";
 import { httpClient } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/auth.store";
-import { readAccessTokenClaims, setAccessToken } from "./access-token";
+import { setAccessToken } from "./access-token";
+import { buildAuthUser, decodeJwtClaims } from "./jwt-decoder";
 
 interface AuthTokenResponse {
 	accessToken: string;
@@ -9,11 +10,15 @@ interface AuthTokenResponse {
 
 let pendingRefresh: Promise<string | null> | null = null;
 
-/**
- * Exchanges the refresh cookie for a new access token. Concurrent callers share
- * one request so a burst of 401s triggers a single refresh.
- */
 export function refreshAccessToken(): Promise<string | null> {
+	if (
+		typeof window !== "undefined" &&
+		localStorage.getItem("nodus_logout_tombstone") === "true"
+	) {
+		endSession();
+		return Promise.resolve(null);
+	}
+
 	pendingRefresh ??= httpClient
 		.post<AuthTokenResponse>("/auth/refresh", undefined, {
 			withCredentials: true,
@@ -37,19 +42,15 @@ export function refreshAccessToken(): Promise<string | null> {
 	return pendingRefresh;
 }
 
-/** Stores the token and derives the signed-in identity from its claims. */
 export function applyAccessToken(token: string) {
-	const claims = readAccessTokenClaims(token);
-	if (!claims) {
+	try {
+		const claims = decodeJwtClaims(token);
+		setAccessToken(token);
+		const user = buildAuthUser(claims);
+		useAuthStore.getState().setUser(user);
+	} catch {
 		endSession();
-		return;
 	}
-
-	setAccessToken(token);
-	// The backend has no current-user endpoint yet, so name and email stay empty.
-	useAuthStore
-		.getState()
-		.setUser({ id: claims.userId, role: claims.role, name: "", email: "" });
 }
 
 export function endSession() {
@@ -57,12 +58,10 @@ export function endSession() {
 	useAuthStore.getState().clearAuth();
 }
 
-/** Restores a session from the refresh cookie on app load. */
 export async function restoreSession() {
 	try {
 		await refreshAccessToken();
 	} catch {
-		// Network or server failure: treat as signed out rather than blocking the app.
 		endSession();
 	}
 }

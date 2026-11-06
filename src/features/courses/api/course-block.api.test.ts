@@ -9,8 +9,14 @@ import {
 } from "./course-block.api";
 
 vi.mock("@/lib/http/client", () => ({
-	httpClient: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+	httpClient: {
+		get: vi.fn(),
+		post: vi.fn(),
+		patch: vi.fn(),
+		delete: vi.fn(),
+	},
 }));
+
 const block: CourseBlock = {
 	id: "block-1",
 	courseId: "course-1",
@@ -20,19 +26,26 @@ const block: CourseBlock = {
 	position: 0,
 	content: null,
 };
+
 afterEach(() => vi.clearAllMocks());
 
 describe("course block API", () => {
-	it("queries course blocks through the courseblock resource", async () => {
-		vi.mocked(httpClient.get).mockResolvedValue({ data: [block] } as never);
+	it("queries course blocks through the nested course resource", async () => {
+		vi.mocked(httpClient.get).mockResolvedValue({
+			data: [block],
+		} as never);
+
 		expect(await listCourseBlocks("course-1")).toEqual([block]);
-		expect(httpClient.get).toHaveBeenCalledWith(
-			"/courseblock/get-all/course-1",
-			{ signal: undefined },
-		);
+
+		expect(httpClient.get).toHaveBeenCalledWith("/courses/course-1/blocks", {
+			signal: undefined,
+		});
 	});
+
 	it("creates nested content as a CourseBlock", async () => {
-		vi.mocked(httpClient.post).mockResolvedValue({ data: block } as never);
+		vi.mocked(httpClient.post).mockResolvedValue({
+			data: block,
+		} as never);
 
 		const input = {
 			courseId: "course-1",
@@ -46,21 +59,31 @@ describe("course block API", () => {
 		await createCourseBlock("course-1", input);
 
 		expect(httpClient.post).toHaveBeenCalledWith(
-			"/courseblock/create/course-1",
+			"/courses/course-1/blocks",
 			input,
 		);
 	});
+
 	it("updates and deletes a block by ID", async () => {
-		vi.mocked(httpClient.patch).mockResolvedValue({ data: block } as never);
+		vi.mocked(httpClient.patch).mockResolvedValue({
+			data: block,
+		} as never);
+
 		vi.mocked(httpClient.delete).mockResolvedValue({} as never);
+
 		await updateCourseBlock("course-1", "block-1", { title: "Updated" });
-		await deleteCourseBlock("block-1");
+
+		await deleteCourseBlock("course-1", "block-1");
+
 		expect(httpClient.patch).toHaveBeenCalledWith(
-			"/courseblock/update/course-1/block-1",
+			"/courses/course-1/blocks/block-1",
 			{
 				title: "Updated",
 			},
 		);
-		expect(httpClient.delete).toHaveBeenCalledWith("/courseblock/block-1");
+
+		expect(httpClient.delete).toHaveBeenCalledWith(
+			"/courses/course-1/blocks/block-1",
+		);
 	});
 });

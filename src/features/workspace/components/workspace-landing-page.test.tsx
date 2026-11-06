@@ -38,6 +38,7 @@ afterEach(() => {
 
 describe("Workspace routing", () => {
 	it("repairs saved Devtools positioning while preserving other preferences", async () => {
+		signOut = signInForTest(mockUsers.alex.id);
 		localStorage.setItem(
 			"tanstack_devtools_settings",
 			JSON.stringify({
@@ -67,7 +68,8 @@ describe("Workspace routing", () => {
 		["/workspace/study-group", "/_layout/workspace/$id/"],
 		["/workspace/study-group/settings", "/_layout/workspace/$id/settings"],
 		["/workspace/archived", "/_layout/workspace/archived"],
-	])("places %s under the future auth boundary", async (path, leafRoute) => {
+	])("places %s under the auth boundary", async (path, leafRoute) => {
+		signOut = signInForTest(mockUsers.alex.id);
 		const router = createWorkspaceRouter(path);
 		await router.load();
 
@@ -77,8 +79,16 @@ describe("Workspace routing", () => {
 			"/_layout/workspace",
 			leafRoute,
 		]);
-		expect(useAuthStore.getState().status).toBe("loading");
-		expect(useAuthStore.getState().user).toBeNull();
+	});
+
+	it("redirects unauthenticated visitor to login", async () => {
+		const router = createWorkspaceRouter("/workspace");
+		await router.load();
+
+		expect(router.state.matches.map((match) => match.routeId)).toEqual([
+			"__root__",
+			"/login",
+		]);
 	});
 
 	it("opens the personal workspace and keeps workspace navigation active", async () => {
@@ -219,12 +229,10 @@ describe("Workspace routing", () => {
 		);
 		expect(screen.queryByRole("link", { name: "Go to workspaces" })).toBeNull();
 		await user.click(screen.getByRole("link", { name: "Back to home" }));
+		// Home sends a signed-in admin on to the admin overview.
 		expect(
-			await screen.findByRole("heading", {
-				name: "Learner-Oriented LMS",
-				level: 1,
-			}),
+			await screen.findByRole("heading", { name: "Operational overview" }),
 		).toBeInTheDocument();
-		expect(router.state.location.pathname).toBe("/");
+		expect(router.state.location.pathname).toBe("/admin");
 	});
 });

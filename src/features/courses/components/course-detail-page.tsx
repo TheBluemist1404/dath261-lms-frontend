@@ -74,7 +74,8 @@ export default function CourseDetailPage() {
 		},
 	});
 	const deleteBlock = useMutation({
-		mutationFn: deleteCourseBlock,
+		mutationFn: (blockId: string) =>
+			deleteCourseBlock(courseId as string, blockId),
 		onSuccess: refreshBlocks,
 	});
 	const publication = useMutation({
