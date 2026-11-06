@@ -1,11 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/http/errors";
 import { useAuth } from "../hooks/use-auth";
 import type { RegisterPayload } from "../types";
-import {
-	NameValidationError,
-	partitionFullName,
-} from "../utils/name-partitioner";
 import { AuthBanner } from "./auth-banner";
 import { AuthHeader } from "./auth-header";
 import { type RoleOption, RoleToggle } from "./role-toggle";
@@ -20,12 +17,14 @@ export function RegisterForm({ onSuccess, className = "" }: RegisterFormProps) {
 	const { register } = useAuth();
 
 	const [role, setRole] = useState<RoleOption>("STUDENT");
-	const [fullName, setFullName] = useState("");
+	const [firstName, setFirstName] = useState("");
+	const [lastName, setLastName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 
-	const [nameError, setNameError] = useState<string | null>(null);
+	const [firstNameError, setFirstNameError] = useState<string | null>(null);
+	const [lastNameError, setLastNameError] = useState<string | null>(null);
 	const [emailError, setEmailError] = useState<string | null>(null);
 	const [passwordError, setPasswordError] = useState<string | null>(null);
 	const [bannerError, setBannerError] = useState<string | null>(null);
@@ -34,20 +33,28 @@ export function RegisterForm({ onSuccess, className = "" }: RegisterFormProps) {
 	const validateClient = (): boolean => {
 		let isValid = true;
 
-		setNameError(null);
+		setFirstNameError(null);
+		setLastNameError(null);
 		setEmailError(null);
 		setPasswordError(null);
 		setBannerError(null);
 
-		try {
-			partitionFullName(fullName);
-		} catch (error) {
+		const trimmedFirstName = firstName.trim();
+		if (!trimmedFirstName) {
 			isValid = false;
-			if (error instanceof NameValidationError) {
-				setNameError(error.message);
-			} else {
-				setNameError("Please enter your full name (both first and last name).");
-			}
+			setFirstNameError("First name is required.");
+		} else if (trimmedFirstName.length > 100) {
+			isValid = false;
+			setFirstNameError("First name cannot exceed 100 characters.");
+		}
+
+		const trimmedLastName = lastName.trim();
+		if (!trimmedLastName) {
+			isValid = false;
+			setLastNameError("Last name is required.");
+		} else if (trimmedLastName.length > 100) {
+			isValid = false;
+			setLastNameError("Last name cannot exceed 100 characters.");
 		}
 
 		const trimmedEmail = email.trim();
@@ -82,7 +89,8 @@ export function RegisterForm({ onSuccess, className = "" }: RegisterFormProps) {
 
 		try {
 			const payload: RegisterPayload = {
-				fullName: fullName.trim(),
+				firstName: firstName.trim(),
+				lastName: lastName.trim(),
 				email: email.trim(),
 				password,
 				role,
@@ -102,30 +110,16 @@ export function RegisterForm({ onSuccess, className = "" }: RegisterFormProps) {
 				});
 			}
 		} catch (error: unknown) {
-			const axiosError = error as {
-				response?: {
-					status?: number;
-					data?: {
-						message?: string | string[];
-						error?: string;
-					};
-				};
-			};
-
-			const status = axiosError.response?.status;
-			const data = axiosError.response?.data;
+			const status = getApiErrorStatus(error);
 
 			if (status === 409) {
 				setBannerError("An account with this email already exists.");
-			} else if (data?.message) {
-				if (Array.isArray(data.message)) {
-					setBannerError(data.message.join(". "));
-				} else {
-					setBannerError(data.message);
-				}
 			} else {
 				setBannerError(
-					"An unexpected error occurred during registration. Please try again.",
+					getApiErrorMessage(
+						error,
+						"An unexpected error occurred during registration. Please try again.",
+					),
 				);
 			}
 		} finally {
@@ -208,44 +202,86 @@ export function RegisterForm({ onSuccess, className = "" }: RegisterFormProps) {
 								/>
 							</div>
 
-							<div className="flex flex-col gap-1.5">
-								<label
-									htmlFor="register-fullname"
-									className="text-xs font-semibold text-ink"
-								>
-									Full name
-								</label>
-								<input
-									id="register-fullname"
-									name="fullName"
-									type="text"
-									placeholder="Alex Le"
-									autoComplete="name"
-									value={fullName}
-									onChange={(e) => {
-										setFullName(e.target.value);
-										if (nameError) setNameError(null);
-									}}
-									disabled={isSubmitting}
-									aria-invalid={Boolean(nameError)}
-									aria-describedby={
-										nameError ? "register-fullname-error" : undefined
-									}
-									className={`h-11 w-full rounded-lg border px-3.5 text-sm text-ink placeholder:text-muted/60 transition-colors focus-visible:outline-2 ${
-										nameError
-											? "border-error focus-visible:outline-error"
-											: "border-border focus-visible:outline-primary"
-									}`}
-								/>
-								{nameError && (
-									<p
-										id="register-fullname-error"
-										role="alert"
-										className="text-xs text-error"
+							<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+								<div className="flex flex-col gap-1.5">
+									<label
+										htmlFor="register-firstname"
+										className="text-xs font-semibold text-ink"
 									>
-										{nameError}
-									</p>
-								)}
+										First name
+									</label>
+									<input
+										id="register-firstname"
+										name="firstName"
+										type="text"
+										placeholder="Alex"
+										autoComplete="given-name"
+										value={firstName}
+										onChange={(e) => {
+											setFirstName(e.target.value);
+											if (firstNameError) setFirstNameError(null);
+										}}
+										disabled={isSubmitting}
+										aria-invalid={Boolean(firstNameError)}
+										aria-describedby={
+											firstNameError ? "register-firstname-error" : undefined
+										}
+										className={`h-11 w-full rounded-lg border px-3.5 text-sm text-ink placeholder:text-muted/60 transition-colors focus-visible:outline-2 ${
+											firstNameError
+												? "border-error focus-visible:outline-error"
+												: "border-border focus-visible:outline-primary"
+										}`}
+									/>
+									{firstNameError && (
+										<p
+											id="register-firstname-error"
+											role="alert"
+											className="text-xs text-error"
+										>
+											{firstNameError}
+										</p>
+									)}
+								</div>
+
+								<div className="flex flex-col gap-1.5">
+									<label
+										htmlFor="register-lastname"
+										className="text-xs font-semibold text-ink"
+									>
+										Last name
+									</label>
+									<input
+										id="register-lastname"
+										name="lastName"
+										type="text"
+										placeholder="Le"
+										autoComplete="family-name"
+										value={lastName}
+										onChange={(e) => {
+											setLastName(e.target.value);
+											if (lastNameError) setLastNameError(null);
+										}}
+										disabled={isSubmitting}
+										aria-invalid={Boolean(lastNameError)}
+										aria-describedby={
+											lastNameError ? "register-lastname-error" : undefined
+										}
+										className={`h-11 w-full rounded-lg border px-3.5 text-sm text-ink placeholder:text-muted/60 transition-colors focus-visible:outline-2 ${
+											lastNameError
+												? "border-error focus-visible:outline-error"
+												: "border-border focus-visible:outline-primary"
+										}`}
+									/>
+									{lastNameError && (
+										<p
+											id="register-lastname-error"
+											role="alert"
+											className="text-xs text-error"
+										>
+											{lastNameError}
+										</p>
+									)}
+								</div>
 							</div>
 
 							<div className="flex flex-col gap-1.5">

@@ -1,9 +1,9 @@
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setAccessToken } from "@/lib/auth/access-token";
+import { bootstrapSession } from "@/lib/auth/session";
 import { useAuthStore } from "@/stores/auth.store";
 import { server } from "@/test/mocks/server";
-import { bootstrapSession } from "./session";
 
 function createJwt(payload: Record<string, unknown>): string {
 	const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }))

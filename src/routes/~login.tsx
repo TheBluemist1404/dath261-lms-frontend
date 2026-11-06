@@ -20,5 +20,12 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginComponent() {
-	return <LoginForm />;
+	const search = Route.useSearch();
+	return (
+		<LoginForm
+			initialEmail={search.email}
+			registered={search.registered}
+			redirect={search.redirect}
+		/>
+	);
 }
