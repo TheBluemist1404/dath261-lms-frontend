@@ -144,21 +144,6 @@ export default function CourseForm({
 					onChange={(e) => change("prerequisites", e.target.value)}
 				/>
 			</div>
-			<div>
-				<label className={labelClass} htmlFor="course-status">
-					Publication status
-				</label>
-				<select
-					id="course-status"
-					className={fieldClass}
-					value={form.status}
-					disabled={busy}
-					onChange={(e) => change("status", e.target.value as CourseStatus)}
-				>
-					<option value="DRAFT">Draft</option>
-					<option value="PUBLISHED">Published</option>
-				</select>
-			</div>
 			{/* New courses start as drafts; a course can be published once it has content. */}
 			{mode === "edit" && (
 				<div>
