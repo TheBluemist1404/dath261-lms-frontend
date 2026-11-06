@@ -103,7 +103,8 @@ describe("useAuth", () => {
 		let registerResult: unknown;
 		await act(async () => {
 			registerResult = await result.current.register({
-				fullName: "New Learner",
+				firstName: "New",
+				lastName: "Learner",
 				email: "new@nodus.edu",
 				password: "Password123!",
 				role: "student",

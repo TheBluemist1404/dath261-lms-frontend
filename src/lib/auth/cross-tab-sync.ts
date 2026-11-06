@@ -2,7 +2,7 @@ import { setAccessToken } from "@/lib/auth/access-token";
 import { queryClient } from "@/lib/query/client";
 import { router } from "@/router";
 import { useAuthStore } from "@/stores/auth.store";
-import { bootstrapSessionSafe } from "./session-barrier";
+import { bootstrapSession, invalidateSessionEpoch } from "./session";
 
 export const AUTH_CHANNEL = "nodus_lms_auth";
 
@@ -22,6 +22,7 @@ export function initCrossTabSync(): () => void {
 
 	channel.onmessage = async (event: MessageEvent<AuthSyncMessage>) => {
 		if (event.data?.type === "LOGOUT") {
+			invalidateSessionEpoch();
 			setAccessToken(null);
 			useAuthStore.getState().clearAuth();
 			queryClient.clear();
@@ -32,7 +33,8 @@ export function initCrossTabSync(): () => void {
 			}
 		} else if (event.data?.type === "LOGIN") {
 			if (useAuthStore.getState().status !== "authenticated") {
-				await bootstrapSessionSafe();
+				useAuthStore.getState().reset();
+				await bootstrapSession();
 				try {
 					await router.invalidate();
 				} catch {

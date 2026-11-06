@@ -39,20 +39,64 @@ describe("RegisterForm", () => {
 		useAuthStore.getState().reset();
 	});
 
-	it("shows mononym validation error when single word is entered for full name", async () => {
+	it("shows validation error when first name is empty", async () => {
 		const user = userEvent.setup();
 		render(<RegisterForm />);
 
-		await user.type(screen.getByLabelText(/full name/i), "Plato");
-		await user.type(screen.getByLabelText(/email/i), "plato@example.com");
+		await user.type(screen.getByLabelText(/last name/i), "Smith");
+		await user.type(screen.getByLabelText(/email/i), "smith@example.com");
+		await user.type(screen.getByLabelText(/^password/i), "securepassword123");
+
+		await user.click(screen.getByRole("button", { name: "Create account" }));
+
+		expect(screen.getByText("First name is required.")).toBeInTheDocument();
+		expect(mockNavigate).not.toHaveBeenCalled();
+	});
+
+	it("shows validation error when last name is empty", async () => {
+		const user = userEvent.setup();
+		render(<RegisterForm />);
+
+		await user.type(screen.getByLabelText(/first name/i), "John");
+		await user.type(screen.getByLabelText(/email/i), "john@example.com");
+		await user.type(screen.getByLabelText(/^password/i), "securepassword123");
+
+		await user.click(screen.getByRole("button", { name: "Create account" }));
+
+		expect(screen.getByText("Last name is required.")).toBeInTheDocument();
+		expect(mockNavigate).not.toHaveBeenCalled();
+	});
+
+	it("shows validation error when first name exceeds 100 characters", async () => {
+		const user = userEvent.setup();
+		render(<RegisterForm />);
+
+		await user.type(screen.getByLabelText(/first name/i), "a".repeat(101));
+		await user.type(screen.getByLabelText(/last name/i), "Smith");
+		await user.type(screen.getByLabelText(/email/i), "smith@example.com");
 		await user.type(screen.getByLabelText(/^password/i), "securepassword123");
 
 		await user.click(screen.getByRole("button", { name: "Create account" }));
 
 		expect(
-			screen.getByText(
-				"Please enter your full name (both first and last name).",
-			),
+			screen.getByText("First name cannot exceed 100 characters."),
+		).toBeInTheDocument();
+		expect(mockNavigate).not.toHaveBeenCalled();
+	});
+
+	it("shows validation error when last name exceeds 100 characters", async () => {
+		const user = userEvent.setup();
+		render(<RegisterForm />);
+
+		await user.type(screen.getByLabelText(/first name/i), "John");
+		await user.type(screen.getByLabelText(/last name/i), "b".repeat(101));
+		await user.type(screen.getByLabelText(/email/i), "john@example.com");
+		await user.type(screen.getByLabelText(/^password/i), "securepassword123");
+
+		await user.click(screen.getByRole("button", { name: "Create account" }));
+
+		expect(
+			screen.getByText("Last name cannot exceed 100 characters."),
 		).toBeInTheDocument();
 		expect(mockNavigate).not.toHaveBeenCalled();
 	});
@@ -61,7 +105,8 @@ describe("RegisterForm", () => {
 		const user = userEvent.setup();
 		render(<RegisterForm />);
 
-		await user.type(screen.getByLabelText(/full name/i), "Alex Le");
+		await user.type(screen.getByLabelText(/first name/i), "Alex");
+		await user.type(screen.getByLabelText(/last name/i), "Le");
 		await user.type(screen.getByLabelText(/email/i), "alex@example.com");
 		await user.type(screen.getByLabelText(/^password/i), "short");
 
@@ -78,7 +123,8 @@ describe("RegisterForm", () => {
 		render(<RegisterForm />);
 
 		const longPassword = "a".repeat(73);
-		await user.type(screen.getByLabelText(/full name/i), "Alex Le");
+		await user.type(screen.getByLabelText(/first name/i), "Alex");
+		await user.type(screen.getByLabelText(/last name/i), "Le");
 		await user.type(screen.getByLabelText(/email/i), "alex@example.com");
 		await user.type(screen.getByLabelText(/^password/i), longPassword);
 
@@ -133,7 +179,8 @@ describe("RegisterForm", () => {
 		const user = userEvent.setup();
 		render(<RegisterForm />);
 
-		await user.type(screen.getByLabelText(/full name/i), "Alex Le");
+		await user.type(screen.getByLabelText(/first name/i), "Alex");
+		await user.type(screen.getByLabelText(/last name/i), "Le");
 		await user.type(screen.getByLabelText(/email/i), "alex@example.com");
 		await user.type(screen.getByLabelText(/^password/i), "validpassword123");
 
@@ -149,7 +196,8 @@ describe("RegisterForm", () => {
 		const user = userEvent.setup();
 		render(<RegisterForm />);
 
-		await user.type(screen.getByLabelText(/full name/i), "Alex Le");
+		await user.type(screen.getByLabelText(/first name/i), "Alex");
+		await user.type(screen.getByLabelText(/last name/i), "Le");
 		await user.type(screen.getByLabelText(/email/i), "exists@example.com");
 		await user.type(screen.getByLabelText(/^password/i), "password123");
 
@@ -166,7 +214,8 @@ describe("RegisterForm", () => {
 		const user = userEvent.setup();
 		render(<RegisterForm />);
 
-		await user.type(screen.getByLabelText(/full name/i), "Alex Le");
+		await user.type(screen.getByLabelText(/first name/i), "Alex");
+		await user.type(screen.getByLabelText(/last name/i), "Le");
 		await user.type(screen.getByLabelText(/email/i), "newuser@example.com");
 		await user.type(screen.getByLabelText(/^password/i), "password123");
 
@@ -182,7 +231,6 @@ describe("RegisterForm", () => {
 			},
 		});
 
-		// Verify user store remains unauthenticated (no zombie session!)
 		expect(useAuthStore.getState().status).not.toBe("authenticated");
 		expect(useAuthStore.getState().user).toBeNull();
 	});

@@ -1,6 +1,6 @@
 import { setAccessToken } from "@/lib/auth/access-token";
 import { broadcastLogout } from "@/lib/auth/cross-tab-sync";
-import { invalidateSessionEpoch } from "@/lib/auth/session-barrier";
+import { invalidateSessionEpoch } from "@/lib/auth/session";
 import { httpClient } from "@/lib/http/client";
 import { queryClient } from "@/lib/query/client";
 import { router } from "@/router";

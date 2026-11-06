@@ -13,7 +13,7 @@ import {
 	getSessionEpoch,
 	invalidateSessionEpoch,
 	resetSessionBarrierForTest,
-} from "@/lib/auth/session-barrier";
+} from "@/lib/auth/session";
 import { terminateSession } from "@/lib/auth/session-termination";
 import { httpClient } from "@/lib/http/client";
 import { Route as RootRoute } from "@/routes/~__root";
@@ -442,8 +442,8 @@ describe("ADVERSARIAL STRESS SUITE: PR #14 Concurrency Barrier & Route Guards", 
 		};
 
 		describe("requireAuth guard (/workspace protection)", () => {
-			it("throws error when auth context is still loading", () => {
-				expect(() =>
+			it("redirects to login when auth context is loading", () => {
+				try {
 					requireAuth({
 						context: {
 							auth: {
@@ -453,8 +453,15 @@ describe("ADVERSARIAL STRESS SUITE: PR #14 Concurrency Barrier & Route Guards", 
 							},
 						},
 						location: { href: "/workspace" },
-					}),
-				).toThrow("Route guard evaluated while auth context is loading");
+					});
+					expect.unreachable("requireAuth must throw redirect");
+				} catch (err) {
+					expect(isRedirect(err)).toBe(true);
+					if (isRedirect(err)) {
+						expect(err.options.to).toBe("/login");
+						expect(err.options.search).toEqual({ redirect: "/workspace" });
+					}
+				}
 			});
 
 			it("redirects unauthenticated user accessing /workspace to /login with sanitized redirect", () => {
