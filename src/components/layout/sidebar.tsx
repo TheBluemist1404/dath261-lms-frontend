@@ -5,7 +5,15 @@ import { type UserRole, useAuthStore } from "@/stores/auth.store";
 type MenuItem = {
 	label: string;
 	icon: IconName;
-	to?: "/" | "/catalog" | "/workspace" | "/instructor/courses" | "/admin";
+	to?:
+		| "/"
+		| "/catalog"
+		| "/workspace"
+		| "/instructor/courses"
+		| "/admin"
+		| "/admin/users"
+		| "/admin/courses"
+		| "/admin/reports";
 	// Shown but not clickable until the feature exists.
 	disabled?: boolean;
 };
@@ -27,11 +35,17 @@ const menus: Record<UserRole, MenuItem[]> = {
 	],
 	admin: [
 		{ label: "Overview", icon: "dashboard", to: "/admin" },
-		{ label: "Users", icon: "users", disabled: true },
-		{ label: "Courses", icon: "courses", disabled: true },
-		{ label: "Reports", icon: "reports", disabled: true },
+		{ label: "Users", icon: "users", to: "/admin/users" },
+		{ label: "Courses", icon: "courses", to: "/admin/courses" },
+		{ label: "Reports", icon: "reports", to: "/admin/reports" },
 	],
 };
+
+// Sections whose entry stays active on nested pages (e.g. a report review).
+const nestedSections = new Set<MenuItem["to"]>([
+	"/workspace",
+	"/admin/reports",
+]);
 
 export default function Sidebar() {
 	const role = useAuthStore((state) => state.user?.role);
@@ -61,7 +75,7 @@ export default function Sidebar() {
 						<Link
 							key={item.label}
 							to={item.to ?? "/"}
-							activeOptions={{ exact: item.to !== "/workspace" }}
+							activeOptions={{ exact: !nestedSections.has(item.to) }}
 							activeProps={{
 								"aria-current": item.to || index === 0 ? "page" : undefined,
 							}}
