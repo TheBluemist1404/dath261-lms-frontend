@@ -15,7 +15,7 @@ export interface Course {
 	lecturer?: { id: string; name: string };
 }
 
-/** Pagination block returned with the public catalog (GET /courses/catalog). */
+/** Pagination block returned with the public catalog. */
 export interface PageMeta {
 	total: number;
 	page: number;
