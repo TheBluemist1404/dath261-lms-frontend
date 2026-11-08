@@ -247,6 +247,96 @@ describe("AD-02 Users", () => {
 	});
 });
 
+describe("Backend admin routes (BE PR #36)", () => {
+	function recordPatches() {
+		const calls: { path: string; body: unknown }[] = [];
+		server.use(
+			http.patch("*/api/admin/*", async ({ request }) => {
+				calls.push({
+					path: new URL(request.url).pathname,
+					body: await request.clone().json(),
+				});
+			}),
+		);
+		return calls;
+	}
+
+	it("suspends a user with PATCH /admin/users/:userId/status", async () => {
+		const calls = recordPatches();
+		const user = userEvent.setup();
+		renderAt("/admin/users");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Suspend account" }),
+		);
+		const dialog = await openDialog("Suspend Mai Tran?");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Suspend account" }),
+		);
+
+		await waitFor(() =>
+			expect(calls).toEqual([
+				{
+					path: "/api/admin/users/user-mai/status",
+					body: {
+						status: "SUSPENDED",
+						reason: "Reviewed the report and target context.",
+					},
+				},
+			]),
+		);
+	});
+
+	it("suspends a course with PATCH /admin/courses/:courseId/suspension", async () => {
+		const calls = recordPatches();
+		const user = userEvent.setup();
+		renderAt("/admin/courses");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Suspend course" }),
+		);
+		const dialog = await openDialog("Suspend Operating Systems?");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Suspend course" }),
+		);
+
+		await waitFor(() =>
+			expect(calls).toEqual([
+				{
+					path: "/api/admin/courses/course-os/suspension",
+					body: {
+						suspended: true,
+						reason: "Reviewed the report and target context.",
+					},
+				},
+			]),
+		);
+	});
+
+	it("reads users from the paged response", async () => {
+		server.use(
+			http.get("*/api/admin/users", () =>
+				HttpResponse.json({
+					items: [mockAdminDb.users[1]],
+					page: 1,
+					pageSize: 20,
+					total: 1,
+				}),
+			),
+		);
+		renderAt("/admin/users");
+
+		expect(
+			await screen.findByRole("button", {
+				name: "Dr. Linh Nguyen · linh.nguyen@example.com",
+			}),
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: /Mai Tran ·/ }),
+		).not.toBeInTheDocument();
+	});
+});
+
 describe("AD-03 Courses", () => {
 	it("suspends a course without changing its publication status", async () => {
 		const user = userEvent.setup();

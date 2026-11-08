@@ -5,8 +5,9 @@ import { Icon } from "@/components/ui/icon";
 import { getApiErrorMessage } from "@/lib/http/errors";
 import {
 	dismissReport,
-	setCourseSuspended,
-	setUserSuspended,
+	resolveReport,
+	updateCourseSuspension,
+	updateUserStatus,
 } from "../api/moderation.api";
 import { adminKey, reportQuery } from "../api/moderation.queries";
 import { formatLongDateTime, formatShortDateTime } from "../format";
@@ -133,10 +134,12 @@ export function ReportReviewPage({ reportId }: { reportId: string }) {
 			if (action === "dismiss") return dismissReport(report.id, reason);
 			const target = suspensionTarget(report);
 			if (!target) throw new Error("This report has no suspension target.");
-			const input = { reason, reportId: report.id };
-			return target.kind === "course"
-				? setCourseSuspended(target.id, true, input)
-				: setUserSuspended(target.id, true, input);
+			if (target.kind === "course") {
+				await updateCourseSuspension(target.id, { suspended: true, reason });
+			} else {
+				await updateUserStatus(target.id, { status: "SUSPENDED", reason });
+			}
+			return resolveReport(report.id, reason);
 		},
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: adminKey });

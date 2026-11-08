@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { getApiErrorMessage } from "@/lib/http/errors";
-import { setUserSuspended } from "../api/moderation.api";
+import { updateUserStatus } from "../api/moderation.api";
 import { adminKey, adminUserListQuery } from "../api/moderation.queries";
 import { formatDate } from "../format";
 import type { AdminUser, UserRoleDto } from "../types";
@@ -31,7 +31,9 @@ const roleLabels: Record<UserRoleDto, string> = {
 	ADMIN: "Administrator",
 };
 
-const fullName = (user: AdminUser) => `${user.firstName} ${user.lastName}`;
+// BE PR #36 allows null first and last names.
+const fullName = (user: AdminUser) =>
+	[user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
 
 /** Figma AD-02 Users: account availability, without changing roles. */
 export function UsersPage() {
@@ -42,7 +44,7 @@ export function UsersPage() {
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	const users = usersQuery.data ?? [];
+	const users = usersQuery.data?.items ?? [];
 	const visible = useMemo(() => {
 		const term = search.trim().toLocaleLowerCase();
 		return users.filter(
@@ -57,7 +59,10 @@ export function UsersPage() {
 
 	const mutation = useMutation({
 		mutationFn: ({ user, reason }: { user: AdminUser; reason: string }) =>
-			setUserSuspended(user.id, user.status !== "SUSPENDED", { reason }),
+			updateUserStatus(user.id, {
+				status: user.status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED",
+				reason,
+			}),
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: adminKey });
 			setDialogOpen(false);

@@ -1,12 +1,11 @@
 // Admin moderation shapes (issue #22, Figma AD-02 to AD-05).
 //
-// The backend has no admin moderation endpoints yet. Statuses reuse the
-// backend enums that already exist (Report.status, AccountStatus,
-// Course.isSuspended); everything else is the mock contract served by
-// testing/handlers.ts and must be replaced once the backend contract is agreed.
+// Users and courses follow the backend admin module (BE PR #36). Reports have
+// no backend endpoints yet, so their shapes are the mock contract served by
+// testing/handlers.ts.
 
 import type { AccountStatusDto, UserRoleDto } from "@/features/auth/types";
-import type { Course } from "@/features/courses/types/course.types";
+import type { CourseStatus } from "@/features/courses/types/course.types";
 import type { Report } from "@/features/workspace/types";
 
 export type { AccountStatusDto, UserRoleDto };
@@ -59,26 +58,44 @@ export interface AdminReport {
 	history: ReportHistoryEntry[];
 }
 
+/** BE PR #36 AdminUserItemDto. */
 export interface AdminUser {
 	id: string;
-	firstName: string;
-	lastName: string;
 	email: string;
+	firstName: string | null;
+	lastName: string | null;
 	role: UserRoleDto;
 	status: AccountStatusDto;
 	createdAt: string;
 }
 
-export type AdminCourse = Pick<
-	Course,
-	"id" | "title" | "status" | "enrollmentCount"
-> & {
-	lecturer: PersonRef;
+/** BE PR #36 AdminCourseItemDto. */
+export interface AdminCourse {
+	id: string;
+	title: string;
+	status: CourseStatus;
 	isSuspended: boolean;
-};
+	lecturer: PersonRef;
+	enrollmentCount: number;
+	createdAt: string;
+}
 
-export interface ModerationReasonInput {
-	reason: string;
-	/** Set when the action is taken from a report review. */
-	reportId?: string;
+/** BE PR #36 paged list response for GET /admin/users and /admin/courses. */
+export interface PagedResponse<T> {
+	items: T[];
+	page: number;
+	pageSize: number;
+	total: number;
+}
+
+/** BE PR #36 body of PATCH /admin/users/:userId/status. */
+export interface UpdateUserStatusInput {
+	status: AccountStatusDto;
+	reason?: string;
+}
+
+/** BE PR #36 body of PATCH /admin/courses/:courseId/suspension. */
+export interface UpdateCourseSuspensionInput {
+	suspended: boolean;
+	reason?: string;
 }

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { getApiErrorMessage } from "@/lib/http/errors";
-import { setCourseSuspended } from "../api/moderation.api";
+import { updateCourseSuspension } from "../api/moderation.api";
 import { adminCourseListQuery, adminKey } from "../api/moderation.queries";
 import type { AdminCourse } from "../types";
 import {
@@ -52,7 +52,7 @@ export function CoursesPage() {
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	const courses = coursesQuery.data ?? [];
+	const courses = coursesQuery.data?.items ?? [];
 	const visible = useMemo(() => {
 		const term = search.trim().toLocaleLowerCase();
 		return courses.filter(
@@ -68,7 +68,10 @@ export function CoursesPage() {
 
 	const mutation = useMutation({
 		mutationFn: ({ course, reason }: { course: AdminCourse; reason: string }) =>
-			setCourseSuspended(course.id, !course.isSuspended, { reason }),
+			updateCourseSuspension(course.id, {
+				suspended: !course.isSuspended,
+				reason,
+			}),
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: adminKey });
 			setDialogOpen(false);

@@ -49,6 +49,7 @@ function seedCourses(): AdminCourse[] {
 			enrollmentCount: 42,
 			lecturer: { id: "user-linh", name: "Dr. Linh Nguyen" },
 			isSuspended: false,
+			createdAt: "2026-08-15T02:00:00.000Z",
 		},
 		{
 			id: "course-db",
@@ -57,6 +58,7 @@ function seedCourses(): AdminCourse[] {
 			enrollmentCount: 28,
 			lecturer: { id: "user-hoa", name: "Prof. Hoa Pham" },
 			isSuspended: false,
+			createdAt: "2026-08-20T02:00:00.000Z",
 		},
 		{
 			id: "course-intro-cs",
@@ -65,6 +67,7 @@ function seedCourses(): AdminCourse[] {
 			enrollmentCount: 0,
 			lecturer: { id: "user-minh", name: "Dr. Minh Tran" },
 			isSuspended: false,
+			createdAt: "2026-09-25T02:00:00.000Z",
 		},
 	];
 }
