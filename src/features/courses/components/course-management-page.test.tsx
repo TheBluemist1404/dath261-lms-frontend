@@ -5,24 +5,17 @@ import { renderWithProviders } from "@/test/render";
 import type { Course } from "../types/course.types";
 import CourseManagementPage from "./course-management-page";
 
-const {
-	listCourses,
-	createCourse,
-	updateCourse,
-	deleteCourse,
-	updateCourseStatus,
-} = vi.hoisted(() => ({
-	listCourses: vi.fn(),
-	createCourse: vi.fn(),
-	updateCourse: vi.fn(),
-	deleteCourse: vi.fn(),
-	updateCourseStatus: vi.fn(),
-}));
+const { listCourses, createCourse, updateCourse, updateCourseStatus } =
+	vi.hoisted(() => ({
+		listCourses: vi.fn(),
+		createCourse: vi.fn(),
+		updateCourse: vi.fn(),
+		updateCourseStatus: vi.fn(),
+	}));
 vi.mock("../api/course.api", () => ({
 	listCourses,
 	createCourse,
 	updateCourse,
-	deleteCourse,
 	updateCourseStatus,
 }));
 vi.mock("@tanstack/react-router", () => ({
@@ -88,7 +81,6 @@ describe("CourseManagementPage", () => {
 			...courses[0],
 			id,
 		}));
-		vi.mocked(deleteCourse).mockResolvedValue(undefined);
 		vi.mocked(updateCourseStatus).mockImplementation(async (id, status) => {
 			const course = courses.find((course) => course.id === id);
 
