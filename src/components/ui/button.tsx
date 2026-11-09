@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { twMerge } from "tailwind-merge";
 
 export type ButtonVariant =
 	| "primary"
@@ -24,6 +25,25 @@ const sizes: Record<ButtonSize, string> = {
 	lg: "min-h-12 px-6 py-3.5 text-base",
 };
 
+export interface ButtonVariantProps {
+	variant?: ButtonVariant;
+	size?: ButtonSize;
+	className?: string;
+}
+
+export function buttonVariants({
+	variant = "primary",
+	size = "md",
+	className = "",
+}: ButtonVariantProps = {}): string {
+	return twMerge(
+		"inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+		sizes[size],
+		variants[variant],
+		className,
+	);
+}
+
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	variant?: ButtonVariant;
 	size?: ButtonSize;
@@ -47,7 +67,7 @@ export function Button({
 			type={type}
 			disabled={disabled || loading}
 			aria-busy={loading ? "true" : undefined}
-			className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${sizes[size]} ${variants[variant]} ${className}`}
+			className={buttonVariants({ variant, size, className })}
 			{...props}
 		>
 			{loading ? (

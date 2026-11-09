@@ -13,7 +13,7 @@ export interface MockAuthUser {
 }
 
 export const mockStudent: MockAuthUser = {
-	id: "student-1",
+	id: mockUsers.alex.id,
 	name: "Alex Learner",
 	email: "alex@nodus.edu",
 	role: "student",
@@ -95,28 +95,37 @@ function extractRefreshToken(
 	cookies: Record<string, string>,
 	isAuthenticated: boolean,
 ): string | null {
-	if (!cookieHeader) {
-		return isAuthenticated ? (cookies.refresh_token ?? null) : null;
+	if (cookieHeader) {
+		const parts = cookieHeader.split(";").map((p) => p.trim());
+		const firstToken = parts[0]?.match(/^refresh_token=([^;]+)/)?.[1] ?? null;
+		if (firstToken) {
+			const secondPart = parts[1]?.toLowerCase() ?? "";
+			const isFirstTokenStoredResponseCookie =
+				secondPart.startsWith("path=") ||
+				secondPart === "httponly" ||
+				secondPart.startsWith("samesite=");
+
+			if (isFirstTokenStoredResponseCookie && !isAuthenticated) {
+				return null;
+			}
+			return firstToken;
+		}
 	}
 
-	const parts = cookieHeader.split(";").map((p) => p.trim());
-	const firstToken = parts[0]?.match(/^refresh_token=([^;]+)/)?.[1] ?? null;
-
-	if (!firstToken) {
-		return null;
+	if (cookies?.refresh_token) {
+		return cookies.refresh_token;
 	}
 
-	const secondPart = parts[1]?.toLowerCase() ?? "";
-	const isFirstTokenStoredResponseCookie =
-		secondPart.startsWith("path=") ||
-		secondPart === "httponly" ||
-		secondPart.startsWith("samesite=");
-
-	if (isFirstTokenStoredResponseCookie && !isAuthenticated) {
-		return null;
+	if (typeof window !== "undefined" && !navigator.userAgent.includes("jsdom")) {
+		const isTombstoned =
+			localStorage.getItem("nodus_logout_tombstone") === "true";
+		if (isTombstoned) {
+			return null;
+		}
+		return "mock-browser-refresh-token";
 	}
 
-	return firstToken;
+	return isAuthenticated ? "mock-node-refresh-token" : null;
 }
 
 export const authHandlers = [
