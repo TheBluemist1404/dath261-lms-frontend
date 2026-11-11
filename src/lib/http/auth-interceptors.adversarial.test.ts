@@ -8,7 +8,6 @@ import {
 } from "@/lib/auth/access-token";
 import {
 	buildAuthUser,
-	cacheUserProfile,
 	decodeJwtClaims,
 	isTokenExpiringSoon,
 } from "@/lib/auth/jwt-decoder";
@@ -35,7 +34,7 @@ function makeJwt(payload: Record<string, unknown>): string {
 	return `${header}.${payloadStr}.signature_test`;
 }
 
-describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
+describe("Token Lifecycle & Refresh Mutex Interceptors", () => {
 	let uninstall: () => void;
 
 	beforeEach(() => {
@@ -56,10 +55,7 @@ describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
 		}
 	});
 
-	// =========================================================================
-	// TASK 1: Concurrent 401 Deduplication (Thundering Herd Defense)
-	// =========================================================================
-	describe("Task 1: Concurrent 401 Deduplication", () => {
+	describe("Concurrent 401 Deduplication", () => {
 		it("stress test: 20 concurrent 401 requests trigger exactly 1 refresh and all 20 resolve", async () => {
 			const stale = makeJwt({ sub: "user-stress", role: "STUDENT" });
 			const fresh = makeJwt({
@@ -218,10 +214,7 @@ describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
 		});
 	});
 
-	// =========================================================================
-	// TASK 2: Infinite Loop Prevention
-	// =========================================================================
-	describe("Task 2: Infinite Loop Prevention", () => {
+	describe("Infinite Loop Prevention", () => {
 		it("terminates immediately when retried request returns 401 again (authRetried: true)", async () => {
 			const stale = makeJwt({ sub: "u-loop", role: "STUDENT" });
 			const fresh = makeJwt({ sub: "u-loop", role: "STUDENT" });
@@ -331,10 +324,7 @@ describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
 		});
 	});
 
-	// =========================================================================
-	// TASK 3: Proactive Expiry (< 30s) and Deadlock Recursion Guard
-	// =========================================================================
-	describe("Task 3: Proactive Expiry & Deadlock Recursion Guard", () => {
+	describe("Proactive Expiry & Deadlock Recursion Guard", () => {
 		it("detects expiry boundary accurately in isTokenExpiringSoon", () => {
 			const now = Math.floor(Date.now() / 1000);
 
@@ -511,10 +501,7 @@ describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
 		});
 	});
 
-	// =========================================================================
-	// TASK 4: JWT Claims Decoding & Edge Cases
-	// =========================================================================
-	describe("Task 4: JWT Claims Decoding", () => {
+	describe("JWT Claims Decoding", () => {
 		it("decodes Vietnamese UTF-8 multi-byte characters with tones and diacritics", () => {
 			const token = makeJwt({
 				sub: "vn-user-01",
@@ -604,10 +591,15 @@ describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
 			expect(u2.name).toBe("Alex");
 
 			// 3. Cached profile fallback
-			cacheUserProfile("u3", {
-				name: "Cached User",
-				email: "cached@nodus.edu",
-			});
+			localStorage.setItem(
+				"nodus_user_profiles",
+				JSON.stringify({
+					u3: {
+						name: "Cached User",
+						email: "cached@nodus.edu",
+					},
+				}),
+			);
 			const u3 = buildAuthUser({ sub: "u3", role: "STUDENT" });
 			expect(u3.name).toBe("Cached User");
 			expect(u3.email).toBe("cached@nodus.edu");
@@ -627,10 +619,7 @@ describe("ADVERSARIAL SUITE: PR #13 Token Lifecycle & Refresh Mutex", () => {
 		});
 	});
 
-	// =========================================================================
-	// TASK 5: Register Does Not Mutate Auth Store (Zombie Session Prevention)
-	// =========================================================================
-	describe("Task 5: Zombie Session Elimination", () => {
+	describe("Zombie Session Elimination on Registration", () => {
 		it("registerApi sends correct payload and does NOT modify in-memory token or store", async () => {
 			useAuthStore.getState().clearAuth();
 			expect(useAuthStore.getState().status).toBe("unauthenticated");
