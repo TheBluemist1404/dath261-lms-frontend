@@ -5,9 +5,9 @@ import { Icon } from "@/components/ui/icon";
 import { getApiErrorMessage } from "@/lib/http/errors";
 import { workspaceListQuery } from "../api/workspace.queries";
 import { getWorkspaceCapabilities } from "../capabilities";
+import { ErrorState, LoadingState } from "../components/query-state";
 import { useRestoreWorkspace } from "../hooks/use-workspace-mutations";
 import type { Workspace } from "../types";
-import { ErrorState, LoadingState } from "./query-state";
 
 export function ArchivedWorkspacesPage() {
 	const workspaces = useQuery(workspaceListQuery({ archived: true }));
