@@ -3,124 +3,69 @@ import type {
 	CatalogQuery,
 	Course,
 	CourseInput,
+	CoursePage,
 	CourseStatus,
 	CourseUpdateInput,
 } from "../types/course.types";
 
-interface CoursePage {
-	data: Course[];
-	meta: {
-		total: number;
-		page: number;
-		limit: number;
-		totalPages: number;
-		hasNextPage: boolean;
-		hasPrevPage: boolean;
-	};
+export async function listCourses(signal?: AbortSignal): Promise<Course[]> {
+	const { data } = await httpClient.get<Course[]>("/courses", { signal });
+	return data;
 }
 
-export const listCourses = async (signal?: AbortSignal): Promise<Course[]> => {
-	const response = await httpClient.get<Course[]>("/courses", {
-		signal,
-	});
-
-	return response.data;
-};
-
-export const listPublishedCourses = async (
+export async function listPublishedCourses(
 	query: CatalogQuery = {},
 	signal?: AbortSignal,
-): Promise<CoursePage> => {
-	const params: Record<string, string | number | boolean> = {};
-
-	if (query.page !== undefined) {
-		params.page = query.page;
-	}
-
-	if (query.limit !== undefined) {
-		params.limit = query.limit;
-	}
-
-	if (query.search !== undefined) {
-		params.search = query.search;
-	}
-
-	if (query.enrollmentOpen !== undefined) {
-		params.enrollmentOpen = String(query.enrollmentOpen);
-	}
-
-	const response = await httpClient.get<CoursePage>("/courses/catalog", {
+): Promise<CoursePage> {
+	const { enrollmentOpen, ...rest } = query;
+	const params =
+		enrollmentOpen === undefined
+			? rest
+			: { ...rest, enrollmentOpen: String(enrollmentOpen) };
+	const { data } = await httpClient.get<CoursePage>("/courses/catalog", {
 		params,
 		signal,
-		skipAuthRefresh: true,
 	});
+	return data;
+}
 
-	return response.data;
-};
-
-export const getCourse = async (
+export async function getCourse(
 	courseId: string,
 	signal?: AbortSignal,
-): Promise<Course> => {
-	const response = await httpClient.get<Course>(
+): Promise<Course> {
+	const { data } = await httpClient.get<Course>(
 		`/courses/${encodeURIComponent(courseId)}`,
-		{
-			signal,
-		},
+		{ signal },
 	);
+	return data;
+}
 
-	return response.data;
-};
-
-export const createCourse = async (input: CourseInput): Promise<Course> => {
+export async function createCourse(input: CourseInput): Promise<Course> {
 	const { status: _status, ...fields } = input;
+	const { data } = await httpClient.post<Course>("/courses", fields);
+	return data;
+}
 
-	const response = await httpClient.post<Course>("/courses", fields);
-
-	return response.data;
-};
-
-export const updateCourseStatus = async (
+export async function updateCourseStatus(
 	courseId: string,
 	status: CourseStatus,
-): Promise<Course> => {
-	const response = await httpClient.patch<Course>(
+): Promise<Course> {
+	const { data } = await httpClient.patch<Course>(
 		`/courses/${encodeURIComponent(courseId)}/status`,
-		{
-			status,
-		},
+		{ status },
 	);
+	return data;
+}
 
-	return response.data;
-};
-
-export const updateCourse = async (
+export async function updateCourse(
 	courseId: string,
 	input: CourseUpdateInput,
-): Promise<Course> => {
+): Promise<Course> {
 	const { status, ...fields } = input;
-
-	const response = await httpClient.patch<Course>(
+	const { data } = await httpClient.patch<Course>(
 		`/courses/${encodeURIComponent(courseId)}`,
 		fields,
 	);
-
-	if (status === undefined) {
-		return response.data;
-	}
-
-	// If the requested status is already the current status,
-	// there is no need to call the status endpoint.
-	if (response.data.status === status) {
-		return response.data;
-	}
-
-	const statusResponse = await httpClient.patch<Course>(
-		`/courses/${encodeURIComponent(courseId)}/status`,
-		{
-			status,
-		},
-	);
-
-	return statusResponse.data;
-};
+	if (status === undefined || status === data.status) return data;
+	return updateCourseStatus(courseId, status);
+}
