@@ -10,25 +10,25 @@ import {
 	workspaceMembersQuery,
 } from "../api/workspace.queries";
 import { useCollaboration } from "../collaboration/collaboration";
-import { usePageAutosave } from "../hooks/use-page-autosave";
-import { getAncestors } from "../page-tree";
-import type { Page, PageSummary, Workspace } from "../types";
 import {
 	AccessEnded,
 	ConnectionBanner,
 	PresenceIndicator,
-} from "./collaboration-status";
-import { CourseReferences } from "./course-references";
-import { EditorSlot } from "./editor-slot";
+} from "../components/collaboration-status";
+import { CourseReferences } from "../components/course-references";
+import { EditorSlot } from "../components/editor-slot";
 import {
 	MovePageDialog,
 	NewPageDialog,
 	PageArchiveDialog,
 	RenamePageDialog,
-} from "./page-dialogs";
-import { ErrorState, LoadingState } from "./query-state";
-import { SaveStatusIndicator } from "./save-status";
-import { WorkspaceShell } from "./workspace-shell";
+} from "../components/page-dialogs";
+import { ErrorState, LoadingState } from "../components/query-state";
+import { SaveStatusIndicator } from "../components/save-status";
+import { WorkspaceShell } from "../components/workspace-shell";
+import { usePageAutosave } from "../hooks/use-page-autosave";
+import { getAncestors } from "../page-tree";
+import type { Page, PageSummary, Workspace } from "../types";
 
 export function WorkspacePageView({
 	workspaceId,

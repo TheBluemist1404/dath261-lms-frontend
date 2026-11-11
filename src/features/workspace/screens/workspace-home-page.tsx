@@ -2,8 +2,8 @@ import { Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { NewPageDialog } from "./page-dialogs";
-import { WorkspaceShell } from "./workspace-shell";
+import { NewPageDialog } from "../components/page-dialogs";
+import { WorkspaceShell } from "../components/workspace-shell";
 
 export function WorkspaceHomePage({ workspaceId }: { workspaceId: string }) {
 	return (
