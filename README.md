@@ -156,6 +156,7 @@ Do not commit secrets or local `.env` files.
 | `pnpm test` | Run Vitest once |
 | `pnpm test:watch` | Run Vitest in watch mode |
 | `pnpm test:e2e` | Run the Playwright browser tests in `e2e/` against the dev server with mocked API (run `pnpm exec playwright install chromium` once) |
+| `pnpm test:e2e:real` | Run the browser tests in `e2e/real/` against a running backend (see below) |
 | `pnpm lint` | Lint with Biome |
 | `pnpm format` | Format with Biome |
 | `pnpm check` | Check formatting, lint rules, and imports |
@@ -169,8 +170,9 @@ Tests should normally live beside the source they verify.
 - **Vitest + React Testing Library** — utilities, hooks, components, and feature/integration behavior.
 - **MSW** — API-facing tests at the HTTP boundary instead of mocking Axios internals.
 - **Playwright** — browser tests in `e2e/` for flows jsdom cannot drive, such as the page editor. They start the dev server with the API mocked, so no backend is needed.
+- **Playwright against the backend** — `e2e/real/` holds the project's end-to-end flows (E2E-02, real-time collaboration) with nothing mocked. Start the backend on `http://localhost:3001` with a database seeded by its `pnpm db:seed:dev`, then run `pnpm test:e2e:real`; set `VITE_API_PROXY_TARGET` for another backend URL. Every run creates its own workspace, so it can be repeated on the same database.
 
-Every pull request is checked by GitHub Actions with a frozen pnpm install, Biome, TypeScript, Vitest, a production Vite build, and the Playwright browser tests.
+Every pull request is checked by GitHub Actions with a frozen pnpm install, Biome, TypeScript, Vitest, a production Vite build, the Playwright browser tests, and the `e2e/real/` tests against the backend's `main` branch on a fresh seeded database.
 
 Local Git hooks provide earlier feedback:
 
