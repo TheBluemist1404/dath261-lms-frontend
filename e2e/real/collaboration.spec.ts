@@ -244,6 +244,10 @@ test("two members edit a shared page live, recover from a dropped connection and
 	await test.step("a user outside the workspace can open neither the page nor its socket", async () => {
 		const outsider = await signIn(browser, OUTSIDER);
 		await outsider.page.goto(pageUrl);
+		// Wait for the answer, so the checks below don't pass while it is loading.
+		await expect(
+			outsider.page.getByRole("heading", { name: "Workspace not found" }),
+		).toBeVisible();
 		await expect(editor(outsider.page)).toHaveCount(0);
 		await expect(
 			outsider.page.getByText("Owner: BFS visits nodes level by level."),
