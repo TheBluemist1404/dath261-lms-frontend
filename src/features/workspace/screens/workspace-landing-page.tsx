@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { recentPagesQuery, workspaceListQuery } from "../api/workspace.queries";
+import { CreateWorkspaceDialog } from "../components/create-workspace-dialog";
+import { ErrorState, LoadingState } from "../components/query-state";
+import { WorkspaceCard } from "../components/workspace-card";
 import type { Workspace } from "../types";
-import { CreateWorkspaceDialog } from "./create-workspace-dialog";
-import { ErrorState, LoadingState } from "./query-state";
-import { WorkspaceCard } from "./workspace-card";
 
 const recentPageLimit = 3;
 
