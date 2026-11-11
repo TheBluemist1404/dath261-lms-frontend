@@ -10,6 +10,8 @@ import {
 	workspaceQuery,
 } from "../api/workspace.queries";
 import { getWorkspaceCapabilities } from "../capabilities";
+import { ErrorState, LoadingState } from "../components/query-state";
+import { WorkspaceNotFound } from "../components/workspace-not-found";
 import { useAddMember, useRemoveMember } from "../hooks/use-member-mutations";
 import type {
 	AddMemberInput,
@@ -18,8 +20,6 @@ import type {
 	WorkspaceMemberRole,
 } from "../types";
 import { roleLabels } from "../workspace-labels";
-import { ErrorState, LoadingState } from "./query-state";
-import { WorkspaceNotFound } from "./workspace-not-found";
 
 const fieldClass =
 	"mt-2 min-h-11 w-full rounded-lg border border-border bg-white px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { WorkspacePageView } from "@/features/workspace/components/workspace-page-view";
+import { WorkspacePageView } from "@/features/workspace/screens/workspace-page-view";
 
 export const Route = createFileRoute("/_layout/workspace/$id/pages/$pageId")({
 	component: RouteComponent,

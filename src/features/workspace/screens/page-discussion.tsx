@@ -16,10 +16,10 @@ import {
 	useLiveMessages,
 	withMessage,
 } from "../collaboration/discussion-channel";
+import { ErrorState, LoadingState } from "../components/query-state";
+import { WorkspaceNotFound } from "../components/workspace-not-found";
 import { formatRelativeTime } from "../relative-time";
 import type { PageMessage, Workspace } from "../types";
-import { ErrorState, LoadingState } from "./query-state";
-import { WorkspaceNotFound } from "./workspace-not-found";
 
 const fieldClass =
 	"mt-2 w-full rounded-lg border border-border bg-white px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";

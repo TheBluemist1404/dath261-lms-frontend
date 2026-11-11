@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate } from "@tanstack/react-router";
 import { workspaceListQuery } from "../api/workspace.queries";
-import { ErrorState, LoadingState } from "./query-state";
-import { WorkspaceNotFound } from "./workspace-not-found";
+import { ErrorState, LoadingState } from "../components/query-state";
+import { WorkspaceNotFound } from "../components/workspace-not-found";
 
 /** `/workspace/me` is a shortcut to the signed-in user's personal workspace. */
 export function PersonalWorkspaceRedirect() {
