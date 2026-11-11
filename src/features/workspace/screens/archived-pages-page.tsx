@@ -3,10 +3,10 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { archivedPagesQuery } from "../api/workspace.queries";
+import { PageArchiveDialog } from "../components/page-dialogs";
+import { ErrorState, LoadingState } from "../components/query-state";
+import { WorkspaceShell } from "../components/workspace-shell";
 import type { PageSummary } from "../types";
-import { PageArchiveDialog } from "./page-dialogs";
-import { ErrorState, LoadingState } from "./query-state";
-import { WorkspaceShell } from "./workspace-shell";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, {
 	dateStyle: "medium",

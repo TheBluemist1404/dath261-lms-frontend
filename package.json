@@ -20,7 +20,8 @@
 		"check:fix": "biome check --write .",
 		"ci": "pnpm check && pnpm typecheck && pnpm test && pnpm build",
 		"prepare": "husky",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"test:e2e:real": "playwright test -c playwright.real.config.ts"
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,json,jsonc,css,html}": "biome check --write"

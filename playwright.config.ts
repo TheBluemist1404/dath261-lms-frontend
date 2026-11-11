@@ -9,6 +9,8 @@ const port = 4173;
  */
 export default defineConfig({
 	testDir: "./e2e",
+	// e2e/real needs a running backend; see playwright.real.config.ts.
+	testIgnore: "real/**",
 	fullyParallel: true,
 	forbidOnly: Boolean(process.env.CI),
 	retries: process.env.CI ? 1 : 0,
