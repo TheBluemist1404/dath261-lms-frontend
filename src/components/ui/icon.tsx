@@ -4,6 +4,9 @@ import bell from "@/assets/icons/bell.svg";
 import book from "@/assets/icons/book-open.svg";
 import calendar from "@/assets/icons/calendar-days.svg";
 import checkCircle from "@/assets/icons/check-circle.svg";
+import chevronDown from "@/assets/icons/chevron-down.svg";
+import chevronLeft from "@/assets/icons/chevron-left.svg";
+import chevronRight from "@/assets/icons/chevron-right.svg";
 import eye from "@/assets/icons/eye.svg";
 import eyeOff from "@/assets/icons/eye-off.svg";
 import file from "@/assets/icons/file-text.svg";
@@ -12,6 +15,7 @@ import dashboard from "@/assets/icons/layout-dashboard.svg";
 import lock from "@/assets/icons/lock.svg";
 import workspace from "@/assets/icons/notebook-pen.svg";
 import play from "@/assets/icons/play.svg";
+import search from "@/assets/icons/search.svg";
 import reports from "@/assets/icons/shield-check.svg";
 import users from "@/assets/icons/users.svg";
 import xMark from "@/assets/icons/x-mark.svg";
@@ -23,6 +27,9 @@ const icons = {
 	book,
 	calendar,
 	checkCircle,
+	chevronDown,
+	chevronLeft,
+	chevronRight,
 	courses,
 	dashboard,
 	eye,
@@ -31,6 +38,7 @@ const icons = {
 	lock,
 	play,
 	reports,
+	search,
 	users,
 	workspace,
 	xMark,
