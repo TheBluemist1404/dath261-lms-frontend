@@ -28,6 +28,7 @@ import { Route as LayoutWorkspaceSearchRouteImport } from './routes/~_layout/~wo
 import { Route as LayoutAdminReportsIndexRouteImport } from './routes/~_layout/~admin/~reports/~index'
 import { Route as LayoutAdminReportsReportIdRouteImport } from './routes/~_layout/~admin/~reports/~$reportId'
 import { Route as LayoutCoursesCourseIdIndexRouteImport } from './routes/~_layout/~courses/~$courseId/~index'
+import { Route as LayoutCoursesCourseIdLearnRouteImport } from './routes/~_layout/~courses/~$courseId/~learn'
 import { Route as LayoutInstructorCoursesIndexRouteImport } from './routes/~_layout/~instructor/~courses/~index'
 import { Route as LayoutInstructorCoursesCourseIdRouteImport } from './routes/~_layout/~instructor/~courses/~$courseId'
 import { Route as LayoutWorkspaceIdIndexRouteImport } from './routes/~_layout/~workspace/~$id/~index'
@@ -133,6 +134,12 @@ const LayoutCoursesCourseIdIndexRoute =
     path: '/courses/$courseId/',
     getParentRoute: () => LayoutRoute,
   } as any)
+const LayoutCoursesCourseIdLearnRoute =
+  LayoutCoursesCourseIdLearnRouteImport.update({
+    id: '/courses/$courseId/learn',
+    path: '/courses/$courseId/learn',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutInstructorCoursesIndexRoute =
   LayoutInstructorCoursesIndexRouteImport.update({
     id: '/',
@@ -202,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/instructor/courses/': typeof LayoutInstructorCoursesIndexRoute
   '/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
   '/admin/reports/$reportId': typeof LayoutAdminReportsReportIdRoute
+  '/courses/$courseId/learn': typeof LayoutCoursesCourseIdLearnRoute
   '/instructor/courses/$courseId': typeof LayoutInstructorCoursesCourseIdRoute
   '/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
   '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
@@ -227,6 +235,7 @@ export interface FileRoutesByTo {
   '/instructor/courses': typeof LayoutInstructorCoursesIndexRoute
   '/workspace/$id': typeof LayoutWorkspaceIdIndexRoute
   '/admin/reports/$reportId': typeof LayoutAdminReportsReportIdRoute
+  '/courses/$courseId/learn': typeof LayoutCoursesCourseIdLearnRoute
   '/instructor/courses/$courseId': typeof LayoutInstructorCoursesCourseIdRoute
   '/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
   '/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
@@ -257,6 +266,7 @@ export interface FileRoutesById {
   '/_layout/instructor/courses/': typeof LayoutInstructorCoursesIndexRoute
   '/_layout/workspace/$id/': typeof LayoutWorkspaceIdIndexRoute
   '/_layout/admin/reports/$reportId': typeof LayoutAdminReportsReportIdRoute
+  '/_layout/courses/$courseId/learn': typeof LayoutCoursesCourseIdLearnRoute
   '/_layout/instructor/courses/$courseId': typeof LayoutInstructorCoursesCourseIdRoute
   '/_layout/workspace/$id/archived-pages': typeof LayoutWorkspaceIdArchivedPagesRoute
   '/_layout/workspace/$id/members': typeof LayoutWorkspaceIdMembersRoute
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/instructor/courses/'
     | '/workspace/$id/'
     | '/admin/reports/$reportId'
+    | '/courses/$courseId/learn'
     | '/instructor/courses/$courseId'
     | '/workspace/$id/archived-pages'
     | '/workspace/$id/members'
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/instructor/courses'
     | '/workspace/$id'
     | '/admin/reports/$reportId'
+    | '/courses/$courseId/learn'
     | '/instructor/courses/$courseId'
     | '/workspace/$id/archived-pages'
     | '/workspace/$id/members'
@@ -341,6 +353,7 @@ export interface FileRouteTypes {
     | '/_layout/instructor/courses/'
     | '/_layout/workspace/$id/'
     | '/_layout/admin/reports/$reportId'
+    | '/_layout/courses/$courseId/learn'
     | '/_layout/instructor/courses/$courseId'
     | '/_layout/workspace/$id/archived-pages'
     | '/_layout/workspace/$id/members'
@@ -490,6 +503,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutCoursesCourseIdIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/courses/$courseId/learn': {
+      id: '/_layout/courses/$courseId/learn'
+      path: '/courses/$courseId/learn'
+      fullPath: '/courses/$courseId/learn'
+      preLoaderRoute: typeof LayoutCoursesCourseIdLearnRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/instructor/courses/': {
       id: '/_layout/instructor/courses/'
       path: '/'
@@ -634,6 +654,7 @@ interface LayoutRouteChildren {
   LayoutWorkspaceRoute: typeof LayoutWorkspaceRouteWithChildren
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutCoursesCourseIdIndexRoute: typeof LayoutCoursesCourseIdIndexRoute
+  LayoutCoursesCourseIdLearnRoute: typeof LayoutCoursesCourseIdLearnRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -643,6 +664,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutWorkspaceRoute: LayoutWorkspaceRouteWithChildren,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutCoursesCourseIdIndexRoute: LayoutCoursesCourseIdIndexRoute,
+  LayoutCoursesCourseIdLearnRoute: LayoutCoursesCourseIdLearnRoute,
 }
 
 const LayoutRouteWithChildren =
