@@ -6,6 +6,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/http/errors";
 import { workspaceQuery } from "../api/workspace.queries";
 import { getWorkspaceCapabilities } from "../capabilities";
+import { ErrorState, LoadingState } from "../components/query-state";
+import { WorkspaceNotFound } from "../components/workspace-not-found";
 import {
 	useArchiveWorkspace,
 	useRenameWorkspace,
@@ -13,8 +15,6 @@ import {
 } from "../hooks/use-workspace-mutations";
 import type { Workspace } from "../types";
 import { roleLabels } from "../workspace-labels";
-import { ErrorState, LoadingState } from "./query-state";
-import { WorkspaceNotFound } from "./workspace-not-found";
 
 export function WorkspaceSettingsPage({
 	workspaceId,

@@ -44,7 +44,7 @@ Do not develop directly on `main`.
 The application uses a feature-first structure.
 
 - `routes/` owns routing concerns: params, search params, loaders, guards, redirects, and layouts.
-- `features/<feature>/` owns domain-specific components, hooks, API calls, queries, and types.
+- `features/<feature>/` owns domain-specific components, hooks, API calls, queries, and types. A feature with many routes can split route-level screens into `screens/` and keep the pieces they share in `components/` (see `features/workspace/`).
 - `components/ui/` is only for reusable domain-agnostic UI.
 - `lib/` contains shared infrastructure such as HTTP and query clients.
 
