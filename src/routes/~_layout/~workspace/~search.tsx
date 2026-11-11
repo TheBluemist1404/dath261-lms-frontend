@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { WorkspaceSearchPage } from "@/features/workspace/components/workspace-search-page";
+import { WorkspaceSearchPage } from "@/features/workspace/screens/workspace-search-page";
 
 export const Route = createFileRoute("/_layout/workspace/search")({
 	validateSearch: (search: Record<string, unknown>): { q?: string } =>
