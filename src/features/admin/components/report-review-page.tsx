@@ -4,9 +4,8 @@ import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { getApiErrorMessage } from "@/lib/http/errors";
 import {
-	dismissReport,
-	resolveReport,
 	updateCourseSuspension,
+	updateReportStatus,
 	updateUserStatus,
 } from "../api/moderation.api";
 import { adminKey, reportQuery } from "../api/moderation.queries";
@@ -26,6 +25,7 @@ import { ModerationDialog } from "./moderation-dialog";
 const historyTitles: Record<ReportHistoryAction, string> = {
 	RECEIVED: "Report received",
 	DISMISSED: "Report dismissed",
+	ACTION_TAKEN: "Action taken",
 	COURSE_SUSPENDED: "Course suspended",
 	USER_SUSPENDED: "Account suspended",
 };
@@ -131,7 +131,8 @@ export function ReportReviewPage({ reportId }: { reportId: string }) {
 			action: "dismiss" | "suspend";
 			reason: string;
 		}) => {
-			if (action === "dismiss") return dismissReport(report.id, reason);
+			if (action === "dismiss")
+				return updateReportStatus(report.id, { status: "DISMISSED", reason });
 			const target = suspensionTarget(report);
 			if (!target) throw new Error("This report has no suspension target.");
 			if (target.kind === "course") {
@@ -139,7 +140,10 @@ export function ReportReviewPage({ reportId }: { reportId: string }) {
 			} else {
 				await updateUserStatus(target.id, { status: "SUSPENDED", reason });
 			}
-			return resolveReport(report.id, reason);
+			return updateReportStatus(report.id, {
+				status: "ACTION_TAKEN",
+				reason,
+			});
 		},
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: adminKey });
