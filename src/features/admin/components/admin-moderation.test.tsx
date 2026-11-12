@@ -247,7 +247,7 @@ describe("AD-02 Users", () => {
 	});
 });
 
-describe("Backend admin routes (BE PR #36)", () => {
+describe("Backend admin routes (BE PR #36, #43)", () => {
 	function recordPatches() {
 		const calls: { path: string; body: unknown }[] = [];
 		server.use(
@@ -311,6 +311,131 @@ describe("Backend admin routes (BE PR #36)", () => {
 				},
 			]),
 		);
+	});
+
+	it("dismisses a report with PATCH /admin/reports/:reportId/status", async () => {
+		const calls = recordPatches();
+		const user = userEvent.setup();
+		renderAt("/admin/reports/R-1048");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Dismiss report" }),
+		);
+		const dialog = await openDialog("Dismiss report #R-1048?");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Dismiss report" }),
+		);
+
+		await waitFor(() =>
+			expect(calls).toEqual([
+				{
+					path: "/api/admin/reports/R-1048/status",
+					body: {
+						status: "DISMISSED",
+						reason: "Reviewed the report and target context.",
+					},
+				},
+			]),
+		);
+	});
+
+	it("suspends the course, then marks the report ACTION_TAKEN", async () => {
+		const calls = recordPatches();
+		const user = userEvent.setup();
+		renderAt("/admin/reports/R-1048");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Suspend course" }),
+		);
+		const dialog = await openDialog("Suspend Operating Systems?");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Suspend course" }),
+		);
+
+		await waitFor(() =>
+			expect(calls).toEqual([
+				{
+					path: "/api/admin/courses/course-os/suspension",
+					body: {
+						suspended: true,
+						reason: "Reviewed the report and target context.",
+					},
+				},
+				{
+					path: "/api/admin/reports/R-1048/status",
+					body: {
+						status: "ACTION_TAKEN",
+						reason: "Reviewed the report and target context.",
+					},
+				},
+			]),
+		);
+		expect(await screen.findByText("Action taken")).toBeInTheDocument();
+		expect(screen.getByText("Course suspended")).toBeInTheDocument();
+	});
+
+	it("shows the backend error when the report was already reviewed", async () => {
+		server.use(
+			http.patch("*/api/admin/reports/:reportId/status", () =>
+				HttpResponse.json(
+					{
+						statusCode: 409,
+						message: "This report has already been reviewed.",
+					},
+					{ status: 409 },
+				),
+			),
+		);
+		const user = userEvent.setup();
+		renderAt("/admin/reports/R-1048");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Dismiss report" }),
+		);
+		const dialog = await openDialog("Dismiss report #R-1048?");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Dismiss report" }),
+		);
+
+		expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+			"This report has already been reviewed.",
+		);
+	});
+
+	it("reads reports from the paged response", async () => {
+		server.use(
+			http.get("*/api/admin/reports", () =>
+				HttpResponse.json({
+					items: [
+						{
+							id: "R-2001",
+							status: "PENDING",
+							reason: "Spam",
+							description: null,
+							createdAt: "2026-11-10T03:00:00.000Z",
+							reporter: { id: "user-alex", name: "Alex Le" },
+							target: {
+								type: "COURSE",
+								id: "course-db",
+								name: "Database Design",
+								available: true,
+							},
+						},
+					],
+					page: 1,
+					pageSize: 20,
+					total: 1,
+				}),
+			),
+		);
+		renderAt("/admin/reports");
+
+		expect(
+			await screen.findByRole("button", { name: "Database Design · Course" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("link", { name: "Review course report" }),
+		).toHaveAttribute("href", "/admin/reports/R-2001");
 	});
 
 	it("reads users from the paged response", async () => {

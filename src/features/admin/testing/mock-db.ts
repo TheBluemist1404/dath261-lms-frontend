@@ -75,14 +75,20 @@ function seedCourses(): AdminCourse[] {
 const maiTran: PersonRef = { id: "user-mai", name: "Mai Tran" };
 const alexLe: PersonRef = { id: "user-alex", name: "Alex Le" };
 
-function received(reportId: string, reporter: PersonRef, createdAt: string) {
+/** BE PR #43: the first history entry carries the reporter's reason. */
+function received(
+	reportId: string,
+	reporter: PersonRef,
+	createdAt: string,
+	reason: string,
+) {
 	return [
 		{
-			id: `${reportId}-received`,
+			id: `received:${reportId}`,
 			action: "RECEIVED" as const,
 			actor: reporter,
 			createdAt,
-			reasonRecorded: false,
+			reasonRecorded: reason,
 		},
 	];
 }
@@ -107,7 +113,12 @@ export function sharedContentReport(): AdminReport {
 			author: maiTran,
 			content: "Visit my store instead of studying this module.",
 		},
-		history: received("R-1052", alexLe, oct02(14, 35)),
+		history: received(
+			"R-1052",
+			alexLe,
+			oct02(14, 35),
+			"Inappropriate behavior",
+		),
 	};
 }
 
@@ -127,7 +138,12 @@ function seedReports(): AdminReport[] {
 				name: "Operating Systems",
 				available: true,
 			},
-			history: received("R-1048", maiTran, oct02(14, 20)),
+			history: received(
+				"R-1048",
+				maiTran,
+				oct02(14, 20),
+				"Misleading course information",
+			),
 		},
 		{
 			id: "R-1047",
@@ -142,7 +158,12 @@ function seedReports(): AdminReport[] {
 				name: "Bao Nguyen",
 				available: true,
 			},
-			history: received("R-1047", alexLe, oct02(9, 5)),
+			history: received(
+				"R-1047",
+				alexLe,
+				oct02(9, 5),
+				"Inappropriate behavior",
+			),
 		},
 	];
 }

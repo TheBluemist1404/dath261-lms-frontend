@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { getApiErrorMessage } from "@/lib/http/errors";
 import { reportListQuery } from "../api/moderation.queries";
 import { formatShortDateTime } from "../format";
-import type { AdminReport, ReportStatus } from "../types";
+import type { AdminReportItem, ReportStatus } from "../types";
 import {
 	AdminPage,
 	AdminTabs,
@@ -26,13 +26,13 @@ export const reportStatusLabels: Record<ReportStatus, string> = {
 	ACTION_TAKEN: "Action taken",
 };
 
-export function reportTargetLabel(report: AdminReport) {
+export function reportTargetLabel(report: AdminReportItem) {
 	switch (report.target.type) {
 		case "COURSE":
 			return `${report.target.name} · Course`;
 		case "USER":
 			return `User account · ${report.target.name}`;
-		case "MESSAGE":
+		default:
 			return report.target.name;
 	}
 }
@@ -45,7 +45,9 @@ export function ReportsPage() {
 
 	const visible = useMemo(
 		() =>
-			(reportsQuery.data ?? []).filter((report) => report.status === filter),
+			(reportsQuery.data?.items ?? []).filter(
+				(report) => report.status === filter,
+			),
 		[reportsQuery.data, filter],
 	);
 	const selected =
