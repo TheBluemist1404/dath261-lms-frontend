@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import type { CourseBlock } from "../../types/course-block.types";
 
 interface CourseBlockListProps {
@@ -19,21 +20,27 @@ export function CourseBlockList({
 	onCreateChild,
 	onCreate,
 }: CourseBlockListProps) {
-	if (loading)
+	if (loading) {
 		return <p className="p-6 text-sm text-muted">Loading course content…</p>;
-	if (error)
+	}
+
+	if (error) {
 		return (
 			<p role="alert" className="p-6 text-sm text-error">
 				{error}
 			</p>
 		);
-	if (!blocks.length)
+	}
+
+	if (!blocks.length) {
 		return (
 			<div className="rounded-xl border border-dashed border-border p-8 text-center">
 				<p className="font-semibold">No content blocks yet</p>
+
 				<p className="mt-1 text-sm text-muted">
 					Start by adding a module, then add learning content inside it.
 				</p>
+
 				{onCreate && (
 					<button
 						type="button"
@@ -45,7 +52,10 @@ export function CourseBlockList({
 				)}
 			</div>
 		);
+	}
+
 	const ordered = [...blocks].sort((a, b) => a.position - b.position);
+
 	return (
 		<div className="flex flex-col gap-3">
 			{ordered.map((block) => (
@@ -59,18 +69,35 @@ export function CourseBlockList({
 								<span className="rounded bg-primary-subtle px-2 py-1 text-xs font-bold text-primary">
 									{block.type}
 								</span>
+
 								<span className="text-xs text-muted">
 									Position {block.position + 1}
 								</span>
 							</div>
+
 							<h3 className="mt-2 font-semibold">{block.title}</h3>
+
 							{block.content && (
 								<pre className="mt-2 max-h-28 overflow-auto whitespace-pre-wrap break-words rounded bg-canvas p-2 text-xs text-muted">
 									{JSON.stringify(block.content, null, 2)}
 								</pre>
 							)}
 						</div>
+
 						<div className="flex flex-wrap gap-2">
+							{block.type === "QUIZ" && (
+								<Link
+									to="/instructor/courses/$courseId/quizzes/$blockId/edit"
+									params={{
+										courseId: block.courseId,
+										blockId: block.id,
+									}}
+									className="inline-flex min-h-9 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-white"
+								>
+									Configure quiz
+								</Link>
+							)}
+
 							<button
 								type="button"
 								onClick={() => onEdit(block)}
@@ -78,6 +105,7 @@ export function CourseBlockList({
 							>
 								Edit
 							</button>
+
 							{block.type === "MODULE" && onCreateChild && (
 								<button
 									type="button"
@@ -87,6 +115,7 @@ export function CourseBlockList({
 									Add child
 								</button>
 							)}
+
 							<button
 								type="button"
 								onClick={() => onDelete(block)}
@@ -96,6 +125,7 @@ export function CourseBlockList({
 							</button>
 						</div>
 					</div>
+
 					{block.type === "MODULE" && block.children?.length ? (
 						<div className="mt-4 flex flex-col gap-2 border-l-2 border-border pl-4">
 							{[...block.children]
@@ -108,9 +138,24 @@ export function CourseBlockList({
 										<span className="text-xs font-bold text-primary">
 											{child.type}
 										</span>
+
 										<span className="min-w-0 flex-1 text-sm font-medium">
 											{child.title}
 										</span>
+
+										{child.type === "QUIZ" && (
+											<Link
+												to="/instructor/courses/$courseId/quizzes/$blockId/edit"
+												params={{
+													courseId: child.courseId,
+													blockId: child.id,
+												}}
+												className="text-sm font-semibold text-primary"
+											>
+												Configure
+											</Link>
+										)}
+
 										<button
 											type="button"
 											onClick={() => onEdit(child)}
@@ -118,6 +163,7 @@ export function CourseBlockList({
 										>
 											Edit
 										</button>
+
 										<button
 											type="button"
 											onClick={() => onDelete(child)}
