@@ -2,7 +2,7 @@ export type QuestionType =
 	| "SINGLE_CHOICE"
 	| "MULTIPLE_CHOICE"
 	| "TRUE_FALSE"
-	| "FILL_IN_THE_BLANK";
+	| "FILL_IN_BLANK";
 
 export type ScoringMode = "HIGHEST" | "LATEST" | "AVERAGE";
 

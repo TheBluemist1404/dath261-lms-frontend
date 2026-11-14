@@ -187,7 +187,7 @@ describe("QuizQuestionEditor", () => {
 		const user = userEvent.setup();
 		const onChange = vi.fn();
 		const fillInTheBlankQuestion: QuizQuestionInput = {
-			type: "FILL_IN_THE_BLANK",
+			type: "FILL_IN_BLANK",
 			text: "Enter the missing word.",
 			acceptedAnswers: ["answer"],
 		};

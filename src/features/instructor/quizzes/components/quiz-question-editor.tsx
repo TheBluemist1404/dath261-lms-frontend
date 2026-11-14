@@ -17,7 +17,7 @@ const questionTypes: { value: QuestionType; label: string }[] = [
 	{ value: "SINGLE_CHOICE", label: "Single choice" },
 	{ value: "MULTIPLE_CHOICE", label: "Multiple choice" },
 	{ value: "TRUE_FALSE", label: "True or false" },
-	{ value: "FILL_IN_THE_BLANK", label: "Fill in the blank" },
+	{ value: "FILL_IN_BLANK", label: "Fill in the blank" },
 ];
 
 const inputClassName =
@@ -50,7 +50,7 @@ function questionWithType(
 		case "TRUE_FALSE":
 			nextQuestion.correctBoolean = false;
 			break;
-		case "FILL_IN_THE_BLANK":
+		case "FILL_IN_BLANK":
 			nextQuestion.acceptedAnswers = [""];
 			break;
 	}
@@ -256,7 +256,7 @@ export function QuizQuestionEditor({
 				</fieldset>
 			)}
 
-			{question.type === "FILL_IN_THE_BLANK" && (
+			{question.type === "FILL_IN_BLANK" && (
 				<fieldset className="space-y-3">
 					<legend className="text-sm font-semibold">Accepted answers</legend>
 					{/* The API represents answers as strings without stable IDs. */}

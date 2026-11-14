@@ -103,7 +103,7 @@ export function validateQuestion(question: QuizQuestionInput): string[] {
 			}
 			break;
 
-		case "FILL_IN_THE_BLANK": {
+		case "FILL_IN_BLANK": {
 			const answers = question.acceptedAnswers ?? [];
 
 			if (answers.length === 0) {
