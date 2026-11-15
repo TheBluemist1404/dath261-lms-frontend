@@ -107,7 +107,7 @@ describe("/admin route", () => {
 		expect(adminLinks).toHaveLength(visible ? 1 : 0);
 	});
 
-	it("shows unbuilt admin sections without linking them", async () => {
+	it("links the Users, Courses and Reports sections", async () => {
 		useAuthStore.getState().setUser(userWithRole("admin"));
 		renderAt("/admin");
 
@@ -115,10 +115,27 @@ describe("/admin route", () => {
 			name: "Primary navigation",
 			hidden: true,
 		});
-		for (const label of ["Users", "Courses", "Reports"]) {
+		for (const [label, href] of [
+			["Users", "/admin/users"],
+			["Courses", "/admin/courses"],
+			["Reports", "/admin/reports"],
+		]) {
 			const item = within(nav).getByText(label);
-			expect(item.closest("a")).toBeNull();
-			expect(item).toHaveAttribute("aria-disabled", "true");
+			expect(item.closest("a")).toHaveAttribute("href", href);
 		}
+	});
+
+	it.each([
+		"/admin/users",
+		"/admin/courses",
+		"/admin/reports",
+		"/admin/reports/R-1048",
+	])("blocks a student from %s", async (path) => {
+		useAuthStore.getState().setUser(userWithRole("student"));
+		const router = renderAt(path);
+
+		await waitFor(() =>
+			expect(router.state.location.pathname).toBe("/workspace"),
+		);
 	});
 });

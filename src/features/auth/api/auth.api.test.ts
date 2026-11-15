@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { authHandlers, resetMockAuth } from "@/mocks/auth.handlers";
 import { server } from "@/test/mocks/server";
-import { authHandlers, resetMockAuth } from "../testing";
 import { loginApi, logoutApi, refreshApi, registerApi } from "./auth.api";
 
 describe("auth API client contracts", () => {

@@ -3,6 +3,7 @@ import { httpClient } from "@/lib/http/client";
 import type { Course } from "../types/course.types";
 import {
 	createCourse,
+	getCourse,
 	listCourses,
 	listPublishedCourses,
 	updateCourse,
@@ -143,7 +144,6 @@ describe("course API", () => {
 				enrollmentOpen: "true",
 			},
 			signal: undefined,
-			skipAuthRefresh: true,
 		});
 	});
 
@@ -159,6 +159,18 @@ describe("course API", () => {
 
 		expect(httpClient.patch).toHaveBeenCalledWith("/courses/course-1/status", {
 			status: "PUBLISHED",
+		});
+	});
+
+	it("gets a single course by id", async () => {
+		vi.mocked(httpClient.get).mockResolvedValue({
+			data: course,
+		} as never);
+
+		const signal = new AbortController().signal;
+		expect(await getCourse("course-1", signal)).toEqual(course);
+		expect(httpClient.get).toHaveBeenCalledWith("/courses/course-1", {
+			signal,
 		});
 	});
 });

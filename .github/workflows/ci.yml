@@ -87,3 +87,104 @@ jobs:
           name: playwright-traces
           path: test-results/
           retention-days: 7
+
+  # E2E-02 (and later E2E-01): the browser against the real backend from the
+  # backend repository's main branch, on a fresh database with the demo seed.
+  e2e-real-backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: nodus
+          POSTGRES_PASSWORD: nodus
+          POSTGRES_DB: nodus_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nodus -d nodus_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://nodus:nodus@localhost:5432/nodus_e2e
+      JWT_ACCESS_SECRET: e2e-access-secret
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Checkout backend
+        uses: actions/checkout@v7
+        with:
+          repository: TheBluemist1404/dath261-lms-backend
+          ref: main
+          path: backend
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.2
+          run_install: false
+
+      # The backend needs Node 24; the frontend runs on it too.
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: backend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            backend/pnpm-lock.yaml
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: 0
+
+      - name: Prepare the database and build the backend
+        working-directory: backend
+        run: |
+          pnpm db:deploy
+          pnpm db:seed:dev
+          pnpm build
+
+      - name: Start the backend
+        working-directory: backend
+        env:
+          NODE_ENV: production
+          PORT: 3001
+        run: |
+          node dist/src/main.js > ../backend.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            curl -sf http://localhost:3001/health && exit 0
+            sleep 1
+          done
+          echo "The backend did not start." && cat ../backend.log && exit 1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: 0
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser tests against the backend
+        run: pnpm test:e2e:real
+
+      - name: Show the backend log
+        if: failure()
+        run: cat backend.log || true
+
+      - name: Upload traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-real-backend
+          path: test-results/
+          retention-days: 7

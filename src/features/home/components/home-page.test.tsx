@@ -7,16 +7,12 @@ import {
 import { render, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	coursePage,
-	mockPublishedCourses,
-} from "@/features/courses/testing/handlers";
+import { coursePage, mockPublishedCourses } from "@/mocks/courses.fixtures";
 import { routeTree } from "@/routeTree.gen";
 import { type UserRole, useAuthStore } from "@/stores/auth.store";
 import { server } from "@/test/mocks/server";
 import { createTestQueryClient } from "@/test/render";
 
-// The root route mounts dev-only devtools, which cannot run under jsdom.
 vi.mock("@tanstack/react-devtools", () => ({ TanStackDevtools: () => null }));
 
 const catalogUrl = "*/api/courses/catalog";
@@ -72,7 +68,6 @@ describe("landing page", () => {
 				screen.getByRole("heading", { level: 3, name: feature }),
 			).toBeInTheDocument();
 		}
-		// The shared shell's header stays in place.
 		expect(screen.getByRole("link", { name: "Nodus home" })).toBeVisible();
 		const site = screen.getByRole("navigation", { name: "Site" });
 		const tabs = within(site).getAllByRole("link");
@@ -97,7 +92,6 @@ describe("landing page", () => {
 		expect(screen.getByText(/All rights reserved\./)).toHaveTextContent(
 			`© ${new Date().getFullYear()} Nodus. All rights reserved.`,
 		);
-		// Signed-out visitors get no app menu.
 		expect(
 			screen.queryByRole("navigation", {
 				name: "Primary navigation",
@@ -132,7 +126,7 @@ describe("landing page", () => {
 		}
 	});
 
-	it("serves a catalog placeholder to guests that leads back home", async () => {
+	it("serves the course catalog to guests with active navigation", async () => {
 		const router = renderAt("/catalog");
 
 		expect(
@@ -146,9 +140,10 @@ describe("landing page", () => {
 		expect(
 			within(site).getByRole("link", { name: "Home" }),
 		).not.toHaveAttribute("aria-current");
-		expect(
-			screen.getByRole("link", { name: "← Back to home" }),
-		).toHaveAttribute("href", "/");
+		expect(within(site).getByRole("link", { name: "Home" })).toHaveAttribute(
+			"href",
+			"/",
+		);
 		expect(router.state.location.pathname).toBe("/catalog");
 	});
 
@@ -171,7 +166,6 @@ describe("landing page", () => {
 
 		await findLanding();
 		await waitFor(() => expect(calls).toBe(1));
-		// Let the failed query settle before asserting the section is absent.
 		await new Promise((resolve) => setTimeout(resolve, 20));
 		expect(
 			screen.queryByRole("heading", { name: "Explore courses" }),

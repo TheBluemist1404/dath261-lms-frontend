@@ -6,7 +6,6 @@ export type CourseBlockType =
 	| "QUIZ"
 	| "ASSIGNMENT";
 
-/** CourseBlock mirrors the backend model; content is a type-specific JSON payload. */
 export interface CourseBlock {
 	id: string;
 	courseId: string;

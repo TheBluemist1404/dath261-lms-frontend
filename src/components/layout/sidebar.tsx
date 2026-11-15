@@ -5,15 +5,23 @@ import { type UserRole, useAuthStore } from "@/stores/auth.store";
 type MenuItem = {
 	label: string;
 	icon: IconName;
-	to?: "/" | "/catalog" | "/workspace" | "/instructor/courses" | "/admin";
-	// Shown but not clickable until the feature exists.
+	to?:
+		| "/"
+		| "/my-courses"
+		| "/catalog"
+		| "/workspace"
+		| "/instructor/courses"
+		| "/admin"
+		| "/admin/users"
+		| "/admin/courses"
+		| "/admin/reports";
 	disabled?: boolean;
 };
 
 const menus: Record<UserRole, MenuItem[]> = {
 	student: [
 		{ label: "Dashboard", icon: "dashboard" },
-		{ label: "My Courses", icon: "courses" },
+		{ label: "My Courses", icon: "courses", to: "/my-courses" },
 		{ label: "Catalog", icon: "book", to: "/catalog" },
 		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
@@ -27,15 +35,19 @@ const menus: Record<UserRole, MenuItem[]> = {
 	],
 	admin: [
 		{ label: "Overview", icon: "dashboard", to: "/admin" },
-		{ label: "Users", icon: "users", disabled: true },
-		{ label: "Courses", icon: "courses", disabled: true },
-		{ label: "Reports", icon: "reports", disabled: true },
+		{ label: "Users", icon: "users", to: "/admin/users" },
+		{ label: "Courses", icon: "courses", to: "/admin/courses" },
+		{ label: "Reports", icon: "reports", to: "/admin/reports" },
 	],
 };
 
+const nestedSections = new Set<MenuItem["to"]>([
+	"/workspace",
+	"/admin/reports",
+]);
+
 export default function Sidebar() {
 	const role = useAuthStore((state) => state.user?.role);
-	// Signed-out visitors only reach public pages, which need no app menu.
 	if (!role) return null;
 	const items = menus[role];
 	const caption = role === "admin" ? "Admin" : role;
@@ -46,7 +58,6 @@ export default function Sidebar() {
 				{caption}
 			</p>
 			<nav aria-label="Primary navigation" className="flex flex-col gap-2">
-				{/* Unimplemented features still use the homepage. */}
 				{items.map((item, index) =>
 					item.disabled ? (
 						<span
@@ -61,7 +72,7 @@ export default function Sidebar() {
 						<Link
 							key={item.label}
 							to={item.to ?? "/"}
-							activeOptions={{ exact: item.to !== "/workspace" }}
+							activeOptions={{ exact: !nestedSections.has(item.to) }}
 							activeProps={{
 								"aria-current": item.to || index === 0 ? "page" : undefined,
 							}}
@@ -82,3 +93,5 @@ export default function Sidebar() {
 		</aside>
 	);
 }
+
+export { Sidebar };

@@ -27,3 +27,8 @@ pnpm-debug.log*
 
 # Local agent tooling
 /.cursor/
+
+# AI-generated planning and audit artifacts
+/docs/plans/
+/docs/audit/
+/docs/analysis/
