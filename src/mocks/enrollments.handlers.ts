@@ -11,6 +11,10 @@ import {
 	mockResumePosition,
 	mockStudentProgress,
 } from "./enrollments.fixtures";
+import {
+	getMockCompletedQuizBlockIds,
+	resetQuizMockState,
+} from "./quizzes.fixtures";
 
 const enrollmentStateMap = new Map<string, EnrollmentStatus>([
 	["course-active", "ACTIVE"],
@@ -22,6 +26,14 @@ const enrollmentStateMap = new Map<string, EnrollmentStatus>([
 	["course-draft-os", "ACTIVE"],
 ]);
 
+export function hasMockCourseAccess(courseId: string): boolean {
+	if (courseId === "course-unavailable" || courseId === "course-draft-os") {
+		return false;
+	}
+	const status = enrollmentStateMap.get(courseId);
+	return status === "ACTIVE" || status === "COMPLETED";
+}
+
 export function resetEnrollmentMockState() {
 	enrollmentStateMap.clear();
 	enrollmentStateMap.set("course-active", "ACTIVE");
@@ -31,6 +43,7 @@ export function resetEnrollmentMockState() {
 	enrollmentStateMap.set("course-algo", "COMPLETED");
 	enrollmentStateMap.set("course-unavailable", "ACTIVE");
 	enrollmentStateMap.set("course-draft-os", "ACTIVE");
+	resetQuizMockState();
 }
 
 export const enrollmentsHandlers = [
@@ -147,10 +160,44 @@ export const enrollmentsHandlers = [
 		return HttpResponse.json(mockResumePosition);
 	}),
 
-	http.get("*/api/courses/:courseId/progress", ({ request }) => {
+	http.get("*/api/courses/:courseId/progress", ({ request, params }) => {
 		const authError = requireMockAuth(request);
 		if (authError) return authError;
 
-		return HttpResponse.json(mockStudentProgress);
+		const courseId = String(params.courseId);
+		const completedQuizIds = getMockCompletedQuizBlockIds(courseId);
+		if (completedQuizIds.size === 0) {
+			return HttpResponse.json(mockStudentProgress);
+		}
+
+		const base = mockStudentProgress.progress;
+		const completedQuizzes = Math.min(
+			base.totalQuizzes,
+			base.completedQuizzes + completedQuizIds.size,
+		);
+		const addedQuizzes = completedQuizzes - base.completedQuizzes;
+		const completedItems = Math.min(
+			base.totalItems,
+			base.completedItems + addedQuizzes,
+		);
+		const learningProgressPercentage =
+			base.totalItems > 0
+				? Math.round((completedItems / base.totalItems) * 100)
+				: 0;
+		const quizCompletionPercentage =
+			base.totalQuizzes > 0
+				? Math.floor((completedQuizzes / base.totalQuizzes) * 100)
+				: 0;
+
+		return HttpResponse.json({
+			...mockStudentProgress,
+			progress: {
+				...base,
+				completedItems,
+				learningProgressPercentage,
+				completedQuizzes,
+				quizCompletionPercentage,
+			},
+		});
 	}),
 ];
