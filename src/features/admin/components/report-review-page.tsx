@@ -46,6 +46,14 @@ function suspensionTarget(report: AdminReport) {
 			copy: dialogCopy.suspendCourse(report.target.name),
 		};
 	}
+	if (report.target.type === "USER") {
+		return {
+			kind: "user" as const,
+			id: report.target.id,
+			label: "Suspend account",
+			copy: dialogCopy.suspendUser(report.target.name),
+		};
+	}
 	if (report.target.type === "MESSAGE" && report.message) {
 		return {
 			kind: "user" as const,

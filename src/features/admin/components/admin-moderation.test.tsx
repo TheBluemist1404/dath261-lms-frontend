@@ -374,6 +374,45 @@ describe("Backend admin routes (BE PR #36, #43)", () => {
 		expect(screen.getByText("Course suspended")).toBeInTheDocument();
 	});
 
+	it("suspends a reported user account, then marks the report ACTION_TAKEN", async () => {
+		const calls = recordPatches();
+		const user = userEvent.setup();
+		renderAt("/admin/reports/R-1047");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Suspend account" }),
+		);
+		const dialog = await openDialog("Suspend Bao Nguyen?");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Suspend account" }),
+		);
+
+		await waitFor(() =>
+			expect(calls).toEqual([
+				{
+					path: "/api/admin/users/user-bao/status",
+					body: {
+						status: "SUSPENDED",
+						reason: "Reviewed the report and target context.",
+					},
+				},
+				{
+					path: "/api/admin/reports/R-1047/status",
+					body: {
+						status: "ACTION_TAKEN",
+						reason: "Reviewed the report and target context.",
+					},
+				},
+			]),
+		);
+		expect(
+			await screen.findByText("Report resolved · Action taken"),
+		).toBeInTheDocument();
+		expect(
+			mockAdminDb.users.find((entry) => entry.id === "user-bao")?.status,
+		).toBe("SUSPENDED");
+	});
+
 	it("shows the backend error when the report was already reviewed", async () => {
 		server.use(
 			http.patch("*/api/admin/reports/:reportId/status", () =>

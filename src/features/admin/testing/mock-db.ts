@@ -37,6 +37,16 @@ function seedUsers(): AdminUser[] {
 			status: "ACTIVE",
 			createdAt: "2026-10-01T02:00:00.000Z",
 		},
+		{
+			// Target of the seeded USER report R-1047.
+			id: "user-bao",
+			firstName: "Bao",
+			lastName: "Nguyen",
+			email: "bao.nguyen@example.com",
+			role: "STUDENT",
+			status: "ACTIVE",
+			createdAt: "2026-09-28T02:00:00.000Z",
+		},
 	];
 }
 
