@@ -4,7 +4,6 @@ import type {
 	CourseBlockInput,
 } from "../types/course-block.types";
 
-/** Course content is represented by CourseBlock records, not separate lessons. */
 export async function listCourseBlocks(
 	courseId: string,
 	signal?: AbortSignal,
@@ -13,6 +12,7 @@ export async function listCourseBlocks(
 		`/courses/${encodeURIComponent(courseId)}/blocks`,
 		{ signal },
 	);
+
 	return data;
 }
 
@@ -24,6 +24,7 @@ export async function createCourseBlock(
 		`/courses/${encodeURIComponent(courseId)}/blocks`,
 		input,
 	);
+
 	return data;
 }
 
@@ -36,6 +37,7 @@ export async function updateCourseBlock(
 		`/courses/${encodeURIComponent(courseId)}/blocks/${encodeURIComponent(blockId)}`,
 		input,
 	);
+
 	return data;
 }
 

@@ -29,18 +29,6 @@ export function getCachedProfile(userId: string): CachedProfile | null {
 	}
 }
 
-export function cacheUserProfile(userId: string, profile: CachedProfile): void {
-	if (typeof localStorage === "undefined") return;
-	try {
-		const raw = localStorage.getItem(PROFILE_CACHE_KEY);
-		const profiles = raw
-			? (JSON.parse(raw) as Record<string, CachedProfile>)
-			: {};
-		profiles[userId] = { ...profiles[userId], ...profile };
-		localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profiles));
-	} catch {}
-}
-
 function decodeBase64Url(segment: string): string {
 	const base64 = segment.replace(/-/g, "+").replace(/_/g, "/");
 	const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");

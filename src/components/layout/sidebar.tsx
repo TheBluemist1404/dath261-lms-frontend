@@ -7,6 +7,7 @@ type MenuItem = {
 	icon: IconName;
 	to?:
 		| "/"
+		| "/my-courses"
 		| "/catalog"
 		| "/workspace"
 		| "/instructor/courses"
@@ -14,14 +15,13 @@ type MenuItem = {
 		| "/admin/users"
 		| "/admin/courses"
 		| "/admin/reports";
-	// Shown but not clickable until the feature exists.
 	disabled?: boolean;
 };
 
 const menus: Record<UserRole, MenuItem[]> = {
 	student: [
 		{ label: "Dashboard", icon: "dashboard" },
-		{ label: "My Courses", icon: "courses" },
+		{ label: "My Courses", icon: "courses", to: "/my-courses" },
 		{ label: "Catalog", icon: "book", to: "/catalog" },
 		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
@@ -41,7 +41,6 @@ const menus: Record<UserRole, MenuItem[]> = {
 	],
 };
 
-// Sections whose entry stays active on nested pages (e.g. a report review).
 const nestedSections = new Set<MenuItem["to"]>([
 	"/workspace",
 	"/admin/reports",
@@ -49,7 +48,6 @@ const nestedSections = new Set<MenuItem["to"]>([
 
 export default function Sidebar() {
 	const role = useAuthStore((state) => state.user?.role);
-	// Signed-out visitors only reach public pages, which need no app menu.
 	if (!role) return null;
 	const items = menus[role];
 	const caption = role === "admin" ? "Admin" : role;
@@ -60,7 +58,6 @@ export default function Sidebar() {
 				{caption}
 			</p>
 			<nav aria-label="Primary navigation" className="flex flex-col gap-2">
-				{/* Unimplemented features still use the homepage. */}
 				{items.map((item, index) =>
 					item.disabled ? (
 						<span
@@ -96,3 +93,5 @@ export default function Sidebar() {
 		</aside>
 	);
 }
+
+export { Sidebar };

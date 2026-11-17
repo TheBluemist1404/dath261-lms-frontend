@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageDiscussion } from "@/features/workspace/components/page-discussion";
+import { PageDiscussion } from "@/features/workspace/screens/page-discussion";
 
 export const Route = createFileRoute(
 	"/_layout/workspace/$id/discussion/$pageId",

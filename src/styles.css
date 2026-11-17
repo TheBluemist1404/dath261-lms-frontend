@@ -14,6 +14,11 @@
 	--color-muted: #556560;
 	--color-border: #dde5df;
 	--color-error: #b42318;
+	--color-error-subtle: #fef3f2;
+	--color-success: #027a48;
+	--color-success-subtle: #ecfdf3;
+	--color-warning: #b54708;
+	--color-warning-subtle: #fffaeb;
 }
 
 * {

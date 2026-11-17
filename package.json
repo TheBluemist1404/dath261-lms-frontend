@@ -20,7 +20,8 @@
 		"check:fix": "biome check --write .",
 		"ci": "pnpm check && pnpm typecheck && pnpm test && pnpm build",
 		"prepare": "husky",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"test:e2e:real": "playwright test -c playwright.real.config.ts"
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,json,jsonc,css,html}": "biome check --write"
@@ -40,6 +41,7 @@
 		"axios": "^1.19.0",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",
+		"tailwind-merge": "^3.7.0",
 		"tailwindcss": "^4.1.18",
 		"y-prosemirror": "1.3.7",
 		"y-protocols": "1.0.7",
