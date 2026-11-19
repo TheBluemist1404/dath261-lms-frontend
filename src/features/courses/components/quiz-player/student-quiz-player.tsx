@@ -15,6 +15,7 @@ import {
 	buildSubmitAnswersPayload,
 	computeAggregatedQuizScore,
 	countAnsweredQuestions,
+	countUsedQuizAttempts,
 	resolveQuizTakeState,
 } from "../../utils/student-quiz-domain";
 import { QuizAttemptResults } from "./quiz-attempt-results";
@@ -221,6 +222,9 @@ export function StudentQuizPlayer({
 	const loadedAttempts = attemptsQuery.isSuccess
 		? attemptsQuery.data
 		: undefined;
+	const attemptsUsed = loadedAttempts
+		? countUsedQuizAttempts(loadedAttempts)
+		: undefined;
 	const aggregatedScore = loadedAttempts
 		? computeAggregatedQuizScore(loadedAttempts, quiz.scoringMode)
 		: null;
@@ -261,7 +265,8 @@ export function StudentQuizPlayer({
 		}
 
 		const attempts = attemptsQuery.data;
-		const takeState = resolveQuizTakeState(quiz, attempts.length);
+		const usedAttempts = attemptsUsed ?? countUsedQuizAttempts(attempts);
+		const takeState = resolveQuizTakeState(quiz, usedAttempts);
 
 		return (
 			<>
@@ -391,7 +396,9 @@ export function StudentQuizPlayer({
 													onClick={handleStartQuiz}
 													disabled={sortedQuestions.length === 0}
 												>
-													{attempts.length > 0 ? "Retake quiz" : "Start quiz"}
+													{takeState.attemptsUsed > 0
+														? "Retake quiz"
+														: "Start quiz"}
 												</Button>
 											</div>
 										</div>
@@ -470,7 +477,7 @@ export function StudentQuizPlayer({
 											}
 										}}
 										title="Submit your quiz?"
-										description={`${answeredCount} of ${sortedQuestions.length} questions answered. Submitting uses attempt ${attempts.length + 1} of ${quiz.maxAttempts}.`}
+										description={`${answeredCount} of ${sortedQuestions.length} questions answered. Submitting uses attempt ${takeState.attemptsUsed + 1} of ${quiz.maxAttempts}.`}
 									>
 										{answeredCount < sortedQuestions.length ? (
 											<p className="rounded-lg border border-border bg-warning-subtle px-3 py-2 text-xs text-warning">
@@ -562,8 +569,8 @@ export function StudentQuizPlayer({
 					<div className="flex flex-col gap-0.5">
 						<dt className="text-muted">Attempts</dt>
 						<dd className="font-semibold text-ink">
-							{loadedAttempts
-								? `Attempts used: ${loadedAttempts.length} / ${quiz.maxAttempts}`
+							{attemptsUsed !== undefined
+								? `Attempts used: ${attemptsUsed} / ${quiz.maxAttempts}`
 								: `Max attempts: ${quiz.maxAttempts}`}
 						</dd>
 					</div>

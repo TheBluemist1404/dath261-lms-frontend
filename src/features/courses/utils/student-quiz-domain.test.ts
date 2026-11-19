@@ -10,6 +10,7 @@ import {
 	buildSubmitAnswersPayload,
 	computeAggregatedQuizScore,
 	countAnsweredQuestions,
+	countUsedQuizAttempts,
 	flattenLearnContentBlocks,
 	formatCorrectAnswerText,
 	formatStudentAnswerText,
@@ -164,6 +165,44 @@ describe("resolveQuizTakeState", () => {
 			attemptsUsed: 0,
 			attemptsRemaining: 3,
 		});
+	});
+});
+
+describe("countUsedQuizAttempts", () => {
+	it("returns 0 when no attempts exist", () => {
+		expect(countUsedQuizAttempts([])).toBe(0);
+	});
+
+	it("returns the highest attemptNumber for descending and unsorted full histories", () => {
+		const descending = [
+			makeAttempt({ id: "a3", attemptNumber: 3 }),
+			makeAttempt({ id: "a2", attemptNumber: 2 }),
+			makeAttempt({ id: "a1", attemptNumber: 1 }),
+		];
+		const unsorted = [
+			makeAttempt({ id: "a1", attemptNumber: 1 }),
+			makeAttempt({ id: "a3", attemptNumber: 3 }),
+			makeAttempt({ id: "a2", attemptNumber: 2 }),
+		];
+
+		expect(countUsedQuizAttempts(descending)).toBe(3);
+		expect(countUsedQuizAttempts(unsorted)).toBe(3);
+	});
+
+	it("uses attemptNumber for single-element 404 fallback attempts", () => {
+		expect(countUsedQuizAttempts([makeAttempt({ attemptNumber: 2 })])).toBe(2);
+		expect(countUsedQuizAttempts([makeAttempt({ attemptNumber: 4 })])).toBe(4);
+	});
+
+	it("falls back to attempts.length when attemptNumber is non-positive or non-finite", () => {
+		expect(
+			countUsedQuizAttempts([
+				makeAttempt({ id: "a1", attemptNumber: 0 }),
+				makeAttempt({ id: "a2", attemptNumber: -1 }),
+				makeAttempt({ id: "a3", attemptNumber: Number.NaN }),
+				makeAttempt({ id: "a4", attemptNumber: Number.POSITIVE_INFINITY }),
+			]),
+		).toBe(4);
 	});
 });
 

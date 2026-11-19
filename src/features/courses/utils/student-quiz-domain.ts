@@ -63,6 +63,22 @@ export function resolveQuizTakeState(
 	};
 }
 
+export function countUsedQuizAttempts(
+	attempts: readonly QuizAttemptResponse[],
+): number {
+	let maxAttemptNumber = 0;
+	for (const attempt of attempts) {
+		if (
+			typeof attempt.attemptNumber === "number" &&
+			Number.isFinite(attempt.attemptNumber) &&
+			attempt.attemptNumber > maxAttemptNumber
+		) {
+			maxAttemptNumber = attempt.attemptNumber;
+		}
+	}
+	return Math.max(attempts.length, maxAttemptNumber);
+}
+
 export function resolveAttemptReviewState(
 	attempt: QuizAttemptResponse,
 ): AttemptReviewState {

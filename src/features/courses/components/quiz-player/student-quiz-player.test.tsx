@@ -2,12 +2,65 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { resetEnrollmentMockState } from "@/mocks/enrollments.handlers";
+import {
+	getMockQuizDefinition,
+	toPublicAttemptResponse,
+	toStudentQuizResponse,
+} from "@/mocks/quizzes.fixtures";
 import { signInForTest } from "@/test/auth";
 import { server } from "@/test/mocks/server";
 import { renderWithProviders } from "@/test/render";
 import { StudentQuizPlayer } from "./student-quiz-player";
 
 let cleanupAuth: (() => void) | null = null;
+
+function mockAttemptsFallbackWithLatestAttempt(options: {
+	attemptNumber: number;
+	maxAttempts?: number;
+}) {
+	const baseQuiz = getMockQuizDefinition("block-1-3");
+	if (!baseQuiz) {
+		throw new Error("Missing seeded mock quiz fixture: block-1-3");
+	}
+	const quiz =
+		options.maxAttempts !== undefined
+			? { ...baseQuiz, maxAttempts: options.maxAttempts }
+			: baseQuiz;
+
+	const latestAttempt = toPublicAttemptResponse(
+		{
+			id: `attempt-${quiz.id}-${options.attemptNumber}`,
+			courseBlockId: quiz.id,
+			attemptNumber: options.attemptNumber,
+			status: "GRADED",
+			score: 75,
+			isLate: false,
+			submittedAt: "2026-10-10T10:00:00.000Z",
+			answers: [],
+		},
+		quiz,
+	);
+
+	server.use(
+		...(options.maxAttempts !== undefined
+			? [
+					http.get(
+						"*/api/courses/:courseId/quizzes/:blockId/student",
+						({ params }) =>
+							HttpResponse.json(
+								toStudentQuizResponse(quiz, String(params.courseId)),
+							),
+					),
+				]
+			: []),
+		http.get("*/api/courses/:courseId/quizzes/:blockId/my-attempts", () =>
+			HttpResponse.json({ message: "Not Found" }, { status: 404 }),
+		),
+		http.get("*/api/courses/:courseId/quizzes/:blockId/my-latest-attempt", () =>
+			HttpResponse.json(latestAttempt),
+		),
+	);
+}
 
 describe("StudentQuizPlayer", () => {
 	beforeEach(() => {
@@ -273,5 +326,46 @@ describe("StudentQuizPlayer", () => {
 		expect(
 			screen.queryByRole("button", { name: /start quiz/i }),
 		).not.toBeInTheDocument();
+	});
+
+	it("blocks starting or retaking when my-attempts 404s and fallback latest attempt reached maxAttempts", async () => {
+		mockAttemptsFallbackWithLatestAttempt({
+			attemptNumber: 2,
+			maxAttempts: 2,
+		});
+
+		renderWithProviders(
+			<StudentQuizPlayer courseId="course-intro-cs" blockId="block-1-3" />,
+		);
+
+		expect(
+			await screen.findByText("All 2 attempts have been used."),
+		).toBeInTheDocument();
+		expect(screen.getByText("Attempts used: 2 / 2")).toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: /start quiz|retake quiz/i }),
+		).not.toBeInTheDocument();
+	});
+
+	it("tracks attempts used, remaining attempts, and next attempt number from fallback attemptNumber", async () => {
+		mockAttemptsFallbackWithLatestAttempt({
+			attemptNumber: 2,
+		});
+
+		const { user } = renderWithProviders(
+			<StudentQuizPlayer courseId="course-intro-cs" blockId="block-1-3" />,
+		);
+
+		expect(await screen.findByText("Attempts used: 2 / 3")).toBeInTheDocument();
+		expect(screen.getByText(/1 of 3 attempts remaining/i)).toBeInTheDocument();
+
+		await user.click(screen.getByRole("button", { name: "Retake quiz" }));
+		await user.click(screen.getByRole("radio", { name: "fork()" }));
+		await user.click(screen.getByRole("button", { name: "Review & submit" }));
+
+		const dialog = screen.getByRole("dialog", { name: "Submit your quiz?" });
+		expect(
+			within(dialog).getByText(/Submitting uses attempt 3 of 3\./i),
+		).toBeInTheDocument();
 	});
 });
