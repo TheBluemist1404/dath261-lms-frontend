@@ -174,11 +174,27 @@ describe("landing page", () => {
 	});
 
 	it.each([
-		["student", "/workspace"],
+		["student", "/dashboard"],
 		["lecturer", "/instructor/courses"],
 		["admin", "/admin"],
 	] as const)("sends a signed-in %s to %s", async (role: UserRole, home) => {
-		server.use(http.get("*", () => HttpResponse.json([])));
+		server.use(
+			http.get("*/api/users/me/enrollments", () =>
+				HttpResponse.json({
+					data: [],
+					meta: {
+						total: 0,
+						page: 1,
+						limit: 50,
+						totalPages: 0,
+						hasNextPage: false,
+						hasPrevPage: false,
+						hasPreviousPage: false,
+					},
+				}),
+			),
+			http.get("*", () => HttpResponse.json([])),
+		);
 		useAuthStore.getState().setUser({
 			id: `${role}-1`,
 			name: `Test ${role}`,

@@ -7,6 +7,13 @@ import axios, {
 } from "axios";
 import { getResponse, type RequestHandler } from "msw";
 
+function readMockBypassPaths(): readonly string[] {
+	const value: unknown = Reflect.get(globalThis, "__nodusMockBypass");
+	return Array.isArray(value)
+		? value.filter((entry): entry is string => typeof entry === "string")
+		: [];
+}
+
 /**
  * Resolves requests against MSW handlers inside the page, falling back to the
  * network for anything unhandled. Unlike the service worker, this cannot lose
@@ -18,6 +25,11 @@ export function createMockAdapter(handlers: RequestHandler[]): AxiosAdapter {
 	return async (config: InternalAxiosRequestConfig) => {
 		const method = (config.method ?? "get").toUpperCase();
 		const url = new URL(axios.getUri(config), window.location.origin);
+		if (
+			readMockBypassPaths().some((prefix) => url.pathname.startsWith(prefix))
+		) {
+			return network(config);
+		}
 		const headers = new Headers();
 		for (const [name, value] of Object.entries(
 			AxiosHeaders.from(config.headers).toJSON(),

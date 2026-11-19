@@ -47,4 +47,16 @@ describe("createMockAdapter", () => {
 		);
 		expect((await client.get("/other")).data).toEqual({ from: "network" });
 	});
+
+	it("falls back to the network for bypassed path prefixes", async () => {
+		server.use(
+			http.get("*/api/items", () => HttpResponse.json({ from: "network" })),
+		);
+		Reflect.set(globalThis, "__nodusMockBypass", ["/api/items"]);
+		try {
+			expect((await client.get("/items")).data).toEqual({ from: "network" });
+		} finally {
+			Reflect.deleteProperty(globalThis, "__nodusMockBypass");
+		}
+	});
 });
