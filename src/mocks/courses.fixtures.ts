@@ -1,5 +1,9 @@
 import type { Course, CoursePage } from "@/features/courses/types/course.types";
-import type { CourseBlock } from "@/features/courses/types/course-block.types";
+import type {
+	CourseBlock,
+	CourseOutlineChild,
+	CourseOutlineItem,
+} from "@/features/courses/types/course-block.types";
 
 const seededAt = "2026-10-01T08:00:00.000Z";
 
@@ -124,6 +128,15 @@ export const mockDraftCourse: Course = {
 	lecturer: mockLecturerElena,
 };
 
+export const mockSuspendedCourse: Course = publishedCourse(
+	"course-suspended",
+	"Suspended Course (Moderated)",
+	"This course is currently suspended and hidden from public access.",
+	{
+		isSuspended: true,
+	},
+);
+
 export const mockCourseBlocks: CourseBlock[] = [
 	{
 		id: "mod-1",
@@ -222,6 +235,57 @@ export const mockCourseBlocks: CourseBlock[] = [
 		],
 	},
 ];
+
+function toOutlineChild(block: CourseBlock): CourseOutlineChild {
+	return {
+		id: block.id,
+		type: block.type,
+		title: block.title,
+		position: block.position,
+	};
+}
+
+export function toCourseOutline(
+	blocks: readonly CourseBlock[],
+): CourseOutlineItem[] {
+	const childrenByParent = new Map<string, CourseBlock[]>();
+	for (const block of blocks) {
+		if (block.parentModuleId) {
+			const group = childrenByParent.get(block.parentModuleId);
+			if (group) {
+				group.push(block);
+			} else {
+				childrenByParent.set(block.parentModuleId, [block]);
+			}
+		}
+	}
+
+	return blocks
+		.filter((block) => block.parentModuleId == null)
+		.sort((a, b) => a.position - b.position)
+		.map((block) => {
+			const nestedChildren = block.children;
+			const rawChildren =
+				nestedChildren && nestedChildren.length > 0
+					? nestedChildren
+					: block.type === "MODULE"
+						? (childrenByParent.get(block.id) ?? [])
+						: [];
+
+			return {
+				id: block.id,
+				type: block.type,
+				title: block.title,
+				position: block.position,
+				children: [...rawChildren]
+					.sort((a, b) => a.position - b.position)
+					.map(toOutlineChild),
+			};
+		});
+}
+
+export const mockCourseOutline: CourseOutlineItem[] =
+	toCourseOutline(mockCourseBlocks);
 
 export function coursePage(
 	courses: Course[],
