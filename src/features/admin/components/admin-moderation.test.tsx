@@ -79,6 +79,26 @@ describe("AD-04 Reports", () => {
 		).toBeInTheDocument();
 	});
 
+	it("links user and shared-content reports to their review page", async () => {
+		mockAdminDb.reports.push(sharedContentReport());
+		const user = userEvent.setup();
+		renderAt("/admin/reports");
+
+		await user.click(
+			await screen.findByRole("button", { name: "User account · Bao Nguyen" }),
+		);
+		expect(
+			screen.getByRole("link", { name: "Review user report" }),
+		).toHaveAttribute("href", "/admin/reports/R-1047");
+
+		await user.click(
+			screen.getByRole("button", { name: "Systems study group / Discussion" }),
+		);
+		expect(
+			screen.getByRole("link", { name: "Review shared-content report" }),
+		).toHaveAttribute("href", "/admin/reports/R-1052");
+	});
+
 	it("shows an error with a retry when the queue cannot load", async () => {
 		server.use(
 			http.get("*/api/admin/reports", () =>
