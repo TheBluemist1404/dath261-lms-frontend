@@ -1,4 +1,5 @@
 import type {
+	DeadlineResponseDto,
 	EnrollmentStateResponseDto,
 	MyCourseItemDto,
 	PaginatedMyCoursesResponseDto,
@@ -135,3 +136,42 @@ export const mockStudentProgress: StudentProgressResponseDto = {
 		quizCompletionPercentage: 66,
 	},
 };
+
+const DAY_MS = 86_400_000;
+
+export function createMockUpcomingDeadlines(
+	nowMs = Date.now(),
+): DeadlineResponseDto[] {
+	return [
+		{
+			courseId: "course-intro-cs",
+			courseTitle: "Introduction to Computer Science",
+			blockId: "block-1-3",
+			title: "System Call Knowledge Check",
+			deadline: new Date(nowMs + 2 * DAY_MS).toISOString(),
+			allowLate: false,
+			attemptsUsed: 0,
+			maxAttempts: 3,
+		},
+		{
+			courseId: "course-intro-cs",
+			courseTitle: "Introduction to Computer Science",
+			blockId: "block-2-1",
+			title: "Process Scheduling Quiz",
+			deadline: new Date(nowMs + 6 * DAY_MS).toISOString(),
+			allowLate: true,
+			attemptsUsed: 1,
+			maxAttempts: 3,
+		},
+		{
+			courseId: "course-intro-cs",
+			courseTitle: "Introduction to Computer Science",
+			blockId: "block-3-1",
+			title: "Virtual Memory Quiz",
+			deadline: new Date(nowMs + 20 * DAY_MS).toISOString(),
+			allowLate: false,
+			attemptsUsed: 0,
+			maxAttempts: 2,
+		},
+	];
+}
