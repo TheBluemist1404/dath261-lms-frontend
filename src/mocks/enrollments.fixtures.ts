@@ -193,7 +193,7 @@ export const mockRoster: EnrollmentRosterResponse = {
 		limit: 20,
 		totalPages: 1,
 		hasNextPage: false,
-		hasPrevPage: false,
+		hasPreviousPage: false,
 	},
 };
 
@@ -255,7 +255,6 @@ export const mockLecturerStudentProgress: LecturerStudentProgress = {
 	],
 	assignmentSubmissions: [],
 };
-
 const DAY_MS = 86_400_000;
 
 export function createMockUpcomingDeadlines(

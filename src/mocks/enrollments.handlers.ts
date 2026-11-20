@@ -283,7 +283,7 @@ export const enrollmentsHandlers = [
 				limit,
 				totalPages,
 				hasNextPage: safePage < totalPages,
-				hasPrevPage: safePage > 1,
+				hasPreviousPage: safePage > 1,
 			},
 		});
 	}),

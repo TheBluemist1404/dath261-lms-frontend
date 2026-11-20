@@ -28,7 +28,7 @@ describe("instructor enrollment API", () => {
 					limit: 20,
 					totalPages: 1,
 					hasNextPage: false,
-					hasPrevPage: true,
+					hasPreviousPage: true,
 				},
 			},
 		};

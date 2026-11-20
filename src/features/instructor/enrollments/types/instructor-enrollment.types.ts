@@ -31,7 +31,7 @@ export interface EnrollmentRosterMeta {
 	limit: number;
 	totalPages: number;
 	hasNextPage: boolean;
-	hasPrevPage: boolean;
+	hasPreviousPage: boolean;
 }
 
 export interface EnrollmentRosterResponse {

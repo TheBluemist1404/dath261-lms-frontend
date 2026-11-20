@@ -78,7 +78,7 @@ describe("StudentRoster", () => {
 				limit: 20,
 				totalPages: 1,
 				hasNextPage: false,
-				hasPrevPage: false,
+				hasPreviousPage: false,
 			},
 		});
 
@@ -105,7 +105,7 @@ describe("StudentRoster", () => {
 				limit: 20,
 				totalPages: 1,
 				hasNextPage: false,
-				hasPrevPage: false,
+				hasPreviousPage: false,
 			},
 		});
 		vi.mocked(completeEnrollment).mockResolvedValue({

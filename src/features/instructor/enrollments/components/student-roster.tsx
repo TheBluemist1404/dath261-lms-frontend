@@ -136,7 +136,7 @@ export function StudentRoster({ courseId }: { courseId: string }) {
 						<StudentRosterPagination
 							page={rosterQuery.data.meta.page}
 							totalPages={rosterQuery.data.meta.totalPages}
-							hasPreviousPage={rosterQuery.data.meta.hasPrevPage}
+							hasPreviousPage={rosterQuery.data.meta.hasPreviousPage}
 							hasNextPage={rosterQuery.data.meta.hasNextPage}
 							onPrevious={() => setPage((value) => Math.max(1, value - 1))}
 							onNext={() => setPage((value) => value + 1)}
