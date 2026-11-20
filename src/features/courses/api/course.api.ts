@@ -7,6 +7,7 @@ import type {
 	CourseStatus,
 	CourseUpdateInput,
 } from "../types/course.types";
+import type { CourseOutlineItem } from "../types/course-block.types";
 
 export async function listCourses(signal?: AbortSignal): Promise<Course[]> {
 	const { data } = await httpClient.get<Course[]>("/courses", { signal });
@@ -35,6 +36,17 @@ export async function getCourse(
 ): Promise<Course> {
 	const { data } = await httpClient.get<Course>(
 		`/courses/${encodeURIComponent(courseId)}`,
+		{ signal },
+	);
+	return data;
+}
+
+export async function getCourseOutline(
+	courseId: string,
+	signal?: AbortSignal,
+): Promise<CourseOutlineItem[]> {
+	const { data } = await httpClient.get<CourseOutlineItem[]>(
+		`/courses/${encodeURIComponent(courseId)}/outline`,
 		{ signal },
 	);
 	return data;

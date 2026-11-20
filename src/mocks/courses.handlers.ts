@@ -4,11 +4,25 @@ import { requireMockAuth } from "@/test/mocks/mock-auth-guard";
 import {
 	coursePage,
 	mockCourseBlocks,
+	mockCourseOutline,
 	mockDraftCourse,
 	mockPublishedCourses,
+	mockSuspendedCourse,
 } from "./courses.fixtures";
 
-const allMockCourses: Course[] = [...mockPublishedCourses, mockDraftCourse];
+const allMockCourses: Course[] = [
+	...mockPublishedCourses,
+	mockDraftCourse,
+	mockSuspendedCourse,
+];
+
+function findPublicCourse(courseId: string | readonly string[] | undefined) {
+	const course = allMockCourses.find((c) => c.id === courseId);
+	if (!course || course.status !== "PUBLISHED" || course.isSuspended) {
+		return null;
+	}
+	return course;
+}
 
 export const coursesHandlers = [
 	http.get("*/api/courses/catalog", ({ request }) => {
@@ -67,10 +81,9 @@ export const coursesHandlers = [
 	}),
 
 	http.get("*/api/courses/:courseId", ({ params }) => {
-		const { courseId } = params;
-		const course = allMockCourses.find((c) => c.id === courseId);
+		const course = findPublicCourse(params.courseId);
 
-		if (!course || course.status !== "PUBLISHED") {
+		if (!course) {
 			return HttpResponse.json(
 				{ message: "Course not found." },
 				{ status: 404 },
@@ -80,9 +93,8 @@ export const coursesHandlers = [
 		return HttpResponse.json(course);
 	}),
 
-	http.get("*/api/courses/:courseId/blocks", ({ request, params }) => {
-		const { courseId } = params;
-		const course = allMockCourses.find((c) => c.id === courseId);
+	http.get("*/api/courses/:courseId/outline", ({ params }) => {
+		const course = findPublicCourse(params.courseId);
 
 		if (!course) {
 			return HttpResponse.json(
@@ -91,9 +103,21 @@ export const coursesHandlers = [
 			);
 		}
 
-		if (course.status !== "PUBLISHED") {
-			const authError = requireMockAuth(request);
-			if (authError) return authError;
+		return HttpResponse.json(mockCourseOutline);
+	}),
+
+	http.get("*/api/courses/:courseId/blocks", ({ request, params }) => {
+		const authError = requireMockAuth(request);
+		if (authError) return authError;
+
+		const { courseId } = params;
+		const course = allMockCourses.find((c) => c.id === courseId);
+
+		if (!course) {
+			return HttpResponse.json(
+				{ message: "Course not found." },
+				{ status: 404 },
+			);
 		}
 
 		return HttpResponse.json(mockCourseBlocks);

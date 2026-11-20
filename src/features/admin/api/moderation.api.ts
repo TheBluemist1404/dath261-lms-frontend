@@ -2,21 +2,24 @@ import { httpClient } from "@/lib/http/client";
 import type {
 	AdminCourse,
 	AdminReport,
+	AdminReportItem,
 	AdminUser,
 	PagedResponse,
 	UpdateCourseSuspensionInput,
+	UpdateReportStatusInput,
 	UpdateUserStatusInput,
 } from "../types";
 
-// Users and courses use the backend admin routes (BE PR #36). Reports have no
-// backend endpoints yet, so their paths are mock placeholders served by MSW.
+// Admin API. Users and courses use the backend admin routes (BE PR #36);
+// reports use the backend report review routes (BE PR #43, backend issue #41).
 
 const id = (value: string) => encodeURIComponent(value);
 
 export async function listReports(signal?: AbortSignal) {
-	const { data } = await httpClient.get<AdminReport[]>("/admin/reports", {
-		signal,
-	});
+	const { data } = await httpClient.get<PagedResponse<AdminReportItem>>(
+		"/admin/reports",
+		{ signal },
+	);
 	return data;
 }
 
@@ -28,19 +31,14 @@ export async function getReport(reportId: string, signal?: AbortSignal) {
 	return data;
 }
 
-export async function dismissReport(reportId: string, reason: string) {
-	const { data } = await httpClient.post<AdminReport>(
-		`/admin/reports/${id(reportId)}/dismiss`,
-		{ reason },
-	);
-	return data;
-}
-
-/** Mock only: records that action was taken on the report's target. */
-export async function resolveReport(reportId: string, reason: string) {
-	const { data } = await httpClient.post<AdminReport>(
-		`/admin/reports/${id(reportId)}/resolve`,
-		{ reason },
+/** Dismisses a report or marks that action was taken on its target. */
+export async function updateReportStatus(
+	reportId: string,
+	input: UpdateReportStatusInput,
+) {
+	const { data } = await httpClient.patch<AdminReportItem>(
+		`/admin/reports/${id(reportId)}/status`,
+		input,
 	);
 	return data;
 }
