@@ -82,3 +82,14 @@ export interface StudentProgressResponseDto {
 		quizCompletionPercentage: number;
 	};
 }
+
+export interface DeadlineResponseDto {
+	courseId: string;
+	courseTitle: string;
+	blockId: string;
+	title: string;
+	deadline: string;
+	allowLate: boolean;
+	attemptsUsed: number;
+	maxAttempts: number;
+}
