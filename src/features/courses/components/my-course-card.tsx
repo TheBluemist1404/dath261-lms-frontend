@@ -5,6 +5,7 @@ import {
 	useStudentProgress,
 } from "../api/enrollment.queries";
 import type { MyCourseItemDto } from "../types/enrollment.types";
+import { buildCourseResumeSearch } from "../utils/resume-link";
 
 export interface MyCourseCardProps {
 	item: MyCourseItemDto;
@@ -28,16 +29,10 @@ export function MyCourseCard({ item }: MyCourseCardProps) {
 			? 100
 			: (progressData?.progress?.learningProgressPercentage ?? 0);
 
-	const resumeSearch =
-		resumeData?.hasResumePosition && resumeData.block
-			? {
-					blockId: resumeData.block.id,
-					positionSeconds: resumeData.resumeData?.data?.positionSeconds,
-				}
-			: undefined;
+	const resumeSearch = buildCourseResumeSearch(resumeData);
 
 	return (
-		<article className="flex flex-col justify-between rounded-2xl border border-border bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+		<article className="flex min-w-0 flex-col justify-between rounded-2xl border border-border bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
 			<div className="flex flex-col gap-3">
 				<div className="flex items-center justify-between gap-2">
 					<span className="truncate text-xs font-semibold uppercase tracking-wider text-muted">

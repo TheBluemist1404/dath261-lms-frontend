@@ -2,9 +2,8 @@ import { redirect } from "@tanstack/react-router";
 import type { GuardContext } from "@/features/auth/routing/guards";
 import type { UserRole } from "@/stores/auth.store";
 
-// Students land in their workspaces until the dashboard (Week 47) exists.
 const roleHomes = {
-	student: "/workspace",
+	student: "/dashboard",
 	lecturer: "/instructor/courses",
 	admin: "/admin",
 } as const satisfies Record<UserRole, string>;

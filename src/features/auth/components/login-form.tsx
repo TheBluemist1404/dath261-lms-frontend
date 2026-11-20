@@ -20,7 +20,7 @@ export interface LoginFormProps {
 export function LoginForm({
 	initialEmail = "",
 	registered = false,
-	redirect = "/workspace",
+	redirect = "/",
 	onSuccess,
 	className = "",
 }: LoginFormProps) {
@@ -76,7 +76,7 @@ export function LoginForm({
 			if (onSuccess) {
 				onSuccess();
 			} else {
-				const destination = sanitizeRedirect(redirect, "/workspace");
+				const destination = sanitizeRedirect(redirect, "/");
 				await navigate({ to: destination });
 			}
 		} catch (error: unknown) {
