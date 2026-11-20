@@ -25,7 +25,7 @@ test.describe("Student dashboard", () => {
 			/\/courses\/course-intro-cs\/learn\?blockId=block-video-1&positionSeconds=142/,
 		);
 		await expect(
-			page.getByRole("heading", { name: "Course Reader" }),
+			page.getByRole("region", { name: "Lesson content" }),
 		).toBeVisible();
 	});
 
@@ -44,7 +44,9 @@ test.describe("Student dashboard", () => {
 			/\/courses\/course-intro-cs\/learn\?blockId=block-1-3/,
 		);
 		await expect(
-			page.getByRole("heading", { name: "Course Reader" }),
+			page
+				.getByRole("region", { name: "Lesson content" })
+				.getByRole("heading", { name: "System Call Knowledge Check" }),
 		).toBeVisible();
 	});
 
