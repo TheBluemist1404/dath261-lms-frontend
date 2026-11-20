@@ -13,8 +13,10 @@ import {
 	mockEnrollmentLeft,
 	mockEnrollmentNone,
 	mockEnrollmentUnavailable,
+	mockLecturerStudentProgress,
 	mockMyCoursesList,
 	mockResumePosition,
+	mockRoster,
 	mockStudentProgress,
 } from "./enrollments.fixtures";
 import {
@@ -241,4 +243,123 @@ export const enrollmentsHandlers = [
 
 		return HttpResponse.json(deadlines);
 	}),
+	http.get("*/api/courses/:courseId/enrollments", ({ request }) => {
+		const authError = requireMockAuth(request);
+		if (authError) return authError;
+
+		const url = new URL(request.url);
+		const status = url.searchParams.get("status");
+		const search = (url.searchParams.get("search") ?? "").trim().toLowerCase();
+		const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
+		const limit = Math.min(
+			100,
+			Math.max(1, Number(url.searchParams.get("limit") ?? 20)),
+		);
+
+		let data = mockRoster.data.filter((item) => {
+			if (status && item.status !== status) return false;
+			if (!search) return true;
+
+			const name =
+				`${item.student.firstName ?? ""} ${item.student.lastName ?? ""}`.toLowerCase();
+			return (
+				name.includes(search) ||
+				item.student.email.toLowerCase().includes(search)
+			);
+		});
+
+		const total = data.length;
+		const totalPages = Math.max(1, Math.ceil(total / limit));
+		const safePage = Math.min(page, totalPages);
+		const startIndex = (safePage - 1) * limit;
+
+		data = data.slice(startIndex, startIndex + limit);
+
+		return HttpResponse.json({
+			data,
+			meta: {
+				total,
+				page: safePage,
+				limit,
+				totalPages,
+				hasNextPage: safePage < totalPages,
+				hasPreviousPage: safePage > 1,
+			},
+		});
+	}),
+
+	http.patch(
+		"*/api/courses/:courseId/enrollments/:enrollmentId/complete",
+		({ request, params }) => {
+			const authError = requireMockAuth(request);
+			if (authError) return authError;
+
+			const enrollmentId = String(params.enrollmentId);
+			const enrollment = mockRoster.data.find(
+				(item) => item.enrollmentId === enrollmentId,
+			);
+
+			if (!enrollment) {
+				return HttpResponse.json(
+					{ message: "Enrollment not found in this course." },
+					{ status: 404 },
+				);
+			}
+
+			if (enrollment.status !== "ACTIVE") {
+				return HttpResponse.json(
+					{ message: "Only ACTIVE enrollments can be completed." },
+					{ status: 409 },
+				);
+			}
+
+			const completedAt = new Date().toISOString();
+			enrollment.status = "COMPLETED";
+			enrollment.completedAt = completedAt;
+
+			return HttpResponse.json({
+				enrollmentId,
+				status: "COMPLETED",
+				completedAt,
+			});
+		},
+	),
+
+	http.get(
+		"*/api/courses/:courseId/enrollments/:enrollmentId/progress",
+		({ request, params }) => {
+			const authError = requireMockAuth(request);
+			if (authError) return authError;
+
+			const enrollmentId = String(params.enrollmentId);
+			const rosterStudent = mockRoster.data.find(
+				(item) => item.enrollmentId === enrollmentId,
+			);
+
+			if (!rosterStudent) {
+				return HttpResponse.json(
+					{ message: "Enrollment not found in this course." },
+					{ status: 404 },
+				);
+			}
+
+			return HttpResponse.json({
+				...mockLecturerStudentProgress,
+				mockRoster,
+				enrollment: {
+					...mockLecturerStudentProgress.enrollment,
+					id: rosterStudent.enrollmentId,
+					status: rosterStudent.status,
+					completedAt: rosterStudent.completedAt,
+				},
+				student: rosterStudent.student,
+				progress: {
+					...mockLecturerStudentProgress.progress,
+					totalItems: rosterStudent.progress.totalBlocks,
+					completedItems: rosterStudent.progress.completedBlocks,
+					learningProgressPercentage: rosterStudent.progress.percent,
+				},
+			});
+		},
+	),
 ];

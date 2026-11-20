@@ -6,6 +6,10 @@ import type {
 	ResumePositionResponseDto,
 	StudentProgressResponseDto,
 } from "@/features/courses/types/enrollment.types";
+import type {
+	EnrollmentRosterResponse,
+	LecturerStudentProgress,
+} from "@/features/instructor/enrollments/types/instructor-enrollment.types";
 
 export const mockEnrollmentNone: EnrollmentStateResponseDto = {
 	courseId: "course-os",
@@ -136,7 +140,121 @@ export const mockStudentProgress: StudentProgressResponseDto = {
 		quizCompletionPercentage: 66,
 	},
 };
+export const mockRoster: EnrollmentRosterResponse = {
+	data: [
+		{
+			enrollmentId: "enrollment-1",
+			status: "ACTIVE",
+			enrolledAt: "2026-10-01T08:00:00.000Z",
+			completedAt: null,
 
+			student: {
+				id: "student-1",
+				firstName: "Nguyen",
+				lastName: "An",
+				email: "an@example.com",
+			},
+
+			progress: {
+				completedBlocks: 6,
+				totalBlocks: 10,
+				percent: 60,
+			},
+
+			quizScore: 85.5,
+		},
+
+		{
+			enrollmentId: "enrollment-2",
+			status: "COMPLETED",
+			enrolledAt: "2026-09-01T08:00:00.000Z",
+			completedAt: "2026-11-01T08:00:00.000Z",
+
+			student: {
+				id: "student-2",
+				firstName: "Tran",
+				lastName: "Binh",
+				email: "binh@example.com",
+			},
+
+			progress: {
+				completedBlocks: 10,
+				totalBlocks: 10,
+				percent: 100,
+			},
+
+			quizScore: 92,
+		},
+	],
+
+	meta: {
+		total: 2,
+		page: 1,
+		limit: 20,
+		totalPages: 1,
+		hasNextPage: false,
+		hasPreviousPage: false,
+	},
+};
+
+export const mockLecturerStudentProgress: LecturerStudentProgress = {
+	enrollment: {
+		id: "enrollment-1",
+		status: "ACTIVE",
+		enrolledAt: "2026-10-01T08:00:00.000Z",
+		leftAt: null,
+		completedAt: null,
+	},
+	student: {
+		id: "student-1",
+		firstName: "Nguyen",
+		lastName: "An",
+		email: "an@example.com",
+	},
+	progress: {
+		totalItems: 10,
+		completedItems: 6,
+		learningProgressPercentage: 60,
+		totalQuizzes: 3,
+		completedQuizzes: 2,
+		quizCompletionPercentage: 66.67,
+	},
+	items: [
+		{
+			courseBlockId: "block-1",
+			type: "TEXT",
+			title: "Introduction",
+			position: 1,
+			parentModuleId: null,
+			completed: true,
+			completedAt: "2026-10-02T08:00:00.000Z",
+		},
+		{
+			courseBlockId: "block-2",
+			type: "VIDEO",
+			title: "Lecture 1",
+			position: 2,
+			parentModuleId: null,
+			completed: false,
+			completedAt: null,
+		},
+	],
+	quizAttempts: [
+		{
+			id: "attempt-1",
+			courseBlockId: "quiz-1",
+			attemptNumber: 1,
+			status: "GRADED",
+			answers: {},
+			score: "85.50",
+			startedAt: "2026-10-03T08:00:00.000Z",
+			submittedAt: "2026-10-03T08:20:00.000Z",
+			gradedAt: "2026-10-03T08:30:00.000Z",
+			quizBlock: { title: "Quiz 1" },
+		},
+	],
+	assignmentSubmissions: [],
+};
 const DAY_MS = 86_400_000;
 
 export function createMockUpcomingDeadlines(
