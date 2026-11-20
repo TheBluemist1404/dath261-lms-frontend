@@ -1,13 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { mockCourseBlocks } from "@/mocks/courses.fixtures";
+import { mockCourseOutline } from "@/mocks/courses.fixtures";
 import { CourseSyllabusAccordion } from "./course-syllabus-accordion";
 
 describe("CourseSyllabusAccordion", () => {
 	it("renders modules and toggles accordion items", async () => {
 		const user = userEvent.setup();
-		render(<CourseSyllabusAccordion blocks={mockCourseBlocks} />);
+		render(<CourseSyllabusAccordion blocks={mockCourseOutline} />);
 
 		expect(
 			screen.getByRole("heading", { level: 2, name: "Course Syllabus" }),
@@ -43,7 +43,7 @@ describe("CourseSyllabusAccordion", () => {
 			screen.getByText(/syllabus for this course is being assembled/),
 		).toBeVisible();
 
-		rerender(<CourseSyllabusAccordion blocks={mockCourseBlocks} />);
+		rerender(<CourseSyllabusAccordion blocks={mockCourseOutline} />);
 		expect(
 			screen.getByText("Introduction to Operating System Abstractions"),
 		).toBeVisible();
