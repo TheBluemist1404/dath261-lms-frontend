@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/http/errors";
-import { courseBlocksQuery, courseDetailQuery } from "../api/course.queries";
+import { courseDetailQuery, courseOutlineQuery } from "../api/course.queries";
 import { CourseActionSidebar } from "./course-action-sidebar";
 import { CourseHero } from "./course-hero";
 import { CourseNotFoundState } from "./course-not-found-state";
@@ -16,7 +16,7 @@ export interface CourseDetailViewProps {
 
 export function CourseDetailView({ courseId }: CourseDetailViewProps) {
 	const courseQuery = useQuery(courseDetailQuery(courseId));
-	const blocksQuery = useQuery(courseBlocksQuery(courseId));
+	const outlineQuery = useQuery(courseOutlineQuery(courseId));
 
 	if (courseQuery.isLoading) {
 		return (
@@ -46,7 +46,7 @@ export function CourseDetailView({ courseId }: CourseDetailViewProps) {
 	if (
 		errorStatus === 404 ||
 		errorStatus === 403 ||
-		(course && course.status === "DRAFT")
+		(course && (course.status === "DRAFT" || course.isSuspended))
 	) {
 		return <CourseNotFoundState />;
 	}
@@ -71,7 +71,7 @@ export function CourseDetailView({ courseId }: CourseDetailViewProps) {
 							variant="primary"
 							onClick={() => {
 								courseQuery.refetch();
-								blocksQuery.refetch();
+								outlineQuery.refetch();
 							}}
 						>
 							Retry
@@ -82,14 +82,19 @@ export function CourseDetailView({ courseId }: CourseDetailViewProps) {
 		);
 	}
 
+	const totalLearningItems = outlineQuery.data?.reduce(
+		(sum, item) => sum + (item.type === "MODULE" ? item.children.length : 1),
+		0,
+	);
+
 	return (
 		<main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 			<div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
 				<div className="flex flex-col gap-8 lg:col-span-8">
-					<CourseHero course={course} totalBlocks={blocksQuery.data?.length} />
+					<CourseHero course={course} totalBlocks={totalLearningItems} />
 					<CourseObjectives description={course.description} />
 					<CoursePrerequisites prerequisites={course.prerequisites} />
-					{blocksQuery.isLoading ? (
+					{outlineQuery.isLoading ? (
 						<section
 							aria-label="Loading syllabus"
 							className="rounded-2xl border border-border bg-white p-6"
@@ -100,7 +105,7 @@ export function CourseDetailView({ courseId }: CourseDetailViewProps) {
 								<div className="h-12 w-full rounded-xl bg-subtle" />
 							</div>
 						</section>
-					) : blocksQuery.isError ? (
+					) : outlineQuery.isError ? (
 						<section
 							aria-label="Syllabus loading error"
 							className="rounded-2xl border border-error/20 bg-error/5 p-6 text-center"
@@ -112,15 +117,15 @@ export function CourseDetailView({ courseId }: CourseDetailViewProps) {
 								variant="outline"
 								size="sm"
 								className="mt-3"
-								onClick={() => blocksQuery.refetch()}
+								onClick={() => outlineQuery.refetch()}
 							>
 								Retry
 							</Button>
 						</section>
-					) : blocksQuery.data ? (
+					) : outlineQuery.data ? (
 						<CourseSyllabusAccordion
-							key={blocksQuery.data.length > 0 ? "loaded" : "empty"}
-							blocks={blocksQuery.data}
+							key={outlineQuery.data.length > 0 ? "loaded" : "empty"}
+							blocks={outlineQuery.data}
 						/>
 					) : null}
 				</div>

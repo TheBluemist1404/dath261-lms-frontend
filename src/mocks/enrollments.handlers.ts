@@ -1,7 +1,13 @@
 import { HttpResponse, http } from "msw";
+import {
+	DEFAULT_DEADLINE_DAYS,
+	MAX_DEADLINE_DAYS,
+	MIN_DEADLINE_DAYS,
+} from "@/features/courses/api/deadline.api";
 import type { EnrollmentStatus } from "@/features/courses/types/enrollment.types";
 import { requireMockAuth } from "@/test/mocks/mock-auth-guard";
 import {
+	createMockUpcomingDeadlines,
 	mockEnrollmentActive,
 	mockEnrollmentCompleted,
 	mockEnrollmentLeft,
@@ -13,6 +19,26 @@ import {
 	mockRoster,
 	mockStudentProgress,
 } from "./enrollments.fixtures";
+import {
+	getMockCompletedQuizBlockIds,
+	resetQuizMockState,
+} from "./quizzes.fixtures";
+
+const DAY_MS = 86_400_000;
+
+function parseDeadlineDays(rawDays: string | null): number {
+	if (rawDays === null || rawDays.trim() === "") {
+		return DEFAULT_DEADLINE_DAYS;
+	}
+	const parsed = Number(rawDays);
+	if (!Number.isFinite(parsed)) {
+		return DEFAULT_DEADLINE_DAYS;
+	}
+	return Math.min(
+		MAX_DEADLINE_DAYS,
+		Math.max(MIN_DEADLINE_DAYS, Math.trunc(parsed)),
+	);
+}
 
 const enrollmentStateMap = new Map<string, EnrollmentStatus>([
 	["course-active", "ACTIVE"],
@@ -24,6 +50,14 @@ const enrollmentStateMap = new Map<string, EnrollmentStatus>([
 	["course-draft-os", "ACTIVE"],
 ]);
 
+export function hasMockCourseAccess(courseId: string): boolean {
+	if (courseId === "course-unavailable" || courseId === "course-draft-os") {
+		return false;
+	}
+	const status = enrollmentStateMap.get(courseId);
+	return status === "ACTIVE" || status === "COMPLETED";
+}
+
 export function resetEnrollmentMockState() {
 	enrollmentStateMap.clear();
 	enrollmentStateMap.set("course-active", "ACTIVE");
@@ -33,6 +67,7 @@ export function resetEnrollmentMockState() {
 	enrollmentStateMap.set("course-algo", "COMPLETED");
 	enrollmentStateMap.set("course-unavailable", "ACTIVE");
 	enrollmentStateMap.set("course-draft-os", "ACTIVE");
+	resetQuizMockState();
 }
 
 export const enrollmentsHandlers = [
@@ -149,11 +184,64 @@ export const enrollmentsHandlers = [
 		return HttpResponse.json(mockResumePosition);
 	}),
 
-	http.get("*/api/courses/:courseId/progress", ({ request }) => {
+	http.get("*/api/courses/:courseId/progress", ({ request, params }) => {
 		const authError = requireMockAuth(request);
 		if (authError) return authError;
 
-		return HttpResponse.json(mockStudentProgress);
+		const courseId = String(params.courseId);
+		const completedQuizIds = getMockCompletedQuizBlockIds(courseId);
+		if (completedQuizIds.size === 0) {
+			return HttpResponse.json(mockStudentProgress);
+		}
+
+		const base = mockStudentProgress.progress;
+		const completedQuizzes = Math.min(
+			base.totalQuizzes,
+			base.completedQuizzes + completedQuizIds.size,
+		);
+		const addedQuizzes = completedQuizzes - base.completedQuizzes;
+		const completedItems = Math.min(
+			base.totalItems,
+			base.completedItems + addedQuizzes,
+		);
+		const learningProgressPercentage =
+			base.totalItems > 0
+				? Math.round((completedItems / base.totalItems) * 100)
+				: 0;
+		const quizCompletionPercentage =
+			base.totalQuizzes > 0
+				? Math.floor((completedQuizzes / base.totalQuizzes) * 100)
+				: 0;
+
+		return HttpResponse.json({
+			...mockStudentProgress,
+			progress: {
+				...base,
+				completedItems,
+				learningProgressPercentage,
+				completedQuizzes,
+				quizCompletionPercentage,
+			},
+		});
+	}),
+
+	http.get("*/api/users/me/deadlines", ({ request }) => {
+		const authError = requireMockAuth(request);
+		if (authError) return authError;
+
+		const url = new URL(request.url);
+		const days = parseDeadlineDays(url.searchParams.get("days"));
+		const nowMs = Date.now();
+		const maxMs = nowMs + days * DAY_MS;
+
+		const deadlines = createMockUpcomingDeadlines(nowMs)
+			.filter((item) => {
+				const deadlineMs = Date.parse(item.deadline);
+				return deadlineMs >= nowMs && deadlineMs <= maxMs;
+			})
+			.sort((a, b) => Date.parse(a.deadline) - Date.parse(b.deadline));
+
+		return HttpResponse.json(deadlines);
 	}),
 	http.get("*/api/courses/:courseId/enrollments", ({ request }) => {
 		const authError = requireMockAuth(request);

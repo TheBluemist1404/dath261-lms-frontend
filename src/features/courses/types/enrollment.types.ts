@@ -1,3 +1,5 @@
+import type { CourseBlockType } from "./course-block.types";
+
 export type EnrollmentStatus = "ACTIVE" | "LEFT" | "COMPLETED";
 export type LearnerCourseState = "IN_PROGRESS" | "UNAVAILABLE" | "COMPLETED";
 
@@ -70,6 +72,16 @@ export interface ResumePositionResponseDto {
 	} | null;
 }
 
+export interface BlockProgressItemDto {
+	courseBlockId: string;
+	type: CourseBlockType;
+	title: string;
+	position: number;
+	parentModuleId: string | null;
+	completed: boolean;
+	completedAt: string | null;
+}
+
 export interface StudentProgressResponseDto {
 	enrollmentId: string;
 	enrollmentStatus: EnrollmentStatus;
@@ -81,4 +93,16 @@ export interface StudentProgressResponseDto {
 		completedQuizzes: number;
 		quizCompletionPercentage: number;
 	};
+	items?: BlockProgressItemDto[];
+}
+
+export interface DeadlineResponseDto {
+	courseId: string;
+	courseTitle: string;
+	blockId: string;
+	title: string;
+	deadline: string;
+	allowLate: boolean;
+	attemptsUsed: number;
+	maxAttempts: number;
 }

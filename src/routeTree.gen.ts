@@ -15,6 +15,7 @@ import { Route as RegisterRouteImport } from './routes/~register'
 import { Route as LayoutIndexRouteImport } from './routes/~_layout.index'
 import { Route as LayoutAdminRouteImport } from './routes/~_layout/~admin'
 import { Route as LayoutCatalogRouteImport } from './routes/~_layout/~catalog'
+import { Route as LayoutDashboardRouteImport } from './routes/~_layout/~dashboard'
 import { Route as LayoutInstructorRouteImport } from './routes/~_layout/~instructor'
 import { Route as LayoutMyCoursesRouteImport } from './routes/~_layout/~my-courses'
 import { Route as LayoutWorkspaceRouteImport } from './routes/~_layout/~workspace'
@@ -69,6 +70,11 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
 const LayoutCatalogRoute = LayoutCatalogRouteImport.update({
   id: '/catalog',
   path: '/catalog',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutDashboardRoute = LayoutDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutInstructorRoute = LayoutInstructorRouteImport.update({
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/admin': typeof LayoutAdminRouteWithChildren
   '/catalog': typeof LayoutCatalogRoute
+  '/dashboard': typeof LayoutDashboardRoute
   '/instructor': typeof LayoutInstructorRouteWithChildren
   '/my-courses': typeof LayoutMyCoursesRoute
   '/workspace': typeof LayoutWorkspaceRouteWithChildren
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/catalog': typeof LayoutCatalogRoute
+  '/dashboard': typeof LayoutDashboardRoute
   '/instructor': typeof LayoutInstructorRouteWithChildren
   '/my-courses': typeof LayoutMyCoursesRoute
   '/': typeof LayoutIndexRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_layout/admin': typeof LayoutAdminRouteWithChildren
   '/_layout/catalog': typeof LayoutCatalogRoute
+  '/_layout/dashboard': typeof LayoutDashboardRoute
   '/_layout/instructor': typeof LayoutInstructorRouteWithChildren
   '/_layout/my-courses': typeof LayoutMyCoursesRoute
   '/_layout/workspace': typeof LayoutWorkspaceRouteWithChildren
@@ -321,6 +330,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/catalog'
+    | '/dashboard'
     | '/instructor'
     | '/my-courses'
     | '/workspace'
@@ -352,6 +362,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/catalog'
+    | '/dashboard'
     | '/instructor'
     | '/my-courses'
     | '/'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/_layout/admin'
     | '/_layout/catalog'
+    | '/_layout/dashboard'
     | '/_layout/instructor'
     | '/_layout/my-courses'
     | '/_layout/workspace'
@@ -461,6 +473,13 @@ declare module '@tanstack/react-router' {
       path: '/catalog'
       fullPath: '/catalog'
       preLoaderRoute: typeof LayoutCatalogRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/dashboard': {
+      id: '/_layout/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof LayoutDashboardRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/instructor': {
@@ -739,6 +758,7 @@ const LayoutWorkspaceRouteWithChildren = LayoutWorkspaceRoute._addFileChildren(
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRouteWithChildren
   LayoutCatalogRoute: typeof LayoutCatalogRoute
+  LayoutDashboardRoute: typeof LayoutDashboardRoute
   LayoutInstructorRoute: typeof LayoutInstructorRouteWithChildren
   LayoutMyCoursesRoute: typeof LayoutMyCoursesRoute
   LayoutWorkspaceRoute: typeof LayoutWorkspaceRouteWithChildren
@@ -750,6 +770,7 @@ interface LayoutRouteChildren {
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRouteWithChildren,
   LayoutCatalogRoute: LayoutCatalogRoute,
+  LayoutDashboardRoute: LayoutDashboardRoute,
   LayoutInstructorRoute: LayoutInstructorRouteWithChildren,
   LayoutMyCoursesRoute: LayoutMyCoursesRoute,
   LayoutWorkspaceRoute: LayoutWorkspaceRouteWithChildren,

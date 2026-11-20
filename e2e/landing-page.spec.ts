@@ -12,6 +12,13 @@ async function visitSignedOut(page: Page) {
 	).toBeVisible();
 }
 
+async function visitSignedInStudent(page: Page) {
+	await page.addInitScript(() => {
+		localStorage.removeItem("nodus_logout_tombstone");
+	});
+	await page.goto("/");
+}
+
 test.describe("Public landing page", () => {
 	test("shows signed-out visitors the pitch, features and course preview", async ({
 		page,
@@ -115,10 +122,9 @@ test.describe("Public landing page", () => {
 		await expect(hero.getByRole("link", { name: "Log in" })).toBeInViewport();
 	});
 
-	test("sends a signed-in student to their workspaces", async ({ page }) => {
-		// Without the logout tombstone the mocked refresh signs in Alex (student).
-		await page.goto("/");
-		await expect(page).toHaveURL(/\/workspace/);
+	test("sends a signed-in student to their dashboard", async ({ page }) => {
+		await visitSignedInStudent(page);
+		await expect(page).toHaveURL(/\/dashboard/);
 		await expect(
 			page.getByRole("heading", { level: 1, name: heroName }),
 		).toHaveCount(0);

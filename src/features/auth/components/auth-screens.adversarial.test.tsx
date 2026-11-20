@@ -427,7 +427,7 @@ describe("RegisterForm and LoginForm Adversarial Challenge Suite", () => {
 
 			await waitFor(() => {
 				expect(mockNavigate).toHaveBeenCalledWith({
-					to: "/workspace",
+					to: "/",
 				});
 			});
 		});
