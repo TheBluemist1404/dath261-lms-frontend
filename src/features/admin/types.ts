@@ -118,3 +118,31 @@ export interface UpdateCourseSuspensionInput {
 	suspended: boolean;
 	reason?: string;
 }
+
+/** BE PR #51 (backend issue #48) PlatformStatsDto: GET /admin/stats. */
+export interface PlatformStats {
+	users: {
+		total: number;
+		students: number;
+		lecturers: number;
+		admins: number;
+		suspended: number;
+	};
+	courses: {
+		total: number;
+		published: number;
+		draft: number;
+		suspended: number;
+	};
+	enrollments: {
+		total: number;
+		active: number;
+		completed: number;
+		left: number;
+	};
+	/** 0 to 1: completed / (active + completed); 0 when there are none. */
+	completionRate: number;
+	/** 0 to 1; null when no valid graded quiz attempts exist. */
+	averageQuizScore: number | null;
+	generatedAt: string;
+}

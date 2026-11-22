@@ -5,13 +5,15 @@ import type {
 	AdminReportItem,
 	AdminUser,
 	PagedResponse,
+	PlatformStats,
 	UpdateCourseSuspensionInput,
 	UpdateReportStatusInput,
 	UpdateUserStatusInput,
 } from "../types";
 
 // Admin API. Users and courses use the backend admin routes (BE PR #36);
-// reports use the backend report review routes (BE PR #43, backend issue #41).
+// reports use the backend report review routes (BE PR #43, backend issue #41);
+// the overview uses the stats route (BE PR #51, backend issue #48).
 
 const id = (value: string) => encodeURIComponent(value);
 
@@ -79,4 +81,23 @@ export async function updateCourseSuspension(
 		input,
 	);
 	return data;
+}
+
+export async function getPlatformStats(signal?: AbortSignal) {
+	const { data } = await httpClient.get<PlatformStats>("/admin/stats", {
+		signal,
+	});
+	return data;
+}
+
+/**
+ * Number of reports waiting for review. The backend calls this status PENDING
+ * (the UI label is "Open"); a page of one item is enough to read `total`.
+ */
+export async function countOpenReports(signal?: AbortSignal) {
+	const { data } = await httpClient.get<PagedResponse<AdminReportItem>>(
+		"/admin/reports",
+		{ params: { status: "PENDING", pageSize: 1 }, signal },
+	);
+	return data.total;
 }

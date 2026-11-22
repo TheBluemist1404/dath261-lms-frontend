@@ -1,5 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import {
+	countOpenReports,
+	getPlatformStats,
 	getReport,
 	listAdminCourses,
 	listAdminUsers,
@@ -31,4 +33,16 @@ export const adminCourseListQuery = () =>
 	queryOptions({
 		queryKey: [...adminKey, "courses"],
 		queryFn: ({ signal }) => listAdminCourses(signal),
+	});
+
+export const platformStatsQuery = () =>
+	queryOptions({
+		queryKey: [...adminKey, "stats"],
+		queryFn: ({ signal }) => getPlatformStats(signal),
+	});
+
+export const openReportCountQuery = () =>
+	queryOptions({
+		queryKey: [...adminKey, "open-report-count"],
+		queryFn: ({ signal }) => countOpenReports(signal),
 	});
