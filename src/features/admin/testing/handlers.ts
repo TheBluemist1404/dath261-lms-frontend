@@ -3,6 +3,7 @@ import type {
 	AdminReport,
 	AdminReportItem,
 	PagedResponse,
+	PlatformStats,
 	ReportHistoryAction,
 	UpdateCourseSuspensionInput,
 	UpdateReportStatusInput,
@@ -11,7 +12,8 @@ import type {
 import { mockAdminDb } from "./mock-db";
 
 // Mock of api/moderation.api.ts, mirroring the backend admin routes and shapes:
-// users and courses (BE PR #36) and report review (BE PR #43).
+// users and courses (BE PR #36), report review (BE PR #43) and platform
+// stats (BE PR #51).
 
 const api = (path: string) => `*/api${path}`;
 
@@ -76,10 +78,54 @@ function paged<T>(request: Request, all: T[]): PagedResponse<T> {
 	};
 }
 
+/** BE PR #51 AdminService.getStats, computed from the mock lists. */
+function platformStats(): PlatformStats {
+	const { users, courses, activity } = mockAdminDb;
+	const countRole = (role: string) =>
+		users.filter((user) => user.role === role).length;
+	const published = courses.filter((c) => c.status === "PUBLISHED").length;
+	const draft = courses.filter((c) => c.status === "DRAFT").length;
+	const { active, completed, left } = activity.enrollments;
+	return {
+		users: {
+			total: users.length,
+			students: countRole("STUDENT"),
+			lecturers: countRole("LECTURER"),
+			admins: countRole("ADMIN"),
+			suspended: users.filter((user) => user.status === "SUSPENDED").length,
+		},
+		courses: {
+			total: published + draft,
+			published,
+			draft,
+			suspended: courses.filter((course) => course.isSuspended).length,
+		},
+		enrollments: { total: active + completed + left, active, completed, left },
+		completionRate:
+			active + completed === 0 ? 0 : completed / (active + completed),
+		averageQuizScore: activity.averageQuizScore,
+		generatedAt: new Date().toISOString(),
+	};
+}
+
+const reportStatuses = new Set(["PENDING", "DISMISSED", "ACTION_TAKEN"]);
+
 export const adminHandlers = [
-	http.get(api("/admin/reports"), ({ request }) =>
-		HttpResponse.json(paged(request, mockAdminDb.reports.map(toItem))),
-	),
+	http.get(api("/admin/stats"), () => HttpResponse.json(platformStats())),
+
+	http.get(api("/admin/reports"), ({ request }) => {
+		// BE PR #43 validates `status` against ReportStatus (400 otherwise).
+		const status = new URL(request.url).searchParams.get("status");
+		if (status !== null && !reportStatuses.has(status))
+			return error(
+				400,
+				"status must be one of the following values: PENDING, DISMISSED, ACTION_TAKEN",
+			);
+		const reports = status
+			? mockAdminDb.reports.filter((report) => report.status === status)
+			: mockAdminDb.reports;
+		return HttpResponse.json(paged(request, reports.map(toItem)));
+	}),
 
 	http.get(api("/admin/reports/:reportId"), ({ params }) => {
 		const report = mockAdminDb.reports.find(

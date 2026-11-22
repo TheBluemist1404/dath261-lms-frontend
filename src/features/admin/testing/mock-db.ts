@@ -178,15 +178,28 @@ function seedReports(): AdminReport[] {
 	];
 }
 
+/**
+ * Learning activity behind GET /admin/stats. User and course counts come from
+ * the seed lists above; these numbers have no list in the mock.
+ */
+function seedActivity() {
+	return {
+		enrollments: { active: 9, completed: 3, left: 1 },
+		averageQuizScore: 0.82 as number | null,
+	};
+}
+
 export const mockAdminDb = {
 	admin,
 	users: seedUsers(),
 	courses: seedCourses(),
 	reports: seedReports(),
+	activity: seedActivity(),
 };
 
 export function resetMockAdminDb() {
 	mockAdminDb.users = seedUsers();
 	mockAdminDb.courses = seedCourses();
 	mockAdminDb.reports = seedReports();
+	mockAdminDb.activity = seedActivity();
 }
