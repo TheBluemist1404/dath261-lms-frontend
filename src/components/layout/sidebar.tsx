@@ -7,6 +7,7 @@ type MenuItem = {
 	icon: IconName;
 	to?:
 		| "/"
+		| "/dashboard"
 		| "/my-courses"
 		| "/catalog"
 		| "/workspace"
@@ -20,7 +21,7 @@ type MenuItem = {
 
 const menus: Record<UserRole, MenuItem[]> = {
 	student: [
-		{ label: "Dashboard", icon: "dashboard" },
+		{ label: "Dashboard", icon: "dashboard", to: "/dashboard" },
 		{ label: "My Courses", icon: "courses", to: "/my-courses" },
 		{ label: "Catalog", icon: "book", to: "/catalog" },
 		{ label: "Workspaces", icon: "workspace", to: "/workspace" },

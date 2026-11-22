@@ -107,7 +107,7 @@ describe("LoginForm", () => {
 		expect(useAuthStore.getState().status).toBe("authenticated");
 	});
 
-	it("sanitizes malicious open redirect to safe fallback /workspace", async () => {
+	it("sanitizes malicious open redirect to safe fallback /", async () => {
 		const user = userEvent.setup();
 		render(<LoginForm redirect="//evil.com/phishing" />);
 
@@ -119,7 +119,7 @@ describe("LoginForm", () => {
 		await screen.findByRole("button", { name: "Log in" });
 
 		expect(mockNavigate).toHaveBeenCalledWith({
-			to: "/workspace",
+			to: "/",
 		});
 		expect(useAuthStore.getState().status).toBe("authenticated");
 	});

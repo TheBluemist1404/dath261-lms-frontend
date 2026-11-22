@@ -1,22 +1,40 @@
 import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
 import { requireRole } from "@/features/auth/routing/guards";
 import { getCourseEnrollmentState } from "@/features/courses/api/enrollment.api";
+import { CourseLearnView } from "@/features/courses/components/course-learn-view";
 
 export interface LearnSearch {
 	blockId?: string;
 	positionSeconds?: number;
 }
 
+function parseNonEmptyString(value: unknown): string | undefined {
+	if (typeof value !== "string") return undefined;
+	const trimmed = value.trim();
+	return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function parseNonNegativeNumber(value: unknown): number | undefined {
+	if (value === undefined || value === null || typeof value === "boolean") {
+		return undefined;
+	}
+	if (typeof value === "string" && value.trim().length === 0) {
+		return undefined;
+	}
+	const num = Number(value);
+	return !Number.isNaN(num) && Number.isFinite(num) && num >= 0
+		? num
+		: undefined;
+}
+
 export function validateLearnSearch(
 	search: Record<string, unknown>,
 ): LearnSearch {
 	const blockId =
-		typeof search.blockId === "string" && search.blockId.trim()
-			? search.blockId.trim()
-			: undefined;
-	const posNum = Number(search.positionSeconds);
+		parseNonEmptyString(search.blockId) ?? parseNonEmptyString(search.block);
 	const positionSeconds =
-		!Number.isNaN(posNum) && posNum >= 0 ? posNum : undefined;
+		parseNonNegativeNumber(search.positionSeconds) ??
+		parseNonNegativeNumber(search.t);
 
 	return { blockId, positionSeconds };
 }
@@ -41,23 +59,28 @@ export const Route = createFileRoute("/_layout/courses/$courseId/learn")({
 			});
 		}
 	},
-	component: CourseReaderPlaceholder,
+	component: CourseLearnRouteComponent,
 });
 
-function CourseReaderPlaceholder() {
+function CourseLearnRouteComponent() {
 	const { courseId } = Route.useParams();
 	const { blockId, positionSeconds } = Route.useSearch();
+	const navigate = Route.useNavigate();
 
 	return (
-		<main className="mx-auto flex max-w-4xl flex-col items-center justify-center p-12 text-center">
-			<h1 className="font-heading text-2xl font-bold text-ink">
-				Course Reader
-			</h1>
-			<p className="mt-2 text-sm text-muted">
-				Course: {courseId}
-				{blockId ? ` | Block: ${blockId}` : ""}
-				{positionSeconds ? ` (${positionSeconds}s)` : ""}
-			</p>
-		</main>
+		<CourseLearnView
+			key={courseId}
+			courseId={courseId}
+			initialBlockId={blockId}
+			positionSeconds={positionSeconds}
+			onSelectBlock={(nextBlockId) => {
+				void navigate({
+					to: "/courses/$courseId/learn",
+					params: { courseId },
+					search: { blockId: nextBlockId },
+					replace: true,
+				});
+			}}
+		/>
 	);
 }

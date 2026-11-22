@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { httpClient } from "@/lib/http/client";
 import type { Course } from "../types/course.types";
+import type { CourseOutlineItem } from "../types/course-block.types";
 import {
 	createCourse,
 	getCourse,
+	getCourseOutline,
 	listCourses,
 	listPublishedCourses,
 	updateCourse,
@@ -172,5 +174,53 @@ describe("course API", () => {
 		expect(httpClient.get).toHaveBeenCalledWith("/courses/course-1", {
 			signal,
 		});
+	});
+
+	it("gets the public course outline with signal and returns outline items", async () => {
+		const outline: CourseOutlineItem[] = [
+			{
+				id: "mod-1",
+				type: "MODULE",
+				title: "Module 1: Processes",
+				position: 0,
+				children: [
+					{
+						id: "lesson-1",
+						type: "TEXT",
+						title: "Overview",
+						position: 0,
+					},
+					{
+						id: "lesson-2",
+						type: "QUIZ",
+						title: "Check-in Quiz",
+						position: 1,
+					},
+				],
+			},
+		];
+
+		vi.mocked(httpClient.get).mockResolvedValue({
+			data: outline,
+		} as never);
+
+		const signal = new AbortController().signal;
+
+		expect(await getCourseOutline("course-1", signal)).toEqual(outline);
+		expect(httpClient.get).toHaveBeenCalledWith("/courses/course-1/outline", {
+			signal,
+		});
+	});
+
+	it("encodes courseId safely when requesting the course outline", async () => {
+		vi.mocked(httpClient.get).mockResolvedValue({
+			data: [],
+		} as never);
+
+		expect(await getCourseOutline("course/1?preview=true")).toEqual([]);
+		expect(httpClient.get).toHaveBeenCalledWith(
+			"/courses/course%2F1%3Fpreview%3Dtrue/outline",
+			{ signal: undefined },
+		);
 	});
 });

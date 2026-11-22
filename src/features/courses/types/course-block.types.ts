@@ -27,3 +27,18 @@ export interface CourseBlockInput {
 	position?: number;
 	content?: Record<string, unknown> | null;
 }
+
+export interface CourseOutlineChild {
+	id: string;
+	type: CourseBlockType;
+	title: string;
+	position: number;
+}
+
+export interface CourseOutlineItem {
+	id: string;
+	type: CourseBlockType;
+	title: string;
+	position: number;
+	children: CourseOutlineChild[];
+}

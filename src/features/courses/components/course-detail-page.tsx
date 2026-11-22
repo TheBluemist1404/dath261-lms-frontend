@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { StudentRoster } from "@/features/instructor/enrollments/components/student-roster";
 import { getCourse, updateCourseStatus } from "../api/course.api";
 import {
 	createCourseBlock,
@@ -30,6 +31,7 @@ function nestBlocks(blocks: CourseBlock[]): CourseBlock[] {
 }
 
 export default function CourseDetailPage() {
+	const [activeTab, setActiveTab] = useState<"content" | "students">("content");
 	const params = useParams({ strict: false }) as Record<
 		string,
 		string | undefined
@@ -42,12 +44,14 @@ export default function CourseDetailPage() {
 	const courseQuery = useQuery({
 		queryKey: ["courses", courseId],
 		enabled: Boolean(courseId),
-		queryFn: ({ signal }) => getCourse(courseId as string, signal),
+		queryFn: ({ signal }: { signal: AbortSignal }) =>
+			getCourse(courseId as string, signal),
 	});
 	const blocksQuery = useQuery({
 		queryKey: ["course-blocks", courseId],
 		enabled: Boolean(courseId),
-		queryFn: ({ signal }) => listCourseBlocks(courseId as string, signal),
+		queryFn: ({ signal }: { signal: AbortSignal }) =>
+			listCourseBlocks(courseId as string, signal),
 	});
 	const refreshBlocks = () =>
 		queryClient.invalidateQueries({ queryKey: ["course-blocks", courseId] });
@@ -169,95 +173,134 @@ export default function CourseDetailPage() {
 					</p>
 				)}
 			</div>
-			<PublicationControl
-				status={course.status}
-				busy={publication.isPending}
-				onChange={(status) => publication.mutate(status)}
-			/>
-			{publication.isError && (
-				<p role="alert" className="text-sm text-error">
-					Unable to update publication: {publication.error.message}
-				</p>
-			)}
-			<section className="flex flex-col gap-4">
-				<div className="flex flex-wrap items-center justify-between gap-3">
-					<div>
-						<h2 className="font-heading text-xl font-bold">
-							Modules and learning blocks
-						</h2>
-						<p className="mt-1 text-sm text-muted">
-							Modules contain text, file, video, quiz, or assignment blocks.
+			<div
+				role="tablist"
+				aria-label="Course management sections"
+				className="flex gap-1 border-b border-border"
+			>
+				<button
+					type="button"
+					role="tab"
+					aria-selected={activeTab === "content"}
+					onClick={() => setActiveTab("content")}
+					className={`min-h-10 rounded-t-lg px-4 text-sm font-semibold ${
+						activeTab === "content"
+							? "bg-primary-subtle text-primary"
+							: "text-muted hover:bg-subtle hover:text-ink"
+					}`}
+				>
+					Content
+				</button>
+				<button
+					type="button"
+					role="tab"
+					aria-selected={activeTab === "students"}
+					onClick={() => setActiveTab("students")}
+					className={`min-h-10 rounded-t-lg px-4 text-sm font-semibold ${
+						activeTab === "students"
+							? "bg-primary-subtle text-primary"
+							: "text-muted hover:bg-subtle hover:text-ink"
+					}`}
+				>
+					Students
+				</button>
+			</div>
+
+			{activeTab === "students" ? (
+				<StudentRoster courseId={course.id} />
+			) : (
+				<>
+					<PublicationControl
+						status={course.status}
+						busy={publication.isPending}
+						onChange={(status) => publication.mutate(status)}
+					/>
+					{publication.isError && (
+						<p role="alert" className="text-sm text-error">
+							Unable to update publication: {publication.error.message}
 						</p>
-					</div>
-					<button
-						type="button"
-						onClick={() => startCreate()}
-						className="min-h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white"
-					>
-						Add module
-					</button>
-				</div>
-				{formOpen && (
-					<section className="rounded-xl border border-border bg-white p-5">
-						<h3 className="mb-4 font-semibold">
-							{editing
-								? "Edit block"
-								: parentModule
-									? `Add content to ${parentModule.title}`
-									: "Add course block"}
-						</h3>
-						<CourseBlockForm
-							key={editing?.id ?? parentModule?.id ?? "new-root"}
-							courseId={course.id}
-							mode={editing ? "edit" : "create"}
-							initialBlock={editing}
-							parentModuleId={parentModule?.id ?? null}
-							position={
-								parentModule
-									? (parentModule.children?.length ?? 0)
-									: blocks.length
-							}
-							busy={saveBlock.isPending}
-							onSubmit={async (input) => {
-								await saveBlock.mutateAsync(input);
-							}}
-							onCancel={() => {
-								setFormOpen(false);
-								setEditing(null);
-								setParentModule(null);
-							}}
-						/>
-						{saveBlock.isError && (
-							<p role="alert" className="mt-3 text-sm text-error">
-								Unable to save block: {saveBlock.error.message}
+					)}
+					<section className="flex flex-col gap-4">
+						<div className="flex flex-wrap items-center justify-between gap-3">
+							<div>
+								<h2 className="font-heading text-xl font-bold">
+									Modules and learning blocks
+								</h2>
+								<p className="mt-1 text-sm text-muted">
+									Modules contain text, file, video, quiz, or assignment blocks.
+								</p>
+							</div>
+							<button
+								type="button"
+								onClick={() => startCreate()}
+								className="min-h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white"
+							>
+								Add module
+							</button>
+						</div>
+						{formOpen && (
+							<section className="rounded-xl border border-border bg-white p-5">
+								<h3 className="mb-4 font-semibold">
+									{editing
+										? "Edit block"
+										: parentModule
+											? `Add content to ${parentModule.title}`
+											: "Add course block"}
+								</h3>
+								<CourseBlockForm
+									key={editing?.id ?? parentModule?.id ?? "new-root"}
+									courseId={course.id}
+									mode={editing ? "edit" : "create"}
+									initialBlock={editing}
+									parentModuleId={parentModule?.id ?? null}
+									position={
+										parentModule
+											? (parentModule.children?.length ?? 0)
+											: blocks.length
+									}
+									busy={saveBlock.isPending}
+									onSubmit={async (input) => {
+										await saveBlock.mutateAsync(input);
+									}}
+									onCancel={() => {
+										setFormOpen(false);
+										setEditing(null);
+										setParentModule(null);
+									}}
+								/>
+								{saveBlock.isError && (
+									<p role="alert" className="mt-3 text-sm text-error">
+										Unable to save block: {saveBlock.error.message}
+									</p>
+								)}
+							</section>
+						)}
+						{deleteBlock.isError && (
+							<p role="alert" className="text-sm text-error">
+								Unable to delete block: {deleteBlock.error.message}
 							</p>
 						)}
+						<CourseBlockList
+							blocks={blocks}
+							loading={blocksQuery.isPending}
+							error={blocksQuery.isError ? blocksQuery.error.message : null}
+							onCreate={() => startCreate()}
+							onCreateChild={(module) => startCreate(module)}
+							onEdit={startEdit}
+							onDelete={(block) => void remove(block)}
+						/>
+						{blocksQuery.isError && (
+							<button
+								type="button"
+								className="self-start rounded-lg border border-border px-3 py-2 text-sm font-semibold"
+								onClick={() => void blocksQuery.refetch()}
+							>
+								Retry loading content
+							</button>
+						)}
 					</section>
-				)}
-				{deleteBlock.isError && (
-					<p role="alert" className="text-sm text-error">
-						Unable to delete block: {deleteBlock.error.message}
-					</p>
-				)}
-				<CourseBlockList
-					blocks={blocks}
-					loading={blocksQuery.isPending}
-					error={blocksQuery.isError ? blocksQuery.error.message : null}
-					onCreate={() => startCreate()}
-					onCreateChild={(module) => startCreate(module)}
-					onEdit={startEdit}
-					onDelete={(block) => void remove(block)}
-				/>
-				{blocksQuery.isError && (
-					<button
-						type="button"
-						className="self-start rounded-lg border border-border px-3 py-2 text-sm font-semibold"
-						onClick={() => void blocksQuery.refetch()}
-					>
-						Retry loading content
-					</button>
-				)}
-			</section>
+				</>
+			)}
 		</main>
 	);
 }

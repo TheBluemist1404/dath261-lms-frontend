@@ -64,7 +64,7 @@ describe("/admin route", () => {
 	});
 
 	it.each([
-		["student", "/workspace"],
+		["student", "/dashboard"],
 		["lecturer", "/instructor/courses"],
 	] as const)("blocks a %s from the admin shell", async (role, home) => {
 		useAuthStore.getState().setUser(userWithRole(role));
@@ -135,7 +135,7 @@ describe("/admin route", () => {
 		const router = renderAt(path);
 
 		await waitFor(() =>
-			expect(router.state.location.pathname).toBe("/workspace"),
+			expect(router.state.location.pathname).toBe("/dashboard"),
 		);
 	});
 });

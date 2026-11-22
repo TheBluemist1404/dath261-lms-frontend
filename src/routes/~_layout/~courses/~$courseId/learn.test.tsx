@@ -43,6 +43,21 @@ describe("Course Learn Route", () => {
 			blockId: undefined,
 			positionSeconds: undefined,
 		});
+		expect(validateLearnSearch({ block: "b-2", t: "45" })).toEqual({
+			blockId: "b-2",
+			positionSeconds: 45,
+		});
+		expect(
+			validateLearnSearch({
+				blockId: "b-primary",
+				block: "b-fallback",
+				positionSeconds: "12",
+				t: "99",
+			}),
+		).toEqual({
+			blockId: "b-primary",
+			positionSeconds: 12,
+		});
 	});
 
 	it("redirects unauthenticated visitor to login", async () => {

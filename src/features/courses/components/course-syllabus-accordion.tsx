@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
-import type { CourseBlock, CourseBlockType } from "../types/course-block.types";
+import type {
+	CourseBlockType,
+	CourseOutlineChild,
+	CourseOutlineItem,
+} from "../types/course-block.types";
 
 export interface CourseSyllabusAccordionProps {
-	blocks: CourseBlock[];
+	blocks: readonly CourseOutlineItem[];
 }
 
 interface ModuleGroup {
 	id: string;
 	title: string;
-	lessons: CourseBlock[];
+	lessons: readonly CourseOutlineChild[];
 }
 
 function getBlockIcon(type: CourseBlockType): IconName {
@@ -26,20 +30,7 @@ function getBlockIcon(type: CourseBlockType): IconName {
 	}
 }
 
-function formatBlockMeta(block: CourseBlock): string | null {
-	if (!block.content) return null;
-	const content = block.content;
-	if (typeof content.durationSeconds === "number") {
-		const minutes = Math.round(content.durationSeconds / 60);
-		return `${minutes} min`;
-	}
-	if (typeof content.questionCount === "number") {
-		return `${content.questionCount} questions`;
-	}
-	return null;
-}
-
-function organizeBlocks(blocks: CourseBlock[]): ModuleGroup[] {
+function organizeBlocks(blocks: readonly CourseOutlineItem[]): ModuleGroup[] {
 	const moduleBlocks = blocks.filter((b) => b.type === "MODULE");
 
 	if (moduleBlocks.length === 0) {
@@ -53,17 +44,11 @@ function organizeBlocks(blocks: CourseBlock[]): ModuleGroup[] {
 		];
 	}
 
-	return moduleBlocks.map((mod) => {
-		let lessons = mod.children ?? [];
-		if (lessons.length === 0) {
-			lessons = blocks.filter((b) => b.parentModuleId === mod.id);
-		}
-		return {
-			id: mod.id,
-			title: mod.title,
-			lessons,
-		};
-	});
+	return moduleBlocks.map((mod) => ({
+		id: mod.id,
+		title: mod.title,
+		lessons: mod.children,
+	}));
 }
 
 export function CourseSyllabusAccordion({
@@ -196,31 +181,27 @@ export function CourseSyllabusAccordion({
 										</p>
 									) : (
 										<ul className="flex flex-col divide-y divide-border/60">
-											{mod.lessons.map((lesson) => {
-												const meta = formatBlockMeta(lesson);
-												return (
-													<li
-														key={lesson.id}
-														className="flex items-center justify-between gap-3 py-2.5 text-sm"
-													>
-														<div className="flex items-center gap-2.5">
-															<Icon
-																name={getBlockIcon(lesson.type)}
-																className="size-4 shrink-0 text-primary"
-															/>
-															<span className="font-medium text-ink">
-																{lesson.title}
-															</span>
-														</div>
-														<div className="flex items-center gap-2 text-xs text-muted">
-															{meta ? <span>{meta}</span> : null}
-															<span className="rounded bg-subtle px-1.5 py-0.5 uppercase tracking-wide">
-																{lesson.type.toLowerCase()}
-															</span>
-														</div>
-													</li>
-												);
-											})}
+											{mod.lessons.map((lesson) => (
+												<li
+													key={lesson.id}
+													className="flex items-center justify-between gap-3 py-2.5 text-sm"
+												>
+													<div className="flex items-center gap-2.5">
+														<Icon
+															name={getBlockIcon(lesson.type)}
+															className="size-4 shrink-0 text-primary"
+														/>
+														<span className="font-medium text-ink">
+															{lesson.title}
+														</span>
+													</div>
+													<div className="flex items-center gap-2 text-xs text-muted">
+														<span className="rounded bg-subtle px-1.5 py-0.5 uppercase tracking-wide">
+															{lesson.type.toLowerCase()}
+														</span>
+													</div>
+												</li>
+											))}
 										</ul>
 									)}
 								</div>
