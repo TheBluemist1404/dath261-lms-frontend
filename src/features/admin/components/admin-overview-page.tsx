@@ -134,14 +134,26 @@ function Populated({
 					action.
 				</p>
 			</OverviewCard>
-			<div>
+			<nav aria-label="Admin shortcuts" className="flex flex-wrap gap-3">
 				<Link
 					to="/admin/reports"
 					className="inline-flex min-h-10 min-w-[160px] items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary-hover"
 				>
 					Review reports
 				</Link>
-			</div>
+				<Link
+					to="/admin/users"
+					className="inline-flex min-h-10 min-w-[160px] items-center justify-center rounded-lg border border-border px-4 text-xs font-semibold text-ink hover:bg-subtle"
+				>
+					Manage users
+				</Link>
+				<Link
+					to="/admin/courses"
+					className="inline-flex min-h-10 min-w-[160px] items-center justify-center rounded-lg border border-border px-4 text-xs font-semibold text-ink hover:bg-subtle"
+				>
+					Manage courses
+				</Link>
+			</nav>
 		</>
 	);
 }

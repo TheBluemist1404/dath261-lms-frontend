@@ -104,6 +104,13 @@ describe("AD-01 Operational overview", () => {
 		expect(
 			screen.getByRole("link", { name: "Review reports" }),
 		).toHaveAttribute("href", "/admin/reports");
+		expect(screen.getByRole("link", { name: "Manage users" })).toHaveAttribute(
+			"href",
+			"/admin/users",
+		);
+		expect(
+			screen.getByRole("link", { name: "Manage courses" }),
+		).toHaveAttribute("href", "/admin/courses");
 	});
 
 	it("counts only PENDING reports from the backend", async () => {
