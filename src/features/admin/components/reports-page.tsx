@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { getApiErrorMessage } from "@/lib/http/errors";
 import { reportListQuery } from "../api/moderation.queries";
 import { formatShortDateTime } from "../format";
-import type { AdminReportItem, ReportStatus } from "../types";
+import type { AdminReportItem, ReportStatus, ReportTargetType } from "../types";
 import {
 	AdminPage,
 	AdminTabs,
@@ -36,6 +36,13 @@ export function reportTargetLabel(report: AdminReportItem) {
 			return report.target.name;
 	}
 }
+
+/** Report targets the review page supports, with the label of their review link. */
+const reviewLabels: Partial<Record<ReportTargetType, string>> = {
+	COURSE: "Review course report",
+	MESSAGE: "Review shared-content report",
+	USER: "Review user report",
+};
 
 /** Figma AD-04 Reports: the moderation queue, filtered by review status. */
 export function ReportsPage() {
@@ -131,14 +138,14 @@ export function ReportsPage() {
 							</tbody>
 						</table>
 					</div>
-					{selected?.target.type === "COURSE" && (
+					{selected && reviewLabels[selected.target.type] && (
 						<div>
 							<Link
 								to="/admin/reports/$reportId"
 								params={{ reportId: selected.id }}
 								className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary-hover"
 							>
-								Review course report
+								{reviewLabels[selected.target.type]}
 							</Link>
 						</div>
 					)}
