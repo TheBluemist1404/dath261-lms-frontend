@@ -219,7 +219,7 @@ export function AdminOverviewPage() {
 	return (
 		<AdminPage
 			title="Operational overview"
-			description="Aggregate activity across Learner LMS. Private learning records remain scoped to their owners and lecturers."
+			description="Aggregate activity across Nodus. Private learning records remain scoped to their owners and lecturers."
 		>
 			{content}
 		</AdminPage>
