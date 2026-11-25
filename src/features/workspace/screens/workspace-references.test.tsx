@@ -62,11 +62,11 @@ describe("Course references", () => {
 		const links = screen.getAllByRole("link", { name: "Open source →" });
 		expect(links[0]).toHaveAttribute(
 			"href",
-			"/courses/course-os?block=block-os-lecture2&t=272",
+			"/courses/course-os/learn?block=block-os-lecture2&t=272",
 		);
 		expect(links[1]).toHaveAttribute(
 			"href",
-			"/courses/course-os?block=block-os-slides2",
+			"/courses/course-os/learn?block=block-os-slides2",
 		);
 	});
 
