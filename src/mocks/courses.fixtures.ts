@@ -154,7 +154,9 @@ export const mockCourseBlocks: CourseBlock[] = [
 				title: "Introduction to Operating System Abstractions",
 				parentModuleId: "mod-1",
 				position: 1,
-				content: { text: "Overview of operating system responsibilities." },
+				content: {
+					text: "# Abstractions\nOverview of operating system **responsibilities**.",
+				},
 			},
 			{
 				id: "block-1-2",
@@ -163,7 +165,10 @@ export const mockCourseBlocks: CourseBlock[] = [
 				title: "User Mode vs. Kernel Mode Traps",
 				parentModuleId: "mod-1",
 				position: 2,
-				content: { durationSeconds: 780 },
+				content: {
+					url: "https://example.com/videos/kernel-traps.mp4",
+					durationSeconds: 780,
+				},
 			},
 			{
 				id: "block-1-3",
@@ -201,7 +206,11 @@ export const mockCourseBlocks: CourseBlock[] = [
 				title: "Scheduling Algorithms Reference Notes",
 				parentModuleId: "mod-2",
 				position: 2,
-				content: { fileName: "scheduling-algorithms.pdf", fileSize: 248000 },
+				content: {
+					url: "https://example.com/files/scheduling-algorithms.pdf",
+					fileName: "scheduling-algorithms.pdf",
+					sizeBytes: 248000,
+				},
 			},
 		],
 	},

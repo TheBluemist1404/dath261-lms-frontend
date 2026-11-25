@@ -58,7 +58,25 @@ export function hasMockCourseAccess(courseId: string): boolean {
 	return status === "ACTIVE" || status === "COMPLETED";
 }
 
+/** Blocks the student marked complete, per course, and the last saved position. */
+const manualCompletion = new Map<string, Set<string>>();
+const savedPositions = new Map<
+	string,
+	{ blockId: string; type: string; resumeData: unknown }
+>();
+
+function completedIn(courseId: string): Set<string> {
+	let set = manualCompletion.get(courseId);
+	if (!set) {
+		set = new Set();
+		manualCompletion.set(courseId, set);
+	}
+	return set;
+}
+
 export function resetEnrollmentMockState() {
+	manualCompletion.clear();
+	savedPositions.clear();
 	enrollmentStateMap.clear();
 	enrollmentStateMap.set("course-active", "ACTIVE");
 	enrollmentStateMap.set("course-intro-cs", "ACTIVE");
@@ -177,12 +195,75 @@ export const enrollmentsHandlers = [
 		});
 	}),
 
-	http.get("*/api/courses/:courseId/progress/resume", ({ request }) => {
+	http.get("*/api/courses/:courseId/progress/resume", ({ request, params }) => {
 		const authError = requireMockAuth(request);
 		if (authError) return authError;
 
-		return HttpResponse.json(mockResumePosition);
+		const saved = savedPositions.get(String(params.courseId));
+		if (!saved) return HttpResponse.json(mockResumePosition);
+		return HttpResponse.json({
+			hasResumePosition: true,
+			lastVisitedAt: new Date().toISOString(),
+			block: {
+				id: saved.blockId,
+				type: saved.type,
+				title: "",
+				position: 0,
+				parentModuleId: null,
+			},
+			resumeData: saved.resumeData,
+		});
 	}),
+
+	http.patch(
+		"*/api/courses/:courseId/blocks/:blockId/progress",
+		async ({ request, params }) => {
+			const authError = requireMockAuth(request);
+			if (authError) return authError;
+
+			const { completed } = (await request.json()) as { completed: boolean };
+			const blockId = String(params.blockId);
+			const set = completedIn(String(params.courseId));
+			if (completed) set.add(blockId);
+			else set.delete(blockId);
+
+			return HttpResponse.json({
+				id: `progress-${blockId}`,
+				courseBlockId: blockId,
+				completed,
+				completedAt: completed ? new Date().toISOString() : null,
+				lastVisitedAt: new Date().toISOString(),
+			});
+		},
+	),
+
+	http.patch(
+		"*/api/courses/:courseId/blocks/:blockId/position",
+		async ({ request, params }) => {
+			const authError = requireMockAuth(request);
+			if (authError) return authError;
+
+			const { resumeData } = (await request.json()) as {
+				resumeData: { type: string } | null;
+			};
+			const blockId = String(params.blockId);
+			if (resumeData) {
+				savedPositions.set(String(params.courseId), {
+					blockId,
+					type: resumeData.type,
+					resumeData,
+				});
+			}
+
+			return HttpResponse.json({
+				id: `progress-${blockId}`,
+				courseBlockId: blockId,
+				completed: completedIn(String(params.courseId)).has(blockId),
+				completedAt: null,
+				lastVisitedAt: new Date().toISOString(),
+			});
+		},
+	),
 
 	http.get("*/api/courses/:courseId/progress", ({ request, params }) => {
 		const authError = requireMockAuth(request);
@@ -190,11 +271,27 @@ export const enrollmentsHandlers = [
 
 		const courseId = String(params.courseId);
 		const completedQuizIds = getMockCompletedQuizBlockIds(courseId);
-		if (completedQuizIds.size === 0) {
+		const manual = completedIn(courseId);
+		const manualItems = [...manual].map((blockId) => ({
+			courseBlockId: blockId,
+			type: "TEXT" as const,
+			title: "",
+			position: 0,
+			parentModuleId: null,
+			completed: true,
+			completedAt: new Date().toISOString(),
+		}));
+		if (completedQuizIds.size === 0 && manual.size === 0) {
 			return HttpResponse.json(mockStudentProgress);
 		}
 
-		const base = mockStudentProgress.progress;
+		const base = {
+			...mockStudentProgress.progress,
+			completedItems: Math.min(
+				mockStudentProgress.progress.totalItems,
+				mockStudentProgress.progress.completedItems + manual.size,
+			),
+		};
 		const completedQuizzes = Math.min(
 			base.totalQuizzes,
 			base.completedQuizzes + completedQuizIds.size,
@@ -215,6 +312,7 @@ export const enrollmentsHandlers = [
 
 		return HttpResponse.json({
 			...mockStudentProgress,
+			items: [...(mockStudentProgress.items ?? []), ...manualItems],
 			progress: {
 				...base,
 				completedItems,

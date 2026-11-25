@@ -4,6 +4,7 @@ import type {
 	CourseBlockInput,
 	CourseBlockType,
 } from "../../types/course-block.types";
+import { MarkdownText } from "./markdown-text";
 
 interface CourseBlockFormProps {
 	courseId: string;
@@ -107,100 +108,15 @@ function MarkdownPreview({ markdown }: { markdown: string }) {
 		return <p className="text-sm italic text-muted">Nothing to preview yet.</p>;
 	}
 
-	const lineOccurrences = new Map<string, number>();
-
 	return (
 		<div className="rounded-lg border border-border bg-white p-4">
 			<p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
 				Preview
 			</p>
 
-			<div className="space-y-3 text-sm">
-				{markdown.split(/\r?\n/).map((line) => {
-					const trimmed = line.trim();
-
-					const occurrence = (lineOccurrences.get(trimmed) ?? 0) + 1;
-
-					lineOccurrences.set(trimmed, occurrence);
-
-					const key = `${trimmed}-${occurrence}`;
-
-					if (!trimmed) {
-						return <div key={`empty-${key}`} className="h-1" />;
-					}
-
-					if (trimmed.startsWith("### ")) {
-						return (
-							<h4 key={`heading-3-${key}`} className="text-base font-semibold">
-								{formatInlineMarkdown(trimmed.slice(4))}
-							</h4>
-						);
-					}
-
-					if (trimmed.startsWith("## ")) {
-						return (
-							<h3 key={`heading-2-${key}`} className="text-lg font-semibold">
-								{formatInlineMarkdown(trimmed.slice(3))}
-							</h3>
-						);
-					}
-
-					if (trimmed.startsWith("# ")) {
-						return (
-							<h2 key={`heading-1-${key}`} className="text-xl font-bold">
-								{formatInlineMarkdown(trimmed.slice(2))}
-							</h2>
-						);
-					}
-
-					if (trimmed.startsWith("- ")) {
-						return (
-							<li key={`list-${key}`} className="ml-5 list-disc">
-								{formatInlineMarkdown(trimmed.slice(2))}
-							</li>
-						);
-					}
-
-					return (
-						<p key={`paragraph-${key}`}>{formatInlineMarkdown(trimmed)}</p>
-					);
-				})}
-			</div>
+			<MarkdownText markdown={markdown} />
 		</div>
 	);
-}
-
-function formatInlineMarkdown(text: string) {
-	const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
-	const occurrences = new Map<string, number>();
-
-	return parts.map((part) => {
-		const occurrence = (occurrences.get(part) ?? 0) + 1;
-		occurrences.set(part, occurrence);
-
-		const key = `${part}-${occurrence}`;
-
-		if (part.startsWith("**") && part.endsWith("**")) {
-			return <strong key={`bold-${key}`}>{part.slice(2, -2)}</strong>;
-		}
-
-		if (part.startsWith("*") && part.endsWith("*")) {
-			return <em key={`italic-${key}`}>{part.slice(1, -1)}</em>;
-		}
-
-		if (part.startsWith("`") && part.endsWith("`")) {
-			return (
-				<code
-					key={`code-${key}`}
-					className="rounded bg-canvas px-1 py-0.5 font-mono text-xs"
-				>
-					{part.slice(1, -1)}
-				</code>
-			);
-		}
-
-		return part;
-	});
 }
 
 export function CourseBlockForm({

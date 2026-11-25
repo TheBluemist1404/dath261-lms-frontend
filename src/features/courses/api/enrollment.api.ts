@@ -1,8 +1,10 @@
 import { httpClient } from "@/lib/http/client";
 import type {
+	BlockProgressMutationResponseDto,
 	EnrollmentActionResponseDto,
 	EnrollmentStateResponseDto,
 	PaginatedMyCoursesResponseDto,
+	ResumeData,
 	ResumePositionResponseDto,
 	StudentProgressResponseDto,
 } from "../types/enrollment.types";
@@ -66,6 +68,36 @@ export async function getStudentProgress(
 	const { data } = await httpClient.get<StudentProgressResponseDto>(
 		`/courses/${encodeURIComponent(courseId)}/progress`,
 		{ signal },
+	);
+	return data;
+}
+
+function blockPath(courseId: string, blockId: string) {
+	return `/courses/${encodeURIComponent(courseId)}/blocks/${encodeURIComponent(blockId)}`;
+}
+
+/** Marks a TEXT, VIDEO or FILE block complete (or not) for the signed-in student. */
+export async function updateBlockCompletion(
+	courseId: string,
+	blockId: string,
+	completed: boolean,
+): Promise<BlockProgressMutationResponseDto> {
+	const { data } = await httpClient.patch<BlockProgressMutationResponseDto>(
+		`${blockPath(courseId, blockId)}/progress`,
+		{ completed },
+	);
+	return data;
+}
+
+/** Saves the block the student is on (and, for videos, the playback time) for "Resume". */
+export async function updateLearningPosition(
+	courseId: string,
+	blockId: string,
+	resumeData: ResumeData | null,
+): Promise<BlockProgressMutationResponseDto> {
+	const { data } = await httpClient.patch<BlockProgressMutationResponseDto>(
+		`${blockPath(courseId, blockId)}/position`,
+		{ resumeData },
 	);
 	return data;
 }
