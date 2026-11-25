@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { registerAccount, runId, signInNewContext } from "./support";
+import {
+	enrollFromCoursePage,
+	registerAccount,
+	runId,
+	signInNewContext,
+} from "./support";
 
 /**
  * E2E-04: a lecturer builds a course in the UI (module, text lesson, quiz), publishes it,
@@ -74,7 +79,7 @@ test("a lecturer authors and publishes a course that a student can then learn", 
 		.getByRole("link", { name: new RegExp(title) })
 		.first()
 		.click();
-	await sp.getByRole("button", { name: "Enroll in Course" }).click();
+	await enrollFromCoursePage(sp);
 	await sp.getByRole("link", { name: "Continue learning" }).click();
 
 	const outline = sp.getByRole("navigation", { name: "Course syllabus" });

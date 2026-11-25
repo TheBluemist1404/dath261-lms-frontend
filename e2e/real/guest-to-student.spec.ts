@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PASSWORD, runId, SEED_IDS } from "./support";
+import { enrollFromCoursePage, PASSWORD, runId, SEED_IDS } from "./support";
 
 /**
  * E2E-03: a visitor browses the public catalog and course outline without an account,
@@ -56,7 +56,7 @@ test("a guest browses the catalog and outline, registers, signs in and enrolls",
 
 	// Enroll and open the reader.
 	await page.goto(`/courses/${SEED_IDS.databases}`);
-	await page.getByRole("button", { name: "Enroll in Course" }).click();
+	await enrollFromCoursePage(page);
 	await page.getByRole("link", { name: "Continue learning" }).click();
 	await expect(
 		page.getByRole("region", { name: "Lesson content" }).getByRole("heading", {

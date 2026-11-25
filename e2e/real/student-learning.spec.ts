@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { registerAccount, SEED_IDS, signIn } from "./support";
+import {
+	enrollFromCoursePage,
+	registerAccount,
+	SEED_IDS,
+	signIn,
+} from "./support";
 
 /**
  * E2E-01 (FE #60): the student learning flow against the real backend on the dev seed.
@@ -25,7 +30,7 @@ test("a student finds a course, enrolls, learns, resumes, takes the quiz and see
 
 	// 2. Enroll and open the reader.
 	await expect(page).toHaveURL(new RegExp(`/courses/${SEED_IDS.algorithms}$`));
-	await page.getByRole("button", { name: "Enroll in Course" }).click();
+	await enrollFromCoursePage(page);
 	await page.getByRole("link", { name: "Continue learning" }).click();
 	await expect(page).toHaveURL(
 		new RegExp(`/courses/${SEED_IDS.algorithms}/learn`),

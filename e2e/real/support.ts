@@ -78,3 +78,18 @@ export async function apiAuth(request: APIRequestContext, email: string) {
 	const { accessToken } = (await response.json()) as { accessToken: string };
 	return { Authorization: `Bearer ${accessToken}` };
 }
+
+/**
+ * Clicks "Enroll in Course" and waits for the server to confirm. The button switches
+ * to "Continue learning" optimistically, so opening the reader before the request
+ * finishes can bounce back to the course page.
+ */
+export async function enrollFromCoursePage(page: Page) {
+	const enrolled = page.waitForResponse(
+		(response) =>
+			response.request().method() === "POST" &&
+			/\/api\/courses\/[^/]+\/enrollments\/me$/.test(response.url()),
+	);
+	await page.getByRole("button", { name: "Enroll in Course" }).click();
+	expect((await enrolled).status()).toBe(201);
+}
