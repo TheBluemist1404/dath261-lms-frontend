@@ -1,16 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/http/errors";
 import { courseBlocksQuery, courseDetailQuery } from "../api/course.queries";
-import { useStudentProgress } from "../api/enrollment.queries";
+import {
+	useResumePosition,
+	useStudentProgress,
+} from "../api/enrollment.queries";
+import {
+	useBlockCompletion,
+	useSaveLearningPosition,
+} from "../hooks/use-learning-progress";
 import type { CourseBlock, CourseBlockType } from "../types/course-block.types";
 import {
 	flattenLearnContentBlocks,
 	organizeCourseOutlineBlocks,
 } from "../utils/student-quiz-domain";
+import { MarkdownText } from "./content/markdown-text";
 import { StudentQuizPlayer } from "./quiz-player/student-quiz-player";
 
 export interface CourseLearnViewProps {
@@ -72,6 +80,57 @@ function readNumberField(
 	return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+const MANUALLY_COMPLETABLE: ReadonlySet<CourseBlockType> = new Set([
+	"TEXT",
+	"VIDEO",
+	"FILE",
+]);
+
+/** Saves the playback time at most every 15 seconds while playing, and on pause. */
+const VIDEO_SAVE_INTERVAL_SECONDS = 15;
+
+function LessonVideo({
+	url,
+	startSeconds,
+	onPositionChange,
+}: {
+	url: string;
+	startSeconds: number | undefined;
+	onPositionChange: (seconds: number) => void;
+}) {
+	const lastSaved = useRef(startSeconds ?? 0);
+	// A media fragment starts playback at the stored time without waiting for metadata.
+	const src =
+		startSeconds !== undefined && startSeconds > 0
+			? `${url}#t=${Math.floor(startSeconds)}`
+			: url;
+
+	return (
+		// biome-ignore lint/a11y/useMediaCaption: lecturers upload videos without caption tracks.
+		<video
+			controls
+			preload="metadata"
+			src={src}
+			aria-label="Lesson video"
+			className="aspect-video w-full rounded-xl bg-ink"
+			onPause={(event) => {
+				const seconds = Math.floor(event.currentTarget.currentTime);
+				lastSaved.current = seconds;
+				onPositionChange(seconds);
+			}}
+			onTimeUpdate={(event) => {
+				const seconds = Math.floor(event.currentTarget.currentTime);
+				if (
+					Math.abs(seconds - lastSaved.current) >= VIDEO_SAVE_INTERVAL_SECONDS
+				) {
+					lastSaved.current = seconds;
+					onPositionChange(seconds);
+				}
+			}}
+		/>
+	);
+}
+
 export function CourseLearnView({
 	courseId,
 	initialBlockId,
@@ -81,6 +140,13 @@ export function CourseLearnView({
 	const courseQuery = useQuery(courseDetailQuery(courseId));
 	const blocksQuery = useQuery(courseBlocksQuery(courseId));
 	const progressQuery = useStudentProgress(courseId);
+	// Without a block in the URL, open where the student left off.
+	const resumeQuery = useResumePosition(courseId, {
+		enabled: initialBlockId === undefined,
+	});
+	const completion = useBlockCompletion(courseId);
+	const { mutate: savePosition } = useSaveLearningPosition(courseId);
+	const savedBlockId = useRef<string | null>(null);
 
 	const [selectedBlockId, setSelectedBlockId] = useState<string | undefined>(
 		initialBlockId,
@@ -105,7 +171,82 @@ export function CourseLearnView({
 		void progressQuery.refetch();
 	}
 
-	if (courseQuery.isLoading || blocksQuery.isLoading) {
+	const blocks = blocksQuery.data ?? [];
+	const outline = organizeCourseOutlineBlocks(blocks);
+	const flattenedBlocks = flattenLearnContentBlocks(blocks);
+
+	const resume =
+		initialBlockId === undefined && resumeQuery.data?.hasResumePosition
+			? resumeQuery.data
+			: undefined;
+	const resumeIndex = resume?.block
+		? flattenedBlocks.findIndex((block) => block.id === resume.block?.id)
+		: -1;
+	const resumeSecondsValue = resume?.resumeData?.data?.positionSeconds;
+	const resumeSeconds =
+		typeof resumeSecondsValue === "number" &&
+		Number.isFinite(resumeSecondsValue) &&
+		resumeSecondsValue >= 0
+			? resumeSecondsValue
+			: undefined;
+
+	const activeIndex = selectedBlockId
+		? flattenedBlocks.findIndex((block) => block.id === selectedBlockId)
+		: resumeIndex;
+	const resolvedIndex = activeIndex >= 0 ? activeIndex : 0;
+	const activeBlock: CourseBlock | undefined = flattenedBlocks[resolvedIndex];
+	const waitingForResume =
+		initialBlockId === undefined && resumeQuery.isLoading;
+
+	/** Where a video starts: the time from the link, else the saved time when resuming. */
+	function startSecondsFor(block: CourseBlock): number | undefined {
+		if (selectedBlockId !== initialBlockId) return undefined;
+		if (initialBlockId !== undefined) {
+			return block.id === initialBlockId ? positionSeconds : undefined;
+		}
+		if (resumeIndex >= 0) {
+			return block.id === flattenedBlocks[resumeIndex]?.id
+				? (positionSeconds ?? resumeSeconds)
+				: undefined;
+		}
+		return resolvedIndex === 0 && block.id === activeBlock?.id
+			? positionSeconds
+			: undefined;
+	}
+
+	const activeBlockId = activeBlock?.id;
+	const activeBlockType = activeBlock?.type;
+	const activeStartSeconds = activeBlock
+		? startSecondsFor(activeBlock)
+		: undefined;
+
+	// Remember the lesson being viewed so "Resume" comes back to it.
+	useEffect(() => {
+		if (!activeBlockId || !activeBlockType || activeBlockType === "MODULE") {
+			return;
+		}
+		if (waitingForResume || savedBlockId.current === activeBlockId) return;
+		savedBlockId.current = activeBlockId;
+		savePosition({
+			blockId: activeBlockId,
+			resumeData: {
+				version: 1,
+				type: activeBlockType,
+				data:
+					activeBlockType === "VIDEO"
+						? { positionSeconds: Math.floor(activeStartSeconds ?? 0) }
+						: {},
+			},
+		});
+	}, [
+		activeBlockId,
+		activeBlockType,
+		activeStartSeconds,
+		waitingForResume,
+		savePosition,
+	]);
+
+	if (courseQuery.isLoading || blocksQuery.isLoading || waitingForResume) {
 		return (
 			<output
 				aria-label="Loading course reader"
@@ -193,9 +334,6 @@ export function CourseLearnView({
 	}
 
 	const course = courseQuery.data;
-	const blocks = blocksQuery.data;
-	const outline = organizeCourseOutlineBlocks(blocks);
-	const flattenedBlocks = flattenLearnContentBlocks(blocks);
 
 	const completedBlockIds = new Set<string>();
 	for (const item of progressQuery.data?.items ?? []) {
@@ -203,12 +341,6 @@ export function CourseLearnView({
 			completedBlockIds.add(item.courseBlockId);
 		}
 	}
-
-	const activeIndex = selectedBlockId
-		? flattenedBlocks.findIndex((block) => block.id === selectedBlockId)
-		: -1;
-	const resolvedIndex = activeIndex >= 0 ? activeIndex : 0;
-	const activeBlock: CourseBlock | undefined = flattenedBlocks[resolvedIndex];
 
 	function renderProgressPanel() {
 		if (progressQuery.isLoading) {
@@ -337,11 +469,8 @@ export function CourseLearnView({
 	}
 
 	function renderNonQuizContent(block: CourseBlock) {
-		const showResumeTimestamp =
-			positionSeconds !== undefined &&
-			(initialBlockId === undefined
-				? resolvedIndex === 0
-				: block.id === initialBlockId);
+		const startSeconds = startSecondsFor(block);
+		const showResumeTimestamp = startSeconds !== undefined;
 
 		switch (block.type) {
 			case "TEXT": {
@@ -352,7 +481,7 @@ export function CourseLearnView({
 				return (
 					<div className="mt-4 text-sm leading-relaxed text-ink">
 						{textBody ? (
-							<p>{textBody}</p>
+							<MarkdownText markdown={textBody} />
 						) : (
 							<p className="text-muted">No lesson text provided yet.</p>
 						)}
@@ -375,8 +504,8 @@ export function CourseLearnView({
 							<div className="inline-flex w-fit items-center gap-2 rounded-lg bg-primary-subtle px-3 py-1.5 text-xs font-semibold text-primary">
 								<Icon name="play" className="size-4" />
 								<span>
-									Resume at {formatDurationSeconds(positionSeconds)} (
-									{positionSeconds}s)
+									Resume at {formatDurationSeconds(startSeconds)} (
+									{startSeconds}s)
 								</span>
 							</div>
 						) : null}
@@ -386,7 +515,21 @@ export function CourseLearnView({
 							</p>
 						) : null}
 						{videoUrl ? (
-							<p className="break-all text-primary">{videoUrl}</p>
+							<LessonVideo
+								key={`${block.id}:${startSeconds ?? 0}`}
+								url={videoUrl}
+								startSeconds={startSeconds}
+								onPositionChange={(seconds) =>
+									savePosition({
+										blockId: block.id,
+										resumeData: {
+											version: 1,
+											type: "VIDEO",
+											data: { positionSeconds: seconds },
+										},
+									})
+								}
+							/>
 						) : (
 							<p className="text-muted">
 								Video lesson metadata is ready for playback.
@@ -398,7 +541,10 @@ export function CourseLearnView({
 
 			case "FILE": {
 				const fileName = readStringField(block.content, "fileName");
-				const fileSize = readNumberField(block.content, "fileSize");
+				const fileUrl = readStringField(block.content, "url");
+				const fileSize =
+					readNumberField(block.content, "sizeBytes") ??
+					readNumberField(block.content, "fileSize");
 
 				return (
 					<div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-canvas p-4 text-sm">
@@ -408,11 +554,24 @@ export function CourseLearnView({
 								{fileName ?? "Course resource"}
 							</span>
 						</div>
-						{fileSize !== null ? (
-							<span className="text-xs text-muted">
-								{formatFileSize(fileSize)}
-							</span>
-						) : null}
+						<div className="flex items-center gap-3">
+							{fileSize !== null ? (
+								<span className="text-xs text-muted">
+									{formatFileSize(fileSize)}
+								</span>
+							) : null}
+							{fileUrl ? (
+								<a
+									href={fileUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									className={buttonVariants({ variant: "outline", size: "sm" })}
+								>
+									<Icon name="file" className="size-4" />
+									<span>Open file</span>
+								</a>
+							) : null}
+						</div>
 					</div>
 				);
 			}
@@ -443,6 +602,47 @@ export function CourseLearnView({
 				return _exhaustive;
 			}
 		}
+	}
+
+	function renderCompletionControl(block: CourseBlock) {
+		if (
+			!MANUALLY_COMPLETABLE.has(block.type) ||
+			progressQuery.data?.enrollmentStatus !== "ACTIVE"
+		) {
+			return null;
+		}
+		const isCompleted = completedBlockIds.has(block.id);
+		const pending =
+			completion.isPending && completion.variables?.blockId === block.id;
+
+		return (
+			<div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-4">
+				{isCompleted ? (
+					<span className="inline-flex items-center gap-1.5 text-sm font-semibold text-success">
+						<Icon name="checkCircle" className="size-4" />
+						Lesson completed
+					</span>
+				) : null}
+				<Button
+					variant={isCompleted ? "ghost" : "primary"}
+					size="sm"
+					disabled={pending}
+					onClick={() =>
+						completion.mutate({ blockId: block.id, completed: !isCompleted })
+					}
+				>
+					{isCompleted ? "Mark as not done" : "Mark as complete"}
+				</Button>
+				{completion.isError && completion.variables?.blockId === block.id ? (
+					<p role="alert" className="text-xs text-error">
+						{getApiErrorMessage(
+							completion.error,
+							"Could not save your progress. Please try again.",
+						)}
+					</p>
+				) : null}
+			</div>
+		);
 	}
 
 	return (
@@ -566,6 +766,7 @@ export function CourseLearnView({
 									{activeBlock.title}
 								</h2>
 								{renderNonQuizContent(activeBlock)}
+								{renderCompletionControl(activeBlock)}
 							</article>
 						)}
 

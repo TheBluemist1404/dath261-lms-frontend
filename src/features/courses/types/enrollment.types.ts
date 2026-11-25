@@ -57,7 +57,7 @@ export interface ResumePositionResponseDto {
 	lastVisitedAt: string | null;
 	block: {
 		id: string;
-		type: "TEXT" | "VIDEO" | "QUIZ";
+		type: CourseBlockType;
 		title: string;
 		position: number;
 		parentModuleId: string | null;
@@ -70,6 +70,23 @@ export interface ResumePositionResponseDto {
 			[key: string]: unknown;
 		};
 	} | null;
+}
+
+export interface ResumeData {
+	version: 1;
+	type: "TEXT" | "FILE" | "VIDEO" | "QUIZ" | "ASSIGNMENT";
+	data: {
+		positionSeconds?: number;
+		[key: string]: unknown;
+	};
+}
+
+export interface BlockProgressMutationResponseDto {
+	id: string;
+	courseBlockId: string;
+	completed: boolean;
+	completedAt: string | null;
+	lastVisitedAt: string | null;
 }
 
 export interface BlockProgressItemDto {

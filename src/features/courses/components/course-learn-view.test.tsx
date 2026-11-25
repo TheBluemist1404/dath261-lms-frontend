@@ -267,4 +267,161 @@ describe("CourseLearnView", () => {
 		).toBeInTheDocument();
 		expect(screen.getByText("Resume at 2:22 (142s)")).toBeInTheDocument();
 	});
+
+	it("marks a lesson complete, updates the progress bar, and can undo it", async () => {
+		const { user } = renderCourseLearnView({
+			courseId: "course-intro-cs",
+			initialBlockId: "block-1-1",
+		});
+
+		expect(
+			await screen.findByRole("heading", { level: 2, name: "Abstractions" }),
+		).toBeInTheDocument();
+		expect(screen.getByText("responsibilities").tagName).toBe("STRONG");
+		expect(await screen.findByText("60% (6/10 items)")).toBeInTheDocument();
+
+		await user.click(screen.getByRole("button", { name: "Mark as complete" }));
+
+		expect(await screen.findByText("Lesson completed")).toBeInTheDocument();
+		expect(await screen.findByText("70% (7/10 items)")).toBeInTheDocument();
+		const outlineItem = within(
+			screen.getByRole("navigation", { name: "Course syllabus" }),
+		).getByRole("button", {
+			name: /Introduction to Operating System Abstractions/,
+		});
+		expect(within(outlineItem).getByText("Completed")).toBeInTheDocument();
+
+		await user.click(screen.getByRole("button", { name: "Mark as not done" }));
+		expect(await screen.findByText("60% (6/10 items)")).toBeInTheDocument();
+		expect(screen.queryByText("Lesson completed")).not.toBeInTheDocument();
+	});
+
+	it("saves the lesson being viewed so Resume can return to it", async () => {
+		const saved: unknown[] = [];
+		server.use(
+			http.patch(
+				"*/api/courses/:courseId/blocks/:blockId/position",
+				async ({ request, params }) => {
+					saved.push({
+						blockId: params.blockId,
+						...((await request.json()) as object),
+					});
+					return HttpResponse.json({});
+				},
+			),
+		);
+		const { user } = renderCourseLearnView({
+			courseId: "course-intro-cs",
+			initialBlockId: "block-1-1",
+		});
+
+		await screen.findByRole("heading", { level: 2, name: "Abstractions" });
+		await waitFor(() =>
+			expect(saved).toContainEqual({
+				blockId: "block-1-1",
+				resumeData: { version: 1, type: "TEXT", data: {} },
+			}),
+		);
+
+		await user.click(screen.getByRole("button", { name: /Next lesson/ }));
+		await waitFor(() =>
+			expect(saved).toContainEqual({
+				blockId: "block-1-2",
+				resumeData: { version: 1, type: "VIDEO", data: { positionSeconds: 0 } },
+			}),
+		);
+	});
+
+	it("opens the saved lesson and video time when no lesson is in the link", async () => {
+		server.use(
+			http.get("*/api/courses/:courseId/progress/resume", () =>
+				HttpResponse.json({
+					hasResumePosition: true,
+					lastVisitedAt: "2026-11-20T10:00:00.000Z",
+					block: {
+						id: "block-1-2",
+						type: "VIDEO",
+						title: "User Mode vs. Kernel Mode Traps",
+						position: 2,
+						parentModuleId: "mod-1",
+					},
+					resumeData: {
+						version: 1,
+						type: "VIDEO",
+						data: { positionSeconds: 95 },
+					},
+				}),
+			),
+		);
+		renderCourseLearnView({ courseId: "course-intro-cs" });
+
+		expect(
+			await screen.findByRole("heading", {
+				level: 2,
+				name: "User Mode vs. Kernel Mode Traps",
+			}),
+		).toBeInTheDocument();
+		expect(screen.getByText("Resume at 1:35 (95s)")).toBeInTheDocument();
+		expect(screen.getByLabelText("Lesson video")).toHaveAttribute(
+			"src",
+			"https://example.com/videos/kernel-traps.mp4#t=95",
+		);
+	});
+
+	it("starts a deep-linked video at the time from the link", async () => {
+		renderCourseLearnView({
+			courseId: "course-intro-cs",
+			initialBlockId: "block-1-2",
+			positionSeconds: 142,
+		});
+
+		expect(await screen.findByLabelText("Lesson video")).toHaveAttribute(
+			"src",
+			"https://example.com/videos/kernel-traps.mp4#t=142",
+		);
+	});
+
+	it("offers the file with its size and an open link", async () => {
+		renderCourseLearnView({
+			courseId: "course-intro-cs",
+			initialBlockId: "block-2-2",
+		});
+
+		expect(
+			await screen.findByText("scheduling-algorithms.pdf"),
+		).toBeInTheDocument();
+		expect(screen.getByText("242 KB")).toBeInTheDocument();
+		expect(screen.getByRole("link", { name: "Open file" })).toHaveAttribute(
+			"href",
+			"https://example.com/files/scheduling-algorithms.pdf",
+		);
+	});
+
+	it("does not offer Mark as complete on a completed enrollment", async () => {
+		server.use(
+			http.get("*/api/courses/:courseId/progress", () =>
+				HttpResponse.json({
+					enrollmentId: "enrollment-1",
+					enrollmentStatus: "COMPLETED",
+					progress: {
+						totalItems: 10,
+						completedItems: 10,
+						learningProgressPercentage: 100,
+						totalQuizzes: 3,
+						completedQuizzes: 3,
+						quizCompletionPercentage: 100,
+					},
+				}),
+			),
+		);
+		renderCourseLearnView({
+			courseId: "course-intro-cs",
+			initialBlockId: "block-1-1",
+		});
+
+		await screen.findByText("100% (10/10 items)");
+		expect(
+			screen.queryByRole("button", { name: "Mark as complete" }),
+		).not.toBeInTheDocument();
+	});
 });

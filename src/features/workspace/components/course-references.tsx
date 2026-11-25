@@ -11,8 +11,8 @@ import { ErrorState } from "./query-state";
 import { ReferencePickerDialog } from "./reference-picker-dialog";
 
 /**
- * Where "Open source" leads. The course player does not exist yet, so this is the
- * agreed URL shape for it; `t` is the start time in seconds for videos.
+ * Where "Open source" leads: the course reader, opened on that block. `t` is the start
+ * time in seconds for videos. Students who are not enrolled are sent to the course page.
  */
 export function courseBlockHref(
 	block: Pick<ReferencedBlock, "id" | "courseId">,
@@ -20,7 +20,7 @@ export function courseBlockHref(
 ) {
 	const params = new URLSearchParams({ block: block.id });
 	if (timestampSeconds !== null) params.set("t", String(timestampSeconds));
-	return `/courses/${block.courseId}?${params}`;
+	return `/courses/${encodeURIComponent(block.courseId)}/learn?${params}`;
 }
 
 export function CourseReferences({
