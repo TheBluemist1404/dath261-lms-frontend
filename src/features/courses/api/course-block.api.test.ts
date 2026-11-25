@@ -58,9 +58,45 @@ describe("course block API", () => {
 
 		await createCourseBlock("course-1", input);
 
-		expect(httpClient.post).toHaveBeenCalledWith(
-			"/courses/course-1/blocks",
-			input,
+		// Only the fields the backend accepts: no courseId, position or null content.
+		expect(httpClient.post).toHaveBeenCalledWith("/courses/course-1/blocks", {
+			type: "MODULE",
+			title: "Introduction",
+		});
+	});
+
+	it("sends content and the parent module for a lesson inside a module", async () => {
+		vi.mocked(httpClient.post).mockResolvedValue({ data: block } as never);
+
+		await createCourseBlock("course-1", {
+			courseId: "course-1",
+			type: "TEXT",
+			title: "Lesson",
+			parentModuleId: "module-1",
+			position: 3,
+			content: { text: "# Hi" },
+		});
+
+		expect(httpClient.post).toHaveBeenCalledWith("/courses/course-1/blocks", {
+			type: "TEXT",
+			title: "Lesson",
+			parentModuleId: "module-1",
+			content: { text: "# Hi" },
+		});
+	});
+
+	it("leaves null content out of an update", async () => {
+		vi.mocked(httpClient.patch).mockResolvedValue({ data: block } as never);
+
+		await updateCourseBlock("course-1", "block-1", {
+			title: "Renamed module",
+			type: "MODULE",
+			content: null,
+		});
+
+		expect(httpClient.patch).toHaveBeenCalledWith(
+			"/courses/course-1/blocks/block-1",
+			{ title: "Renamed module", type: "MODULE" },
 		);
 	});
 
