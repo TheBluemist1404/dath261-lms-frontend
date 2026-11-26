@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,6 +6,7 @@ import { sanitizeRedirect } from "@/features/auth/routing/guards";
 import { getAccessToken, setAccessToken } from "@/lib/auth/access-token";
 import { useAuthStore } from "@/stores/auth.store";
 import { server } from "@/test/mocks/server";
+import { renderWithProviders as render } from "@/test/render";
 import { LoginForm } from "./login-form";
 import { RegisterForm } from "./register-form";
 import { RoleToggle } from "./role-toggle";

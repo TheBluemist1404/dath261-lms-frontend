@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthStore } from "@/stores/auth.store";
+import { renderWithProviders as render } from "@/test/render";
 import { LoginForm } from "./login-form";
 
 const mockNavigate = vi.fn();
