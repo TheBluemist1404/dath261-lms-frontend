@@ -15,7 +15,8 @@ type MenuItem = {
 		| "/admin"
 		| "/admin/users"
 		| "/admin/courses"
-		| "/admin/reports";
+		| "/admin/reports"
+		| "/notifications";
 	disabled?: boolean;
 };
 
@@ -26,13 +27,13 @@ const menus: Record<UserRole, MenuItem[]> = {
 		{ label: "Catalog", icon: "book", to: "/catalog" },
 		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
-		{ label: "Notifications", icon: "bell" },
+		{ label: "Notifications", icon: "bell", to: "/notifications" },
 	],
 	lecturer: [
 		{ label: "My Courses", icon: "courses", to: "/instructor/courses" },
 		{ label: "Workspaces", icon: "workspace", to: "/workspace" },
 		{ label: "Calendar", icon: "calendar" },
-		{ label: "Notifications", icon: "bell" },
+		{ label: "Notifications", icon: "bell", to: "/notifications" },
 	],
 	admin: [
 		{ label: "Overview", icon: "dashboard", to: "/admin" },

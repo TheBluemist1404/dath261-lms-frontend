@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Icon } from "@/components/ui/icon";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Brand } from "./brand";
 import { GuestHeader } from "./guest-header";
 
@@ -25,14 +25,8 @@ export default function Header() {
 			<div className="flex items-center gap-2">
 				{user ? (
 					<>
-						{/* Use the homepage until these feature routes are implemented. */}
-						<Link
-							to="/"
-							aria-label="Notifications"
-							className="flex size-11 items-center justify-center rounded-lg text-muted hover:bg-subtle"
-						>
-							<Icon name="bell" />
-						</Link>
+						<NotificationBell />
+						{/* Use the homepage until the profile route is implemented. */}
 						<Link
 							to="/"
 							aria-label={
